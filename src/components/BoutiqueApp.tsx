@@ -24,11 +24,7 @@ export function BoutiqueApp() {
             </div>
             <DressRoiTable />
           </>
-        ) : (
-          <section className="rounded-3xl bg-white/80 px-6 py-5 text-sm leading-7 text-stone-500">
-            صلاحية الموظف تقتصر على حالة الفساتين والحجوزات. الأسعار والرواتب والمصروفات مخفية.
-          </section>
-        )}
+        ) : null}
         <DressGrid />
       </main>
     </div>
