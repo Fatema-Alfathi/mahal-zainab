@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { Megaphone, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
 import { formatCurrency, formatDate, todayIso } from "@/lib/format";
 import { CATEGORY_LABELS } from "@/lib/labels";
@@ -10,28 +10,28 @@ import { VARIABLE_EXPENSE_CATEGORIES, type VariableExpenseCategory } from "@/typ
 export function VariableExpenseLog() {
   const { variableExpenses, dresses, addVariableExpense } = useShop();
   const [open, setOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const rows = useMemo(
     () => [...variableExpenses].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)),
     [variableExpenses],
   );
+  const visible = showAll ? rows : rows.slice(0, 5);
 
   return (
-    <section className="rounded-3xl bg-white/80 p-6">
+    <section className="shop-card rounded-3xl p-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm text-stone-400">مصروفات متغيرة</p>
-          <h3 className="mt-1 text-2xl font-medium text-stone-800">التسويق والمصروفات</h3>
-          <p className="mt-2 text-sm leading-7 text-stone-500">
-            الحملات وفواتير الخدمات والتنظيف الجاف والإصلاحات.
-          </p>
+          <p className="text-sm text-rose-400">مصروفات ثانية</p>
+          <h3 className="mt-1 text-2xl font-medium text-rose-900">تنظيف وإعلانات</h3>
+          <p className="mt-2 text-sm leading-7 text-rose-600/80">أضيفي أي مبلغ طلع من الصندوق غير الإيجار والرواتب.</p>
         </div>
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-stone-800 px-4 py-2.5 text-sm text-white hover:bg-stone-700"
+          className="shop-btn inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm"
         >
           <Plus className="h-4 w-4" aria-hidden />
-          إضافة مصروف جديد
+          إضافة مصروف
         </button>
       </div>
       {open ? (
@@ -44,39 +44,34 @@ export function VariableExpenseLog() {
           onCancel={() => setOpen(false)}
         />
       ) : null}
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[640px] text-start text-sm">
-          <thead>
-            <tr className="border-b border-stone-200 text-xs text-stone-500">
-              <th className="pb-2 font-medium">التاريخ</th>
-              <th className="pb-2 font-medium">الفئة</th>
-              <th className="pb-2 font-medium">الوصف</th>
-              <th className="pb-2 font-medium">الفستان المرتبط</th>
-              <th className="pb-2 text-end font-medium">المبلغ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((expense) => {
-              const dress = dresses.find((item) => item.id === expense.associatedDressId);
-              return (
-                <tr key={expense.id} className="border-b border-stone-100 last:border-0">
-                  <td className="py-3 tabular-nums text-stone-600">{formatDate(expense.date)}</td>
-                  <td className="py-3">
-                    <span className="rounded-full bg-[#f3f1ee] px-2.5 py-1 text-xs text-stone-600">
-                      {CATEGORY_LABELS[expense.category]}
-                    </span>
-                  </td>
-                  <td className="py-3 text-stone-800">{expense.description}</td>
-                  <td className="py-3 text-stone-500">{dress?.name ?? "—"}</td>
-                  <td className="py-3 text-end tabular-nums text-stone-800">
-                    {formatCurrency(expense.amount)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <ul className="space-y-2">
+        {visible.map((expense) => {
+          const dress = dresses.find((item) => item.id === expense.associatedDressId);
+          return (
+            <li key={expense.id} className="rounded-2xl bg-rose-50/80 px-4 py-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm text-rose-900">{expense.description}</p>
+                  <p className="mt-1 text-xs text-rose-400">
+                    {CATEGORY_LABELS[expense.category]} · {formatDate(expense.date)}
+                    {dress ? ` · ${dress.name}` : ""}
+                  </p>
+                </div>
+                <p className="shrink-0 tabular-nums text-sm text-rose-800">{formatCurrency(expense.amount)}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      {rows.length > 5 ? (
+        <button
+          type="button"
+          onClick={() => setShowAll((value) => !value)}
+          className="mt-3 text-sm text-rose-400 hover:text-rose-700"
+        >
+          {showAll ? "عرض آخر المصروفات فقط" : `عرض الكل (${rows.length})`}
+        </button>
+      ) : null}
     </section>
   );
 }
@@ -108,11 +103,11 @@ function AddExpenseForm({
     event.preventDefault();
     const parsed = Number(amount);
     if (!description.trim()) {
-      setError("الوصف مطلوب.");
+      setError("اكتبي وصفاً قصيراً.");
       return;
     }
     if (!Number.isFinite(parsed) || parsed <= 0) {
-      setError("أدخل مبلغاً صحيحاً أكبر من صفر.");
+      setError("أدخلي مبلغاً أكبر من صفر.");
       return;
     }
     onSubmit({
@@ -125,13 +120,13 @@ function AddExpenseForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4 grid gap-3 rounded-2xl bg-[#f3f1ee]/80 p-4 md:grid-cols-2">
+    <form onSubmit={handleSubmit} className="mb-4 grid gap-3 rounded-2xl bg-rose-50/80 p-4">
       <label className="block text-sm">
-        <span className="mb-1 block text-stone-600">الفئة</span>
+        <span className="mb-1 block text-rose-700">النوع</span>
         <select
           value={category}
           onChange={(event) => setCategory(event.target.value as VariableExpenseCategory)}
-          className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-stone-800"
+          className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-rose-900"
         >
           {VARIABLE_EXPENSE_CATEGORIES.map((item) => (
             <option key={item} value={item}>
@@ -141,45 +136,45 @@ function AddExpenseForm({
         </select>
       </label>
       <label className="block text-sm">
-        <span className="mb-1 block text-stone-600">المبلغ</span>
+        <span className="mb-1 block text-rose-700">المبلغ (ر.ع.)</span>
         <input
           type="number"
           min="0"
-          step="0.001"
+          step="0.1"
           value={amount}
           onChange={(event) => setAmount(event.target.value)}
-          className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-stone-800"
+          className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-rose-900"
           placeholder="55"
         />
       </label>
       <label className="block text-sm">
-        <span className="mb-1 block text-stone-600">التاريخ</span>
+        <span className="mb-1 block text-rose-700">التاريخ</span>
         <input
           type="date"
           value={date}
           onChange={(event) => setDate(event.target.value)}
-          className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-stone-800"
+          className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-rose-900"
         />
       </label>
       <label className="block text-sm">
-        <span className="mb-1 block text-stone-600">الوصف</span>
+        <span className="mb-1 block text-rose-700">الوصف</span>
         <input
           type="text"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
-          className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-stone-800"
-          placeholder="إعلانات إنستغرام لرمضان"
+          className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-rose-900"
+          placeholder="إعلان إنستغرام"
         />
       </label>
       {showDressLink ? (
-        <label className="block text-sm md:col-span-2">
-          <span className="mb-1 block text-stone-600">الفستان المرتبط (اختياري)</span>
+        <label className="block text-sm">
+          <span className="mb-1 block text-rose-700">مرتبط بأي فستان؟ (اختياري)</span>
           <select
             value={associatedDressId}
             onChange={(event) => setAssociatedDressId(event.target.value)}
-            className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-stone-800"
+            className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-rose-900"
           >
-            <option value="">مصروف عام غير مرتبط بفستان</option>
+            <option value="">مصروف عام</option>
             {dresses.map((dress) => (
               <option key={dress.id} value={dress.id}>
                 {dress.name}
@@ -188,16 +183,12 @@ function AddExpenseForm({
           </select>
         </label>
       ) : null}
-      {error ? <p className="text-sm text-rose-700 md:col-span-2">{error}</p> : null}
-      <div className="flex gap-2 md:col-span-2">
-        <button
-          type="submit"
-          className="inline-flex items-center gap-2 rounded-2xl bg-teal-800 px-4 py-2 text-sm text-white hover:bg-teal-700"
-        >
-          <Megaphone className="h-4 w-4" aria-hidden />
-          حفظ المصروف
+      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+      <div className="flex gap-2">
+        <button type="submit" className="shop-btn rounded-2xl px-4 py-2 text-sm">
+          حفظ
         </button>
-        <button type="button" onClick={onCancel} className="rounded-2xl px-4 py-2 text-sm text-stone-600 hover:bg-white">
+        <button type="button" onClick={onCancel} className="rounded-2xl px-4 py-2 text-sm text-rose-400 hover:bg-white">
           إلغاء
         </button>
       </div>

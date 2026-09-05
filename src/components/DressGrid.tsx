@@ -1,18 +1,22 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarPlus, CheckCircle2, RotateCcw, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { CalendarPlus, CheckCircle2, RotateCcw, Sparkles, X } from "lucide-react";
 import { BookingModal } from "@/components/BookingModal";
+import { DressBarcode } from "@/components/DressBarcode";
+import { DressGallery } from "@/components/DressGallery";
 import { ReturnDialog } from "@/components/ReturnDialog";
+import { SizeFilter, type SizeFilterValue } from "@/components/SizeFilter";
 import { useShop } from "@/context/ShopContext";
-import { DRESS_PRESENTATION } from "@/data/mockData";
+import { dressDisplay, measurementLine, sizeLabel } from "@/lib/dressCatalog";
 import { cn, formatCurrency } from "@/lib/format";
 import type { Dress, DressStatus } from "@/types";
 
 const STATUS_STYLES: Record<DressStatus, string> = {
-  available: "bg-teal-50 text-teal-800",
-  rented: "bg-[#eee8e4] text-stone-600",
-  maintenance: "bg-[#f0ebe4] text-stone-500",
+  available: "bg-emerald-100 text-emerald-800",
+  rented: "bg-amber-100 text-amber-800",
+  maintenance: "bg-violet-100 text-violet-800",
 };
 
 const STATUS_LABELS: Record<DressStatus, string> = {
@@ -21,10 +25,22 @@ const STATUS_LABELS: Record<DressStatus, string> = {
   maintenance: "صيانة",
 };
 
+type StatusFilter = "all" | DressStatus;
+
+const FILTERS: Array<{ id: StatusFilter; label: string }> = [
+  { id: "all", label: "الكل" },
+  { id: "available", label: "متاح" },
+  { id: "rented", label: "مؤجَّر" },
+  { id: "maintenance", label: "صيانة" },
+];
+
 export function DressGrid() {
   const { dresses, bookings, isOwner, completeMaintenance } = useShop();
   const [bookingDress, setBookingDress] = useState<Dress | null>(null);
   const [returningDress, setReturningDress] = useState<Dress | null>(null);
+  const [barcodeDress, setBarcodeDress] = useState<Dress | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sizeFilter, setSizeFilter] = useState<SizeFilterValue>("all");
 
   const activeCustomerByDress = useMemo(() => {
     const map = new Map<string, string>();
@@ -34,26 +50,62 @@ export function DressGrid() {
     return map;
   }, [bookings]);
 
+  const visibleDresses = dresses.filter((dress) => {
+    const statusOk = statusFilter === "all" || dress.status === statusFilter;
+    const sizeOk = sizeFilter === "all" || dress.size === sizeFilter;
+    return statusOk && sizeOk;
+  });
+
   return (
     <section>
-      <div className="mb-5">
-        <p className="text-sm text-stone-400">المخزون</p>
-        <h2 className="mt-1 text-3xl font-medium text-stone-800">فساتين المحل</h2>
-        <p className="mt-2 text-sm leading-7 text-stone-500">التوفر والحجوزات والإرجاع والعناية بعد التأجير.</p>
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm text-rose-400">الصالة</p>
+          <h2 className="mt-1 text-3xl font-medium text-rose-900">فساتين المحل</h2>
+          <p className="mt-2 text-sm leading-7 text-rose-600/80">احجزي، رجّعي، أو أرجعي الفستان للصالة بعد العناية.</p>
+        </div>
+        <Link href="/dresses" className="shop-btn-gold rounded-2xl px-4 py-2 text-sm">
+          إدارة الفساتين
+        </Link>
+      </div>
+      <div className="mb-4 space-y-3">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="تصفية حسب الحالة">
+          {FILTERS.map((filter) => (
+            <button
+              key={filter.id}
+              type="button"
+              onClick={() => setStatusFilter(filter.id)}
+              className={cn(
+                "rounded-full px-3 py-1.5 text-sm",
+                statusFilter === filter.id ? "shop-btn" : "bg-white/80 text-rose-400 hover:bg-white",
+              )}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+        <SizeFilter value={sizeFilter} onChange={setSizeFilter} />
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {dresses.map((dress) => {
-          const presentation = DRESS_PRESENTATION[dress.id];
+        {visibleDresses.length === 0 ? (
+          <p className="shop-card rounded-3xl px-4 py-8 text-center text-sm text-rose-400 sm:col-span-2 xl:col-span-3">
+            ما في فساتين بهذي الحالة أو المقاس حالياً.
+          </p>
+        ) : null}
+        {visibleDresses.map((dress) => {
+          const presentation = dressDisplay(dress);
           const guest = activeCustomerByDress.get(dress.id);
           return (
-            <article key={dress.id} className="overflow-hidden rounded-3xl bg-white/80 transition hover:bg-white">
-              <div className={cn("relative flex h-36 items-end bg-gradient-to-br p-4", presentation?.palette)}>
-                <span className="absolute start-4 top-4 font-serif text-5xl text-stone-900/10">
-                  {dress.name.charAt(0)}
-                </span>
-                <div>
-                  <p className="text-[11px] text-stone-500">{presentation?.designer ?? "محل زينب"}</p>
-                  <h3 className="text-xl leading-tight text-stone-800">{dress.name}</h3>
+            <article key={dress.id} className="shop-card overflow-hidden rounded-3xl transition hover:-translate-y-0.5">
+              <div className="relative">
+                <DressGallery
+                  images={presentation.images}
+                  alt={dress.name}
+                  fallbackClassName={presentation.palette}
+                />
+                <div className="pointer-events-none absolute inset-x-0 bottom-6 z-10 p-4">
+                  <p className="text-[11px] text-white/70">{presentation.designer}</p>
+                  <h3 className="text-xl leading-tight text-white">{dress.name}</h3>
                 </div>
               </div>
               <div className="space-y-4 p-4">
@@ -61,15 +113,21 @@ export function DressGrid() {
                   <span className={cn("inline-flex items-center rounded-full px-2.5 py-1 text-xs", STATUS_STYLES[dress.status])}>
                     {STATUS_LABELS[dress.status]}
                   </span>
-                  <span className="text-xs text-stone-500">{presentation?.silhouette}</span>
+                  <span className="text-xs text-rose-400">{presentation.silhouette}</span>
                 </div>
+                <p className="text-sm text-rose-800">
+                  <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs text-amber-800">{sizeLabel(dress.size)}</span>
+                </p>
+                {measurementLine(dress.measurements) ? (
+                  <p className="text-xs leading-6 text-rose-400">{measurementLine(dress.measurements)}</p>
+                ) : null}
                 {isOwner ? (
-                  <p className="text-sm text-stone-600">
+                  <p className="text-sm text-rose-700">
                     إيجار اليوم{" "}
-                    <span className="tabular-nums text-stone-800">{formatCurrency(dress.rentalPricePerDay)}</span>
+                    <span className="tabular-nums text-rose-900">{formatCurrency(dress.rentalPricePerDay)}</span>
                   </p>
                 ) : (
-                  <p className="text-sm text-stone-500">
+                  <p className="text-sm text-rose-500">
                     {dress.status === "available"
                       ? "جاهز لحجز زبونة جديدة."
                       : dress.status === "rented"
@@ -80,14 +138,22 @@ export function DressGrid() {
                   </p>
                 )}
                 {dress.status === "rented" && guest ? (
-                  <p className="text-xs text-stone-500">مؤجَّر · {guest}</p>
+                  <p className="text-xs text-amber-700">مؤجَّر · {guest}</p>
                 ) : null}
+                <button
+                  type="button"
+                  onClick={() => setBarcodeDress(dress)}
+                  className="shop-soft w-full rounded-2xl px-3 py-2 hover:bg-rose-50"
+                  aria-label={`عرض باركود ${dress.name}`}
+                >
+                  <DressBarcode value={dress.barcode} height={38} moduleWidth={1} />
+                </button>
                 <div className="flex flex-wrap gap-2">
                   {dress.status === "available" ? (
                     <button
                       type="button"
                       onClick={() => setBookingDress(dress)}
-                      className="inline-flex items-center gap-1.5 rounded-2xl bg-stone-800 px-3 py-1.5 text-xs text-white hover:bg-stone-700"
+                      className="shop-btn inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
                     >
                       <CalendarPlus className="h-3.5 w-3.5" aria-hidden />
                       حجز الفستان
@@ -97,7 +163,7 @@ export function DressGrid() {
                     <button
                       type="button"
                       onClick={() => setReturningDress(dress)}
-                      className="inline-flex items-center gap-1.5 rounded-2xl bg-stone-600 px-3 py-1.5 text-xs text-white hover:bg-stone-500"
+                      className="shop-btn-gold inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
                     >
                       <RotateCcw className="h-3.5 w-3.5" aria-hidden />
                       تسجيل الإرجاع
@@ -107,14 +173,14 @@ export function DressGrid() {
                     <button
                       type="button"
                       onClick={() => completeMaintenance(dress.id)}
-                      className="inline-flex items-center gap-1.5 rounded-2xl bg-stone-500 px-3 py-1.5 text-xs text-white hover:bg-stone-400"
+                      className="shop-btn-violet inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
                     >
                       <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
                       إعادة للصالة
                     </button>
                   ) : null}
                   {dress.status === "maintenance" ? (
-                    <span className="inline-flex items-center gap-1 text-xs text-stone-400">
+                    <span className="inline-flex items-center gap-1 text-xs text-violet-400">
                       <Sparkles className="h-3.5 w-3.5" aria-hidden />
                       {isOwner ? "تم تسجيل التنظيف الجاف" : "العناية جارية"}
                     </span>
@@ -127,6 +193,32 @@ export function DressGrid() {
       </div>
       {bookingDress ? <BookingModal dress={bookingDress} onClose={() => setBookingDress(null)} /> : null}
       {returningDress ? <ReturnDialog dress={returningDress} onClose={() => setReturningDress(null)} /> : null}
+      {barcodeDress ? <BarcodeDialog dress={barcodeDress} onClose={() => setBarcodeDress(null)} /> : null}
     </section>
+  );
+}
+
+function BarcodeDialog({ dress, onClose }: { dress: Dress; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
+      <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق الباركود" onClick={onClose} />
+      <div role="dialog" aria-modal="true" aria-labelledby="barcode-title" className="shop-card relative w-full max-w-sm rounded-3xl p-6">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs text-rose-400">باركود الفستان</p>
+            <h3 id="barcode-title" className="mt-1 text-xl text-rose-900">
+              {dress.name}
+            </h3>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label="إغلاق">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="shop-soft rounded-2xl px-4 py-5">
+          <DressBarcode value={dress.barcode} height={72} moduleWidth={1.4} />
+        </div>
+        <p className="mt-3 text-center text-sm text-rose-400">يُستخدم للتعريف السريع عند الحجز والجرد.</p>
+      </div>
+    </div>
   );
 }

@@ -1,4 +1,13 @@
 export type DressStatus = "available" | "rented" | "maintenance";
+export const DRESS_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"] as const;
+export type DressSize = (typeof DRESS_SIZES)[number];
+
+export interface DressMeasurements {
+  bust?: number;
+  waist?: number;
+  hips?: number;
+  length?: number;
+}
 export type ExpenseFrequency = "monthly";
 export type VariableExpenseCategory =
   | "Marketing Campaign"
@@ -7,17 +16,41 @@ export type VariableExpenseCategory =
   | "Utility Bills"
   | "Other";
 export type BookingStatus = "active" | "completed";
+export type DiscountType = "none" | "percent" | "amount";
+export type AuthorizedDiscountType = Exclude<DiscountType, "none">;
 export type UserRole = "owner" | "employee";
 export type Role = UserRole;
+
+export interface EmployeeDiscountPolicy {
+  enabled: boolean;
+  type: AuthorizedDiscountType;
+  value: number;
+}
 
 export interface Dress {
   id: string;
   name: string;
+  barcode: string;
+  silhouette: string;
+  size: DressSize;
+  measurements: DressMeasurements;
+  images: string[];
   purchasePrice: number;
   rentalPricePerDay: number;
   status: DressStatus;
   totalMaintenanceCost: number;
 }
+
+export type DressCatalogDraft = {
+  name: string;
+  barcode: string;
+  silhouette: string;
+  size: DressSize;
+  measurements: DressMeasurements;
+  images: string[];
+  rentalPricePerDay: number;
+  purchasePrice: number;
+};
 
 export interface FixedExpense {
   id: string;
@@ -41,6 +74,10 @@ export interface Booking {
   customerName: string;
   startDate: string;
   endDate: string;
+  subtotal: number;
+  discountType: DiscountType;
+  discountValue: number;
+  discountAmount: number;
   totalRevenueGenerated: number;
   status: BookingStatus;
 }
@@ -51,6 +88,7 @@ export interface ShopState {
   fixedExpenses: FixedExpense[];
   variableExpenses: VariableExpense[];
   bookings: Booking[];
+  discountPolicy: EmployeeDiscountPolicy;
 }
 
 export const VARIABLE_EXPENSE_CATEGORIES: VariableExpenseCategory[] = [

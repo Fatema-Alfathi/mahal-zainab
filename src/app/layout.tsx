@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Amiri, Cairo } from "next/font/google";
+import { Providers } from "@/app/providers";
 import "./globals.css";
 
 const cairo = Cairo({
@@ -29,7 +30,9 @@ export default function RootLayout({
       dir="rtl"
       className={`${cairo.variable} ${amiri.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[#f3f1ee] font-sans text-stone-700">{children}</body>
+      <body className="min-h-full font-sans text-[#5a3144]">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

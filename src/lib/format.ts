@@ -17,13 +17,25 @@ export function formatPercent(value: number): string {
   return `${sign}${value.toFixed(1)}٪`;
 }
 
+const MONTHS_AR = [
+  "يناير",
+  "فبراير",
+  "مارس",
+  "أبريل",
+  "مايو",
+  "يونيو",
+  "يوليو",
+  "أغسطس",
+  "سبتمبر",
+  "أكتوبر",
+  "نوفمبر",
+  "ديسمبر",
+];
+
 export function formatDate(isoDate: string): string {
-  return new Date(`${isoDate}T00:00:00`).toLocaleDateString("ar-OM", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-    numberingSystem: "latn",
-  });
+  const [year, month, day] = isoDate.split("-").map(Number);
+  if (!year || !month || !day) return isoDate;
+  return `${day} ${MONTHS_AR[month - 1]} ${year}`;
 }
 
 export function todayIso(): string {

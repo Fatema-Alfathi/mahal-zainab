@@ -1,4 +1,15 @@
-import { DRY_CLEANING_FEE, type Booking, type Dress, type FixedExpense, type VariableExpense } from "@/types";
+import {
+  DRY_CLEANING_FEE,
+  type Booking,
+  type DiscountType,
+  type Dress,
+  type FixedExpense,
+  type VariableExpense,
+} from "@/types";
+
+export function roundMoney(amount: number): number {
+  return Math.round(amount * 1000) / 1000;
+}
 
 export function rentalDayCount(startDate: string, endDate: string): number {
   const start = new Date(`${startDate}T00:00:00`);
@@ -8,12 +19,41 @@ export function rentalDayCount(startDate: string, endDate: string): number {
   return Math.max(1, diff);
 }
 
-export function calculateBookingRevenue(
+export function calculateBookingSubtotal(
   rentalPricePerDay: number,
   startDate: string,
   endDate: string,
 ): number {
-  return Math.round(rentalPricePerDay * rentalDayCount(startDate, endDate) * 1000) / 1000;
+  return roundMoney(rentalPricePerDay * rentalDayCount(startDate, endDate));
+}
+
+export function applyBookingDiscount(
+  subtotal: number,
+  discountType: DiscountType,
+  discountValue: number,
+): { discountAmount: number; total: number } {
+  const value = Number.isFinite(discountValue) ? Math.max(0, discountValue) : 0;
+  let discountAmount = 0;
+  if (discountType === "percent") {
+    discountAmount = roundMoney(subtotal * (Math.min(100, value) / 100));
+  } else if (discountType === "amount") {
+    discountAmount = roundMoney(Math.min(subtotal, value));
+  }
+  return {
+    discountAmount,
+    total: roundMoney(Math.max(0, subtotal - discountAmount)),
+  };
+}
+
+export function calculateBookingRevenue(
+  rentalPricePerDay: number,
+  startDate: string,
+  endDate: string,
+  discountType: DiscountType = "none",
+  discountValue = 0,
+): number {
+  const subtotal = calculateBookingSubtotal(rentalPricePerDay, startDate, endDate);
+  return applyBookingDiscount(subtotal, discountType, discountValue).total;
 }
 
 export function grossRevenue(bookings: Booking[]): number {

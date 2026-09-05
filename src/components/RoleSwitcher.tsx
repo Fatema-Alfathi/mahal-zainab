@@ -14,7 +14,7 @@ export function RoleSwitcher() {
   const { role, setRole } = useShop();
 
   return (
-    <div className="inline-flex rounded-2xl bg-[#e8e2db]/80 p-1" role="tablist" aria-label="تبديل دور المستخدم">
+    <div className="inline-flex rounded-2xl bg-gradient-to-l from-amber-100 to-rose-100 p-1" role="tablist" aria-label="تبديل دور المستخدم">
       {ROLES.map((item) => {
         const Icon = item.icon;
         const active = role === item.id;
@@ -27,12 +27,12 @@ export function RoleSwitcher() {
             onClick={() => setRole(item.id)}
             className={cn(
               "flex items-center gap-2 rounded-xl px-4 py-2 text-sm transition-colors",
-              active ? "bg-white text-stone-800 shadow-sm" : "text-stone-500 hover:text-stone-700",
+              active ? "bg-white text-rose-700 shadow-sm" : "text-rose-400 hover:text-rose-600",
             )}
           >
             <Icon className="h-3.5 w-3.5" aria-hidden />
             <span>{item.label}</span>
-            <span className="hidden text-xs text-stone-400 sm:inline">{item.hint}</span>
+            <span className="hidden text-xs text-rose-300 sm:inline">{item.hint}</span>
           </button>
         );
       })}
