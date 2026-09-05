@@ -1,8 +1,25 @@
 import { DRESS_PRESENTATION } from "@/data/mockData";
-import { DRESS_SIZES, type Dress, type DressCatalogDraft, type DressMeasurements, type DressSize } from "@/types";
+import { DRESS_CATEGORY_LABELS } from "@/lib/labels";
+import {
+  DRESS_CATEGORIES,
+  DRESS_SIZES,
+  type Dress,
+  type DressCatalogDraft,
+  type DressCategory,
+  type DressMeasurements,
+  type DressSize,
+} from "@/types";
 
 export function isDressSize(value: string): value is DressSize {
   return (DRESS_SIZES as readonly string[]).includes(value);
+}
+
+export function isDressCategory(value: string): value is DressCategory {
+  return (DRESS_CATEGORIES as readonly string[]).includes(value);
+}
+
+export function categoryLabel(category: DressCategory): string {
+  return DRESS_CATEGORY_LABELS[category];
 }
 
 function optionalMeasure(value: number | undefined): number | undefined {
@@ -80,6 +97,7 @@ export function normalizeDressDraft(draft: DressCatalogDraft): DressCatalogDraft
     barcode,
     silhouette: draft.silhouette.trim() || "فستان سهرة",
     size: isDressSize(draft.size) ? draft.size : "M",
+    category: isDressCategory(draft.category) ? draft.category : "evening",
     measurements: normalizeMeasurements(draft.measurements),
     images: sanitizeImageUrls(draft.images),
     rentalPricePerDay,

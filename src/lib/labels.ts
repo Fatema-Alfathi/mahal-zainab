@@ -1,6 +1,7 @@
 import type {
   AuthorizedDiscountType,
   DiscountType,
+  DressCategory,
   EmployeeDiscountPolicy,
   ExpenseFrequency,
   VariableExpenseCategory,
@@ -12,6 +13,15 @@ export const CATEGORY_LABELS: Record<VariableExpenseCategory, string> = {
   "Dress Repair": "إصلاح فستان",
   "Utility Bills": "فواتير خدمات",
   Other: "أخرى",
+};
+
+export const DRESS_CATEGORY_LABELS: Record<DressCategory, string> = {
+  wedding: "زفاف",
+  evening: "سهرة",
+  soft: "ناعم",
+  engagement: "خطوبة",
+  henna: "ملكة",
+  graduation: "تخرج",
 };
 
 export const FREQUENCY_LABELS: Record<ExpenseFrequency, string> = {

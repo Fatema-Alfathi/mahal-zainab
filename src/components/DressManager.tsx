@@ -3,10 +3,12 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Pencil, Plus, Trash2, X } from "lucide-react";
 import { DressPhoto } from "@/components/DressPhoto";
+import { CategoryFilter, type CategoryFilterValue } from "@/components/CategoryFilter";
+import { CategoryPicker } from "@/components/CategoryPicker";
 import { SizeFilter, type SizeFilterValue } from "@/components/SizeFilter";
 import { SizePicker } from "@/components/SizePicker";
 import { useShop } from "@/context/ShopContext";
-import { dressDisplay, isBarcodeTaken, measurementLine, sizeLabel, suggestBarcode } from "@/lib/dressCatalog";
+import { categoryLabel, dressDisplay, isBarcodeTaken, measurementLine, sizeLabel, suggestBarcode } from "@/lib/dressCatalog";
 import { cn, formatCurrency } from "@/lib/format";
 import type { Dress, DressCatalogDraft, DressStatus } from "@/types";
 
@@ -27,6 +29,7 @@ const EMPTY_DRAFT: DressCatalogDraft = {
   barcode: "",
   silhouette: "",
   size: "M",
+  category: "evening",
   measurements: {},
   images: ["", "", ""],
   rentalPricePerDay: 20,
@@ -41,6 +44,7 @@ function draftFromDress(dress: Dress): DressCatalogDraft {
     barcode: dress.barcode,
     silhouette: dress.silhouette,
     size: dress.size,
+    category: dress.category,
     measurements: dress.measurements,
     images: images.slice(0, 3),
     rentalPricePerDay: dress.rentalPricePerDay,
@@ -54,7 +58,12 @@ export function DressManager() {
   const [pendingDelete, setPendingDelete] = useState<Dress | null>(null);
   const [notice, setNotice] = useState("");
   const [sizeFilter, setSizeFilter] = useState<SizeFilterValue>("all");
-  const visibleDresses = sizeFilter === "all" ? dresses : dresses.filter((dress) => dress.size === sizeFilter);
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilterValue>("all");
+  const visibleDresses = dresses.filter((dress) => {
+    const sizeOk = sizeFilter === "all" || dress.size === sizeFilter;
+    const categoryOk = categoryFilter === "all" || dress.category === categoryFilter;
+    return sizeOk && categoryOk;
+  });
 
   return (
     <section>
@@ -81,13 +90,14 @@ export function DressManager() {
 
       {notice ? <p className="mb-4 text-sm text-emerald-600">{notice}</p> : null}
 
-      <div className="mb-5">
+      <div className="mb-5 space-y-3">
+        <CategoryFilter value={categoryFilter} onChange={setCategoryFilter} />
         <SizeFilter value={sizeFilter} onChange={setSizeFilter} />
       </div>
 
       <div className="space-y-3">
         {visibleDresses.length === 0 ? (
-          <p className="shop-card rounded-3xl px-4 py-8 text-center text-sm text-rose-400">ما في فساتين بهالمقاس حالياً.</p>
+          <p className="shop-card rounded-3xl px-4 py-8 text-center text-sm text-rose-400">ما في فساتين بهالتصنيف أو المقاس حالياً.</p>
         ) : null}
         {visibleDresses.map((dress) => {
           const display = dressDisplay(dress);
@@ -109,7 +119,7 @@ export function DressManager() {
                     </span>
                   </div>
                   <p className="mt-1 text-sm text-rose-400">
-                    {sizeLabel(dress.size)} · {display.silhouette || "بدون قصة"} · {dress.barcode}
+                    {categoryLabel(dress.category)} · {sizeLabel(dress.size)} · {display.silhouette || "بدون قصة"} · {dress.barcode}
                   </p>
                   {measurementLine(dress.measurements) ? (
                     <p className="mt-1 text-xs leading-6 text-rose-400">{measurementLine(dress.measurements)}</p>
@@ -309,6 +319,10 @@ function DressFormDialog({
               className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
             />
           </label>
+          <CategoryPicker
+            value={draft.category}
+            onChange={(category) => setDraft((current) => ({ ...current, category }))}
+          />
           <SizePicker
             value={draft.size}
             onChange={(size) => setDraft((current) => ({ ...current, size }))}

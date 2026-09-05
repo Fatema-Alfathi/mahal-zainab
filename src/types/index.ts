@@ -1,6 +1,8 @@
 export type DressStatus = "available" | "rented" | "maintenance";
 export const DRESS_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"] as const;
 export type DressSize = (typeof DRESS_SIZES)[number];
+export const DRESS_CATEGORIES = ["wedding", "evening", "soft", "engagement", "henna", "graduation"] as const;
+export type DressCategory = (typeof DRESS_CATEGORIES)[number];
 
 export interface DressMeasurements {
   bust?: number;
@@ -33,6 +35,7 @@ export interface Dress {
   barcode: string;
   silhouette: string;
   size: DressSize;
+  category: DressCategory;
   measurements: DressMeasurements;
   images: string[];
   purchasePrice: number;
@@ -46,6 +49,7 @@ export type DressCatalogDraft = {
   barcode: string;
   silhouette: string;
   size: DressSize;
+  category: DressCategory;
   measurements: DressMeasurements;
   images: string[];
   rentalPricePerDay: number;

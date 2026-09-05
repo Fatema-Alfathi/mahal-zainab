@@ -5,7 +5,7 @@ import { CalendarRange, X } from "lucide-react";
 import { DressBarcode } from "@/components/DressBarcode";
 import { DressGallery } from "@/components/DressGallery";
 import { useShop } from "@/context/ShopContext";
-import { dressDisplay, measurementLine, sizeLabel } from "@/lib/dressCatalog";
+import { categoryLabel, dressDisplay, measurementLine, sizeLabel } from "@/lib/dressCatalog";
 import { applyBookingDiscount, calculateBookingSubtotal, rentalDayCount } from "@/lib/finance";
 import { formatCurrency, todayIso } from "@/lib/format";
 import { DISCOUNT_TYPE_LABELS, authorizedDiscountLabel, daysLabel, discountLabel } from "@/lib/labels";
@@ -87,7 +87,9 @@ export function BookingModal({ dress, onClose }: { dress: Dress; onClose: () => 
       <div role="dialog" aria-modal="true" aria-labelledby="booking-title" className="shop-card relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl p-6">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs text-rose-400">حجز جديد · {sizeLabel(dress.size)}</p>
+            <p className="text-xs text-rose-400">
+              حجز جديد · {categoryLabel(dress.category)} · {sizeLabel(dress.size)}
+            </p>
             <h3 id="booking-title" className="mt-1 text-2xl text-rose-900">
               حجز {dress.name}
             </h3>
