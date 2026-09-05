@@ -5,10 +5,21 @@ import { Pencil, Plus, Trash2, X } from "lucide-react";
 import { DressPhoto } from "@/components/DressPhoto";
 import { CategoryFilter, type CategoryFilterValue } from "@/components/CategoryFilter";
 import { CategoryPicker } from "@/components/CategoryPicker";
+import { ColorFilter, type ColorFilterValue } from "@/components/ColorFilter";
+import { ColorPicker } from "@/components/ColorPicker";
+import { DressVariants } from "@/components/DressVariants";
 import { SizeFilter, type SizeFilterValue } from "@/components/SizeFilter";
 import { SizePicker } from "@/components/SizePicker";
 import { useShop } from "@/context/ShopContext";
-import { categoryLabel, dressDisplay, isBarcodeTaken, measurementLine, sizeLabel, suggestBarcode } from "@/lib/dressCatalog";
+import {
+  categoryLabel,
+  dressDisplay,
+  isBarcodeTaken,
+  isSameVariantTaken,
+  measurementLine,
+  sizeLabel,
+  suggestBarcode,
+} from "@/lib/dressCatalog";
 import { cn, formatCurrency } from "@/lib/format";
 import type { Dress, DressCatalogDraft, DressStatus } from "@/types";
 
@@ -30,6 +41,8 @@ const EMPTY_DRAFT: DressCatalogDraft = {
   silhouette: "",
   size: "M",
   category: "evening",
+  color: "أبيض",
+  styleId: "",
   measurements: {},
   images: ["", "", ""],
   rentalPricePerDay: 20,
@@ -45,6 +58,8 @@ function draftFromDress(dress: Dress): DressCatalogDraft {
     silhouette: dress.silhouette,
     size: dress.size,
     category: dress.category,
+    color: dress.color,
+    styleId: dress.styleId,
     measurements: dress.measurements,
     images: images.slice(0, 3),
     rentalPricePerDay: dress.rentalPricePerDay,
@@ -59,10 +74,12 @@ export function DressManager() {
   const [notice, setNotice] = useState("");
   const [sizeFilter, setSizeFilter] = useState<SizeFilterValue>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilterValue>("all");
+  const [colorFilter, setColorFilter] = useState<ColorFilterValue>("all");
   const visibleDresses = dresses.filter((dress) => {
     const sizeOk = sizeFilter === "all" || dress.size === sizeFilter;
     const categoryOk = categoryFilter === "all" || dress.category === categoryFilter;
-    return sizeOk && categoryOk;
+    const colorOk = colorFilter === "all" || dress.color === colorFilter;
+    return sizeOk && categoryOk && colorOk;
   });
 
   return (
@@ -92,12 +109,13 @@ export function DressManager() {
 
       <div className="mb-5 space-y-3">
         <CategoryFilter value={categoryFilter} onChange={setCategoryFilter} />
+        <ColorFilter value={colorFilter} onChange={setColorFilter} />
         <SizeFilter value={sizeFilter} onChange={setSizeFilter} />
       </div>
 
       <div className="space-y-3">
         {visibleDresses.length === 0 ? (
-          <p className="shop-card rounded-3xl px-4 py-8 text-center text-sm text-rose-400">ما في فساتين بهالتصنيف أو المقاس حالياً.</p>
+          <p className="shop-card rounded-3xl px-4 py-8 text-center text-sm text-rose-400">ما في فساتين بهالتصنيف أو اللون أو المقاس حالياً.</p>
         ) : null}
         {visibleDresses.map((dress) => {
           const display = dressDisplay(dress);
@@ -119,11 +137,14 @@ export function DressManager() {
                     </span>
                   </div>
                   <p className="mt-1 text-sm text-rose-400">
-                    {categoryLabel(dress.category)} · {sizeLabel(dress.size)} · {display.silhouette || "بدون قصة"} · {dress.barcode}
+                    {categoryLabel(dress.category)} · {dress.color} · {sizeLabel(dress.size)} · {display.silhouette || "بدون قصة"} · {dress.barcode}
                   </p>
                   {measurementLine(dress.measurements) ? (
                     <p className="mt-1 text-xs leading-6 text-rose-400">{measurementLine(dress.measurements)}</p>
                   ) : null}
+                  <div className="mt-2">
+                    <DressVariants dress={dress} dresses={dresses} />
+                  </div>
                   <p className="mt-2 text-sm text-rose-700">
                     إيجار اليوم{" "}
                     <span className="tabular-nums text-rose-900">{formatCurrency(dress.rentalPricePerDay)}</span>
@@ -244,6 +265,10 @@ function DressFormDialog({
       setError("هذا الباركود مستخدم لفستان آخر.");
       return;
     }
+    if (isSameVariantTaken(dresses, draft, excludeId)) {
+      setError("نفس هذا الفستان موجود أصلاً بنفس اللون والمقاس.");
+      return;
+    }
     const rental = Number(draft.rentalPricePerDay);
     if (!Number.isFinite(rental) || rental <= 0) {
       setError("أدخلي إيجار يوم أكبر من صفر.");
@@ -323,10 +348,55 @@ function DressFormDialog({
             value={draft.category}
             onChange={(category) => setDraft((current) => ({ ...current, category }))}
           />
+          <ColorPicker
+            value={draft.color}
+            onChange={(color) => setDraft((current) => ({ ...current, color }))}
+          />
           <SizePicker
             value={draft.size}
             onChange={(size) => setDraft((current) => ({ ...current, size }))}
           />
+          <label className="block text-sm">
+            <span className="mb-1 block text-rose-700">هل هذا نفس فستان موجود بلون أو مقاس ثاني؟</span>
+            <select
+              value={draft.styleId}
+              onChange={(event) => {
+                const styleId = event.target.value;
+                if (!styleId) {
+                  setDraft((current) => ({ ...current, styleId: "" }));
+                  return;
+                }
+                const source = dresses.find((item) => item.styleId === styleId && item.id !== excludeId);
+                if (!source) {
+                  setDraft((current) => ({ ...current, styleId }));
+                  return;
+                }
+                setDraft((current) => ({
+                  ...current,
+                  name: source.name,
+                  silhouette: source.silhouette,
+                  category: source.category,
+                  styleId: source.styleId,
+                  rentalPricePerDay: source.rentalPricePerDay,
+                  purchasePrice: source.purchasePrice,
+                  images: source.images.length > 0 ? [...source.images, "", ""].slice(0, 3) : current.images,
+                }));
+              }}
+              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 text-rose-900"
+            >
+              <option value="">لا، قطعة جديدة مستقلة</option>
+              {dresses
+                .filter((item, index, list) => {
+                  if (item.id === excludeId) return false;
+                  return list.findIndex((other) => other.styleId === item.styleId && other.id !== excludeId) === index;
+                })
+                .map((item) => (
+                  <option key={item.styleId} value={item.styleId}>
+                    نعم، نفس {item.name}
+                  </option>
+                ))}
+            </select>
+          </label>
           <div>
             <p className="mb-2 text-sm text-rose-700">القياسات بالسنتيمتر (اختياري)</p>
             <div className="grid grid-cols-2 gap-3">

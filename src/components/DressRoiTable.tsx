@@ -1,6 +1,7 @@
 "use client";
 
 import { BadgeCheck } from "lucide-react";
+import { DressVariants } from "@/components/DressVariants";
 import { useShop } from "@/context/ShopContext";
 import {
   capitalRecoveryPercent,
@@ -48,6 +49,9 @@ export function DressRoiTable() {
                 <p className={cn("text-lg tabular-nums", net >= 0 ? "text-emerald-600" : "text-rose-600")}>
                   {net >= 0 ? formatCurrency(net) : `−${formatCurrency(Math.abs(net))}`}
                 </p>
+              </div>
+              <div className="mt-3">
+                <DressVariants dress={dress} dresses={dresses} />
               </div>
               <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
                 <div className="rounded-2xl bg-rose-50 px-3 py-2">

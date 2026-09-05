@@ -8,6 +8,8 @@ import { DressBarcode } from "@/components/DressBarcode";
 import { DressGallery } from "@/components/DressGallery";
 import { ReturnDialog } from "@/components/ReturnDialog";
 import { CategoryFilter, type CategoryFilterValue } from "@/components/CategoryFilter";
+import { ColorFilter, type ColorFilterValue } from "@/components/ColorFilter";
+import { DressVariants } from "@/components/DressVariants";
 import { SizeFilter, type SizeFilterValue } from "@/components/SizeFilter";
 import { useShop } from "@/context/ShopContext";
 import { categoryLabel, dressDisplay, measurementLine, sizeLabel } from "@/lib/dressCatalog";
@@ -43,6 +45,7 @@ export function DressGrid() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sizeFilter, setSizeFilter] = useState<SizeFilterValue>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilterValue>("all");
+  const [colorFilter, setColorFilter] = useState<ColorFilterValue>("all");
 
   const activeCustomerByDress = useMemo(() => {
     const map = new Map<string, string>();
@@ -56,7 +59,8 @@ export function DressGrid() {
     const statusOk = statusFilter === "all" || dress.status === statusFilter;
     const sizeOk = sizeFilter === "all" || dress.size === sizeFilter;
     const categoryOk = categoryFilter === "all" || dress.category === categoryFilter;
-    return statusOk && sizeOk && categoryOk;
+    const colorOk = colorFilter === "all" || dress.color === colorFilter;
+    return statusOk && sizeOk && categoryOk && colorOk;
   });
 
   return (
@@ -88,12 +92,13 @@ export function DressGrid() {
           ))}
         </div>
         <CategoryFilter value={categoryFilter} onChange={setCategoryFilter} />
+        <ColorFilter value={colorFilter} onChange={setColorFilter} />
         <SizeFilter value={sizeFilter} onChange={setSizeFilter} />
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {visibleDresses.length === 0 ? (
           <p className="shop-card rounded-3xl px-4 py-8 text-center text-sm text-rose-400 sm:col-span-2 xl:col-span-3">
-            ما في فساتين بهذي الحالة أو التصنيف أو المقاس حالياً.
+            ما في فساتين بهذي الحالة أو التصنيف أو اللون أو المقاس حالياً.
           </p>
         ) : null}
         {visibleDresses.map((dress) => {
@@ -123,8 +128,10 @@ export function DressGrid() {
                 </div>
                 <p className="flex flex-wrap gap-2 text-sm text-rose-800">
                   <span className="rounded-full bg-pink-100 px-2.5 py-1 text-xs text-pink-800">{categoryLabel(dress.category)}</span>
+                  <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs text-violet-800">{dress.color}</span>
                   <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs text-amber-800">{sizeLabel(dress.size)}</span>
                 </p>
+                <DressVariants dress={dress} dresses={dresses} />
                 {measurementLine(dress.measurements) ? (
                   <p className="text-xs leading-6 text-rose-400">{measurementLine(dress.measurements)}</p>
                 ) : null}
@@ -198,7 +205,13 @@ export function DressGrid() {
           );
         })}
       </div>
-      {bookingDress ? <BookingModal dress={bookingDress} onClose={() => setBookingDress(null)} /> : null}
+      {bookingDress ? (
+        <BookingModal
+          dress={bookingDress}
+          onClose={() => setBookingDress(null)}
+          onSwitchDress={setBookingDress}
+        />
+      ) : null}
       {returningDress ? <ReturnDialog dress={returningDress} onClose={() => setReturningDress(null)} /> : null}
       {barcodeDress ? <BarcodeDialog dress={barcodeDress} onClose={() => setBarcodeDress(null)} /> : null}
     </section>

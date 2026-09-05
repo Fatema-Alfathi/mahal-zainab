@@ -1,11 +1,13 @@
 import { DRESS_PRESENTATION } from "@/data/mockData";
-import { DRESS_CATEGORY_LABELS } from "@/lib/labels";
+import { DRESS_CATEGORY_LABELS, joinArabic, piecesLabel } from "@/lib/labels";
 import {
   DRESS_CATEGORIES,
+  DRESS_COLORS,
   DRESS_SIZES,
   type Dress,
   type DressCatalogDraft,
   type DressCategory,
+  type DressColor,
   type DressMeasurements,
   type DressSize,
 } from "@/types";
@@ -20,6 +22,55 @@ export function isDressCategory(value: string): value is DressCategory {
 
 export function categoryLabel(category: DressCategory): string {
   return DRESS_CATEGORY_LABELS[category];
+}
+
+export function isDressColor(value: string): value is DressColor {
+  return (DRESS_COLORS as readonly string[]).includes(value);
+}
+
+export function siblingDresses(dresses: Dress[], dress: Dress): Dress[] {
+  return dresses.filter((item) => item.styleId === dress.styleId && item.id !== dress.id);
+}
+
+export function styleFamily(dresses: Dress[], dress: Dress): Dress[] {
+  if (!dress.styleId) return [dress];
+  return dresses.filter((item) => item.styleId === dress.styleId);
+}
+
+export function styleFamilySummary(dresses: Dress[], dress: Dress) {
+  const family = styleFamily(dresses, dress);
+  const sizes = [...new Set(family.map((item) => item.size))];
+  const colors = [...new Set(family.map((item) => item.color))];
+  const sameSize = sizes.length <= 1;
+  const sameColor = colors.length <= 1;
+  return {
+    count: family.length,
+    siblings: family.filter((item) => item.id !== dress.id),
+    countLabel: piecesLabel(family.length),
+    sizeLine: sameSize
+      ? `نفس المقاس (${sizes[0] ?? dress.size})`
+      : `مختلف (${joinArabic(sizes)})`,
+    colorLine: sameColor
+      ? `نفس اللون (${colors[0] ?? dress.color})`
+      : `مختلف (${joinArabic(colors)})`,
+    sameSize,
+    sameColor,
+  };
+}
+
+export function isSameVariantTaken(
+  dresses: Dress[],
+  draft: Pick<Dress, "styleId" | "color" | "size">,
+  excludeId?: string,
+): boolean {
+  if (!draft.styleId.trim()) return false;
+  return dresses.some(
+    (item) =>
+      item.id !== excludeId &&
+      item.styleId === draft.styleId &&
+      item.color === draft.color &&
+      item.size === draft.size,
+  );
 }
 
 function optionalMeasure(value: number | undefined): number | undefined {
@@ -98,6 +149,8 @@ export function normalizeDressDraft(draft: DressCatalogDraft): DressCatalogDraft
     silhouette: draft.silhouette.trim() || "فستان سهرة",
     size: isDressSize(draft.size) ? draft.size : "M",
     category: isDressCategory(draft.category) ? draft.category : "evening",
+    color: isDressColor(draft.color) ? draft.color : "أبيض",
+    styleId: draft.styleId.trim(),
     measurements: normalizeMeasurements(draft.measurements),
     images: sanitizeImageUrls(draft.images),
     rentalPricePerDay,

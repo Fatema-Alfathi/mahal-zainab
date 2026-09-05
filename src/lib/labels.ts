@@ -41,6 +41,19 @@ export function daysLabel(days: number): string {
   return `${days} يومًا`;
 }
 
+export function piecesLabel(count: number): string {
+  if (count === 1) return "قطعة واحدة";
+  if (count === 2) return "قطعتان";
+  if (count >= 3 && count <= 10) return `${count} قطع`;
+  return `${count} قطعة`;
+}
+
+export function joinArabic(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? "";
+  if (items.length === 2) return `${items[0]} و ${items[1]}`;
+  return `${items.slice(0, -1).join("، ")} و ${items[items.length - 1]}`;
+}
+
 export function discountLabel(type: DiscountType, value: number): string {
   if (type === "percent" && value > 0) return `خصم ${value}٪`;
   if (type === "amount" && value > 0) return "خصم بمبلغ ثابت";

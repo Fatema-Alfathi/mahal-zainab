@@ -3,6 +3,21 @@ export const DRESS_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"] as const;
 export type DressSize = (typeof DRESS_SIZES)[number];
 export const DRESS_CATEGORIES = ["wedding", "evening", "soft", "engagement", "henna", "graduation"] as const;
 export type DressCategory = (typeof DRESS_CATEGORIES)[number];
+export const DRESS_COLORS = [
+  "أبيض",
+  "عاجي",
+  "ذهبي",
+  "فضي",
+  "وردي",
+  "أحمر",
+  "أسود",
+  "أزرق",
+  "أخضر",
+  "بنفسجي",
+  "شمبانيا",
+  "خمري",
+] as const;
+export type DressColor = (typeof DRESS_COLORS)[number];
 
 export interface DressMeasurements {
   bust?: number;
@@ -36,6 +51,8 @@ export interface Dress {
   silhouette: string;
   size: DressSize;
   category: DressCategory;
+  color: DressColor;
+  styleId: string;
   measurements: DressMeasurements;
   images: string[];
   purchasePrice: number;
@@ -50,6 +67,8 @@ export type DressCatalogDraft = {
   silhouette: string;
   size: DressSize;
   category: DressCategory;
+  color: DressColor;
+  styleId: string;
   measurements: DressMeasurements;
   images: string[];
   rentalPricePerDay: number;

@@ -5,6 +5,7 @@ import { CalendarRange, X } from "lucide-react";
 import { DressBarcode } from "@/components/DressBarcode";
 import { DressGallery } from "@/components/DressGallery";
 import { useShop } from "@/context/ShopContext";
+import { DressVariants } from "@/components/DressVariants";
 import { categoryLabel, dressDisplay, measurementLine, sizeLabel } from "@/lib/dressCatalog";
 import { applyBookingDiscount, calculateBookingSubtotal, rentalDayCount } from "@/lib/finance";
 import { formatCurrency, todayIso } from "@/lib/format";
@@ -13,8 +14,16 @@ import type { DiscountType, Dress } from "@/types";
 
 const PERCENT_PRESETS = [5, 10, 15, 20];
 
-export function BookingModal({ dress, onClose }: { dress: Dress; onClose: () => void }) {
-  const { isOwner, createBooking, discountPolicy } = useShop();
+export function BookingModal({
+  dress,
+  onClose,
+  onSwitchDress,
+}: {
+  dress: Dress;
+  onClose: () => void;
+  onSwitchDress?: (dress: Dress) => void;
+}) {
+  const { dresses, isOwner, createBooking, discountPolicy } = useShop();
   const presentation = dressDisplay(dress);
   const [customerName, setCustomerName] = useState("");
   const [startDate, setStartDate] = useState(todayIso());
@@ -88,7 +97,7 @@ export function BookingModal({ dress, onClose }: { dress: Dress; onClose: () => 
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="text-xs text-rose-400">
-              حجز جديد · {categoryLabel(dress.category)} · {sizeLabel(dress.size)}
+              حجز جديد · {categoryLabel(dress.category)} · {dress.color} · {sizeLabel(dress.size)}
             </p>
             <h3 id="booking-title" className="mt-1 text-2xl text-rose-900">
               حجز {dress.name}
@@ -96,6 +105,19 @@ export function BookingModal({ dress, onClose }: { dress: Dress; onClose: () => 
             {measurementLine(dress.measurements) ? (
               <p className="mt-1 text-xs leading-6 text-rose-400">{measurementLine(dress.measurements)}</p>
             ) : null}
+            <div className="mt-2">
+              <DressVariants
+                dress={dress}
+                dresses={dresses}
+                onSelect={
+                  onSwitchDress
+                    ? (item) => {
+                        if (item.status === "available") onSwitchDress(item);
+                      }
+                    : undefined
+                }
+              />
+            </div>
           </div>
           <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label="إغلاق">
             <X className="h-4 w-4" />
