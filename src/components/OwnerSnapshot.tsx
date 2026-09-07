@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useShop } from "@/context/ShopContext";
-import { ownerSnapshot } from "@/lib/ownerSnapshot";
+import { ownerHistory, ownerSnapshot } from "@/lib/ownerSnapshot";
 import { cn, formatCurrency } from "@/lib/format";
 import { comparisonLabel } from "@/lib/labels";
 
@@ -11,6 +11,10 @@ export function OwnerSnapshot() {
   const snap = useMemo(
     () => ownerSnapshot(dresses, bookings, fixedExpenses, variableExpenses),
     [bookings, dresses, fixedExpenses, variableExpenses],
+  );
+  const history = useMemo(
+    () => ownerHistory(bookings, fixedExpenses, variableExpenses),
+    [bookings, fixedExpenses, variableExpenses],
   );
 
   return (
@@ -91,6 +95,19 @@ export function OwnerSnapshot() {
             change={snap.comparison.bookings.change}
           />
         </dl>
+      </div>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          أعلى شهر دخل: {history.highestIncomeMonth?.label ?? "—"}
+          {history.highestIncomeMonth
+            ? ` · ${history.highestIncomeMonth.income < 0 ? `−${formatCurrency(Math.abs(history.highestIncomeMonth.income))}` : formatCurrency(history.highestIncomeMonth.income)}`
+            : ""}
+        </p>
+        <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          أقل شهر دخل: {history.lowestIncomeMonth?.label ?? "—"}
+          {history.lowestIncomeMonth ? ` · ${formatCurrency(history.lowestIncomeMonth.income)}` : ""}
+        </p>
       </div>
     </section>
   );

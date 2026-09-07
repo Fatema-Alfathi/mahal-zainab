@@ -5,6 +5,7 @@ import {
   endOfMonthIso,
   isIsoInRange,
   monthNameAr,
+  monthYearLabel,
   shiftMonthsIso,
   startOfMonthIso,
   startOfWeekIso,
@@ -140,5 +141,94 @@ export function ownerSnapshot(
         change: changePercent(thisMonthBookings, lastMonthBookings),
       },
     },
+  };
+}
+
+export type HistoryRow = {
+  key: string;
+  label: string;
+  income: number;
+  expenses: number;
+  profit: number;
+  bookings: number;
+};
+
+function earliestIso(bookings: Booking[], expenses: VariableExpense[], today: string): string {
+  const dates = [
+    ...bookings.flatMap((booking) => [booking.startDate, booking.endDate]),
+    ...expenses.map((expense) => expense.date),
+    today,
+  ].filter(Boolean);
+  return dates.reduce((min, date) => (date < min ? date : min), today);
+}
+
+function rangeForMonth(monthStart: string): DateRange {
+  return { start: monthStart, end: endOfMonthIso(monthStart) };
+}
+
+function rowForRange(label: string, key: string, bookings: Booking[], fixed: FixedExpense[], variable: VariableExpense[], range: DateRange): HistoryRow {
+  const income = incomeInRange(bookings, range);
+  const expenses = expensesInRange(fixed, variable, range);
+  return {
+    key,
+    label,
+    income,
+    expenses,
+    profit: roundMoney(income - expenses),
+    bookings: bookingsInRange(bookings, range),
+  };
+}
+
+function pickExtreme(rows: HistoryRow[], field: keyof Pick<HistoryRow, "income" | "profit" | "expenses" | "bookings">, kind: "max" | "min"): HistoryRow | null {
+  if (rows.length === 0) return null;
+  return rows.reduce((best, row) => {
+    if (kind === "max") return row[field] > best[field] ? row : best;
+    return row[field] < best[field] ? row : best;
+  });
+}
+
+export function ownerHistory(
+  bookings: Booking[],
+  fixedExpenses: FixedExpense[],
+  variableExpenses: VariableExpense[],
+  today = todayIso(),
+) {
+  const first = startOfMonthIso(earliestIso(bookings, variableExpenses, today));
+  const last = startOfMonthIso(today);
+  const months: HistoryRow[] = [];
+  let cursor = first;
+  while (cursor <= last) {
+    months.push(
+      rowForRange(
+        monthYearLabel(cursor),
+        cursor.slice(0, 7),
+        bookings,
+        fixedExpenses,
+        variableExpenses,
+        rangeForMonth(cursor),
+      ),
+    );
+    cursor = startOfMonthIso(shiftMonthsIso(cursor, 1));
+  }
+
+  const activeMonths = months.filter((row) => row.bookings > 0);
+  const yearKeys = [...new Set(months.map((row) => row.key.slice(0, 4)))];
+  const years = yearKeys.map((year) => {
+    const start = `${year}-01-01`;
+    const end = year === today.slice(0, 4) ? endOfMonthIso(today) : `${year}-12-31`;
+    return rowForRange(year, year, bookings, fixedExpenses, variableExpenses, { start, end });
+  });
+
+  return {
+    months,
+    years,
+    highestIncomeMonth: pickExtreme(months, "income", "max"),
+    lowestIncomeMonth: pickExtreme(months, "income", "min"),
+    weakestBusyMonth: pickExtreme(activeMonths, "income", "min"),
+    highestProfitMonth: pickExtreme(months, "profit", "max"),
+    lowestProfitMonth: pickExtreme(months, "profit", "min"),
+    highestIncomeYear: pickExtreme(years, "income", "max"),
+    lowestIncomeYear: pickExtreme(years, "income", "min"),
+    mostBookingsMonth: pickExtreme(months, "bookings", "max"),
   };
 }

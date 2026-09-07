@@ -5,12 +5,14 @@ import { DiscountPolicyPanel } from "@/components/DiscountPolicyPanel";
 import { DressGrid } from "@/components/DressGrid";
 import { DressRoiTable } from "@/components/DressRoiTable";
 import { FixedCostBreakdown } from "@/components/FixedCostBreakdown";
+import { OwnerHistory } from "@/components/OwnerHistory";
 import { OwnerSnapshot } from "@/components/OwnerSnapshot";
 import { VariableExpenseLog } from "@/components/VariableExpenseLog";
 import { cn } from "@/lib/format";
 
 const TABS = [
   { id: "floor", label: "الصالة" },
+  { id: "months", label: "الأشهر والسنوات" },
   { id: "money", label: "الحسابات" },
   { id: "roi", label: "أرباح الفساتين" },
   { id: "discount", label: "خصم الموظفات" },
@@ -49,6 +51,7 @@ export function OwnerDashboard() {
       </div>
 
       {tab === "floor" ? <DressGrid /> : null}
+      {tab === "months" ? <OwnerHistory /> : null}
       {tab === "money" ? (
         <div className="grid gap-6 xl:grid-cols-2">
           <FixedCostBreakdown />

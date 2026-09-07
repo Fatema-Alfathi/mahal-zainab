@@ -115,6 +115,10 @@ export function monthNameAr(iso: string): string {
   return MONTHS_AR[(month || 1) - 1] ?? iso;
 }
 
+export function monthYearLabel(iso: string): string {
+  return `${monthNameAr(iso)} ${iso.slice(0, 4)}`;
+}
+
 export function cn(...classes: Array<string | false | null | undefined>): string {
   return classes.filter(Boolean).join(" ");
 }

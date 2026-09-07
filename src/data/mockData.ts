@@ -146,6 +146,9 @@ export const INITIAL_VARIABLE_EXPENSES: VariableExpense[] = [
   { id: "var-dc-noor-2", category: "Dry Cleaning", amount: 2.5, date: "2026-08-18", description: "تنظيف جاف بعد التأجير", associatedDressId: "dress-noor" },
   { id: "var-repair-sultana", category: "Dress Repair", amount: 12, date: "2026-05-26", description: "إعادة تثبيت خرز الكريستال بعد تأجير العيد", associatedDressId: "dress-sultana" },
   { id: "var-repair-noor", category: "Dress Repair", amount: 8, date: "2026-08-19", description: "إصلاح الذيل وإعادة خياطة اللؤلؤ", associatedDressId: "dress-noor" },
+  { id: "var-mkt-2025-eid", category: "Marketing Campaign", amount: 35, date: "2025-10-12", description: "إعلانات عيد الفطر السابق" },
+  { id: "var-util-2025-q4", category: "Utility Bills", amount: 18, date: "2025-12-20", description: "كهرباء وماء الربع الأخير" },
+  { id: "var-dc-2025-noor", category: "Dry Cleaning", amount: 2.5, date: "2025-11-18", description: "تنظيف جاف بعد التأجير", associatedDressId: "dress-noor" },
 ];
 
 function booking(
@@ -183,6 +186,11 @@ function booking(
 }
 
 export const INITIAL_BOOKINGS: Booking[] = [
+  booking("book-2025-1", "dress-aurora", "منى الكندي", "2025-10-10", "2025-10-12", 54, "completed"),
+  booking("book-2025-2", "dress-noor", "أسماء البلوشي", "2025-11-15", "2025-11-18", 140, "completed"),
+  booking("book-2025-3", "dress-sultana", "رقية الزدجالي", "2025-11-22", "2025-11-24", 84, "completed"),
+  booking("book-2025-4", "dress-layla", "خلود الحارثي", "2025-12-05", "2025-12-07", 56, "completed"),
+  booking("book-2025-5", "dress-celeste", "إيمان الشقصي", "2025-12-20", "2025-12-23", 100, "completed"),
   booking("book-1", "dress-aurora", "عائشة رحمن", "2026-03-12", "2026-03-15", 54, "completed"),
   booking("book-2", "dress-celeste", "فاطمة الحسن", "2026-03-20", "2026-03-25", 125, "completed"),
   booking("book-3", "dress-noor", "مريم خليل", "2026-04-02", "2026-04-04", 70, "completed"),
