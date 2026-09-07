@@ -140,9 +140,11 @@ export function normalizeDressDraft(draft: DressCatalogDraft): DressCatalogDraft
   const barcode = draft.barcode.trim();
   const rentalPricePerDay = Number(draft.rentalPricePerDay);
   const purchasePrice = Number(draft.purchasePrice);
+  const insuranceAmount = Number(draft.insuranceAmount);
   if (!name || !barcode) return null;
   if (!Number.isFinite(rentalPricePerDay) || rentalPricePerDay <= 0) return null;
   if (!Number.isFinite(purchasePrice) || purchasePrice < 0) return null;
+  if (!Number.isFinite(insuranceAmount) || insuranceAmount < 0) return null;
   return {
     name,
     barcode,
@@ -155,5 +157,6 @@ export function normalizeDressDraft(draft: DressCatalogDraft): DressCatalogDraft
     images: sanitizeImageUrls(draft.images),
     rentalPricePerDay,
     purchasePrice,
+    insuranceAmount,
   };
 }

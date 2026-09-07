@@ -142,6 +142,9 @@ export function DressGrid() {
                   <p className="text-sm text-rose-700">
                     إيجار اليوم{" "}
                     <span className="tabular-nums text-rose-900">{formatCurrency(dress.rentalPricePerDay)}</span>
+                    {" "}
+                    · تأمين{" "}
+                    <span className="tabular-nums text-rose-900">{formatCurrency(dress.insuranceAmount)}</span>
                   </p>
                 ) : (
                   <p className="text-sm text-rose-500">
@@ -158,6 +161,13 @@ export function DressGrid() {
                           : "في العناية بعد التأجير قبل إعادته للصالة."}
                   </p>
                 )}
+                {!isOwner && dress.insuranceAmount > 0 ? (
+                  <p className="text-sm text-rose-700">
+                    تأمين{" "}
+                    <span className="tabular-nums text-rose-900">{formatCurrency(dress.insuranceAmount)}</span>
+                    <span className="text-rose-400"> · يُرجَع إذا الفستان سليم</span>
+                  </p>
+                ) : null}
                 {dress.status === "reserved" && guest ? (
                   <p className="text-xs text-sky-700">محجوز · {guest}</p>
                 ) : null}

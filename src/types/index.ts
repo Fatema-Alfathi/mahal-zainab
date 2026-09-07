@@ -57,6 +57,7 @@ export interface Dress {
   images: string[];
   purchasePrice: number;
   rentalPricePerDay: number;
+  insuranceAmount: number;
   status: DressStatus;
   totalMaintenanceCost: number;
 }
@@ -73,6 +74,7 @@ export type DressCatalogDraft = {
   images: string[];
   rentalPricePerDay: number;
   purchasePrice: number;
+  insuranceAmount: number;
 };
 
 export interface FixedExpense {
@@ -91,12 +93,62 @@ export interface VariableExpense {
   associatedDressId?: string;
 }
 
+export interface Customer {
+  id: string;
+  number: string;
+  name: string;
+  phone: string;
+  eventDate: string;
+  notes: string;
+}
+
+export type CustomerDraft = {
+  number: string;
+  name: string;
+  phone: string;
+  eventDate: string;
+  notes: string;
+};
+
+export const EMPLOYEE_JOB_TITLES = ["بائعة", "مساعدة", "تعديلات", "استقبال"] as const;
+export type EmployeeJobTitle = (typeof EMPLOYEE_JOB_TITLES)[number];
+
+export interface Employee {
+  id: string;
+  number: string;
+  name: string;
+  phone: string;
+  jobTitle: string;
+  salary: number;
+  startDate: string;
+  active: boolean;
+  notes: string;
+}
+
+export type EmployeeDraft = {
+  number: string;
+  name: string;
+  phone: string;
+  jobTitle: string;
+  salary: number;
+  startDate: string;
+  active: boolean;
+  notes: string;
+};
+
 export interface Booking {
   id: string;
   dressId: string;
+  customerId: string;
   customerName: string;
+  bookedAt: string;
   startDate: string;
   endDate: string;
+  pickupDate: string;
+  returnDate: string;
+  needsFitting: boolean;
+  needsAlterations: boolean;
+  fittingDate: string;
   subtotal: number;
   discountType: DiscountType;
   discountValue: number;
@@ -104,17 +156,24 @@ export interface Booking {
   totalRevenueGenerated: number;
   depositPaid: number;
   remainingAmount: number;
+  insuranceAmount: number;
+  insurancePaid: number;
+  insuranceReturned: boolean;
   status: BookingStatus;
 }
 
 export interface ShopState {
   role: UserRole;
   dresses: Dress[];
+  customers: Customer[];
+  employees: Employee[];
   fixedExpenses: FixedExpense[];
   variableExpenses: VariableExpense[];
   bookings: Booking[];
   discountPolicy: EmployeeDiscountPolicy;
 }
+
+export const FITTING_LEAD_DAYS = 5;
 
 export const VARIABLE_EXPENSE_CATEGORIES: VariableExpenseCategory[] = [
   "Marketing Campaign",

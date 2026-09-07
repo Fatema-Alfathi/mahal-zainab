@@ -1,4 +1,5 @@
-import type { Booking, Dress, EmployeeDiscountPolicy, FixedExpense, VariableExpense } from "@/types";
+import { fittingDateForPickup } from "@/lib/customers";
+import type { Booking, Customer, Dress, Employee, EmployeeDiscountPolicy, FixedExpense, VariableExpense } from "@/types";
 
 export const INITIAL_DISCOUNT_POLICY: EmployeeDiscountPolicy = {
   enabled: false,
@@ -18,6 +19,7 @@ const DRESS_CATALOG = [
     measurements: { bust: 88, waist: 68, hips: 94, length: 148 },
     purchasePrice: 95,
     rentalPricePerDay: 18,
+    insuranceAmount: 20,
     status: "available",
     totalMaintenanceCost: 7.5,
   },
@@ -32,6 +34,7 @@ const DRESS_CATALOG = [
     measurements: { bust: 92, waist: 72, hips: 98, length: 150 },
     purchasePrice: 140,
     rentalPricePerDay: 25,
+    insuranceAmount: 30,
     status: "rented",
     totalMaintenanceCost: 5,
   },
@@ -46,6 +49,7 @@ const DRESS_CATALOG = [
     measurements: { bust: 96, waist: 76, hips: 102, length: 152 },
     purchasePrice: 220,
     rentalPricePerDay: 35,
+    insuranceAmount: 45,
     status: "available",
     totalMaintenanceCost: 13,
   },
@@ -60,6 +64,7 @@ const DRESS_CATALOG = [
     measurements: { bust: 84, waist: 64, hips: 90, length: 145 },
     purchasePrice: 110,
     rentalPricePerDay: 20,
+    insuranceAmount: 20,
     status: "maintenance",
     totalMaintenanceCost: 5,
   },
@@ -74,6 +79,7 @@ const DRESS_CATALOG = [
     measurements: { bust: 100, waist: 80, hips: 106, length: 154 },
     purchasePrice: 165,
     rentalPricePerDay: 28,
+    insuranceAmount: 35,
     status: "reserved",
     totalMaintenanceCost: 2.5,
   },
@@ -88,6 +94,7 @@ const DRESS_CATALOG = [
     measurements: { bust: 92, waist: 72, hips: 98, length: 155 },
     purchasePrice: 280,
     rentalPricePerDay: 42,
+    insuranceAmount: 55,
     status: "rented",
     totalMaintenanceCost: 14.5,
   },
@@ -102,6 +109,7 @@ const DRESS_CATALOG = [
     measurements: { bust: 92, waist: 72, hips: 98, length: 148 },
     purchasePrice: 95,
     rentalPricePerDay: 18,
+    insuranceAmount: 20,
     status: "available",
     totalMaintenanceCost: 0,
   },
@@ -116,14 +124,19 @@ const DRESS_CATALOG = [
     measurements: { bust: 92, waist: 72, hips: 98, length: 152 },
     purchasePrice: 220,
     rentalPricePerDay: 35,
+    insuranceAmount: 45,
     status: "available",
     totalMaintenanceCost: 0,
   },
 ] as const;
 
+const DRESS_INSURANCE: Record<string, number> = Object.fromEntries(
+  DRESS_CATALOG.map((dress) => [dress.id, dress.insuranceAmount]),
+);
+
 export const INITIAL_FIXED_EXPENSES: FixedExpense[] = [
   { id: "fixed-rent", name: "إيجار المحل", amount: 280, frequency: "monthly" },
-  { id: "fixed-salaries", name: "رواتب الموظفين", amount: 450, frequency: "monthly" },
+  { id: "fixed-salaries", name: "رواتب الموظفات", amount: 450, frequency: "monthly" },
   { id: "fixed-software", name: "اشتراكات البرامج", amount: 12, frequency: "monthly" },
 ];
 
@@ -151,6 +164,65 @@ export const INITIAL_VARIABLE_EXPENSES: VariableExpense[] = [
   { id: "var-dc-2025-noor", category: "Dry Cleaning", amount: 2.5, date: "2025-11-18", description: "تنظيف جاف بعد التأجير", associatedDressId: "dress-noor" },
 ];
 
+export const INITIAL_CUSTOMERS: Customer[] = [
+  { id: "cust-mona", number: "ZNB-C-001", name: "منى الكندي", phone: "99120011", eventDate: "2025-10-12", notes: "عروس هادئة، تحب القصّة الناعمة." },
+  { id: "cust-asma", number: "ZNB-C-002", name: "أسماء البلوشي", phone: "99120022", eventDate: "2025-11-18", notes: "طلبت لؤلؤ ولون أبيض واضح." },
+  { id: "cust-ruqaya", number: "ZNB-C-003", name: "رقية الزدجالي", phone: "99120033", eventDate: "2025-11-24", notes: "" },
+  { id: "cust-kholoud", number: "ZNB-C-004", name: "خلود الحارثي", phone: "99120044", eventDate: "2025-12-07", notes: "سهرة عائلة." },
+  { id: "cust-iman", number: "ZNB-C-005", name: "إيمان الشقصي", phone: "99120055", eventDate: "2025-12-23", notes: "" },
+  { id: "cust-aisha", number: "ZNB-C-006", name: "عائشة رحمن", phone: "99210011", eventDate: "2026-08-04", notes: "زبونة ترجع للمحل. تحب أورورا." },
+  { id: "cust-fatima", number: "ZNB-C-007", name: "فاطمة الحسن", phone: "99210022", eventDate: "2026-07-01", notes: "خطوبة ثم مناسبة ثانية." },
+  { id: "cust-maryam", number: "ZNB-C-008", name: "مريم خليل", phone: "99210033", eventDate: "2026-08-18", notes: "فستان زفاف يحتاج تعديلات ذيل." },
+  { id: "cust-hana", number: "ZNB-C-009", name: "هناء عبدالله", phone: "99210044", eventDate: "2026-04-22", notes: "" },
+  { id: "cust-lina", number: "ZNB-C-010", name: "لينا عثمان", phone: "99210055", eventDate: "2026-05-11", notes: "" },
+  { id: "cust-noor", number: "ZNB-C-011", name: "نور الأمين", phone: "99210066", eventDate: "2026-05-24", notes: "تفضل الذهبي." },
+  { id: "cust-sara", number: "ZNB-C-012", name: "سارة إبراهيم", phone: "99310011", eventDate: "2026-06-13", notes: "" },
+  { id: "cust-amira", number: "ZNB-C-013", name: "أميرة صالح", phone: "99310022", eventDate: "2026-09-01", notes: "" },
+  { id: "cust-leen", number: "ZNB-C-014", name: "لين قريشي", phone: "99310033", eventDate: "2026-08-18", notes: "" },
+  { id: "cust-layla", number: "ZNB-C-015", name: "ليلى حداد", phone: "99410011", eventDate: "2026-09-05", notes: "المتبقي لم يُحصَّل بعد." },
+  { id: "cust-rania", number: "ZNB-C-016", name: "رانيا محمود", phone: "99410022", eventDate: "2026-09-06", notes: "تحتاج بروفة وتعديل خصر." },
+  { id: "cust-hind", number: "ZNB-C-017", name: "هند سالم", phone: "99410033", eventDate: "2026-09-08", notes: "حجز يوم واحد." },
+  { id: "cust-jawaher", number: "ZNB-C-018", name: "جواهر ناصر", phone: "99410044", eventDate: "2026-09-20", notes: "الفستان محجوز ولم يُسلَّم بعد." },
+];
+
+export const INITIAL_EMPLOYEES: Employee[] = [
+  {
+    id: "emp-maryam",
+    number: "ZNB-E-001",
+    name: "مريم العلوي",
+    phone: "99130011",
+    jobTitle: "بائعة",
+    salary: 180,
+    startDate: "2024-09-01",
+    active: true,
+    notes: "مسؤولة الصالة واستقبال العميلات.",
+  },
+  {
+    id: "emp-hind",
+    number: "ZNB-E-002",
+    name: "هند البلوشي",
+    phone: "99130022",
+    jobTitle: "مساعدة",
+    salary: 150,
+    startDate: "2025-01-15",
+    active: true,
+    notes: "تحجز المواعيد وتتابع العربون والتأمين.",
+  },
+  {
+    id: "emp-suad",
+    number: "ZNB-E-003",
+    name: "سعاد الحارثي",
+    phone: "99130033",
+    jobTitle: "تعديلات",
+    salary: 120,
+    startDate: "2025-06-01",
+    active: true,
+    notes: "خياطة وتعديلات الفساتين قبل الاستلام.",
+  },
+];
+
+const CUSTOMER_BY_NAME = Object.fromEntries(INITIAL_CUSTOMERS.map((item) => [item.name, item]));
+
 function booking(
   id: string,
   dressId: string,
@@ -163,17 +235,30 @@ function booking(
     depositPaid?: number;
     remainingAmount?: number;
     discount?: { type: Booking["discountType"]; value: number; amount: number; subtotal: number };
+    needsAlterations?: boolean;
+    needsFitting?: boolean;
+    bookedAt?: string;
   },
 ): Booking {
+  const customer = CUSTOMER_BY_NAME[customerName];
   const depositPaid = extra?.depositPaid ?? Math.round(total * 0.4 * 1000) / 1000;
   const remainingAmount =
     extra?.remainingAmount ?? (status === "completed" ? 0 : Math.max(0, Math.round((total - depositPaid) * 1000) / 1000));
+  const needsAlterations = extra?.needsAlterations ?? false;
+  const needsFitting = needsAlterations || (extra?.needsFitting ?? false);
   return {
     id,
     dressId,
+    customerId: customer?.id ?? "",
     customerName,
+    bookedAt: extra?.bookedAt ?? startDate,
     startDate,
     endDate,
+    pickupDate: startDate,
+    returnDate: endDate,
+    needsFitting,
+    needsAlterations,
+    fittingDate: needsFitting ? fittingDateForPickup(startDate) : "",
     subtotal: extra?.discount?.subtotal ?? total,
     discountType: extra?.discount?.type ?? "none",
     discountValue: extra?.discount?.value ?? 0,
@@ -181,6 +266,9 @@ function booking(
     totalRevenueGenerated: total,
     depositPaid,
     remainingAmount: status === "completed" ? 0 : remainingAmount,
+    insuranceAmount: DRESS_INSURANCE[dressId] ?? 20,
+    insurancePaid: DRESS_INSURANCE[dressId] ?? 20,
+    insuranceReturned: status === "completed",
     status,
   };
 }
@@ -191,24 +279,46 @@ export const INITIAL_BOOKINGS: Booking[] = [
   booking("book-2025-3", "dress-sultana", "رقية الزدجالي", "2025-11-22", "2025-11-24", 84, "completed"),
   booking("book-2025-4", "dress-layla", "خلود الحارثي", "2025-12-05", "2025-12-07", 56, "completed"),
   booking("book-2025-5", "dress-celeste", "إيمان الشقصي", "2025-12-20", "2025-12-23", 100, "completed"),
-  booking("book-1", "dress-aurora", "عائشة رحمن", "2026-03-12", "2026-03-15", 54, "completed"),
-  booking("book-2", "dress-celeste", "فاطمة الحسن", "2026-03-20", "2026-03-25", 125, "completed"),
-  booking("book-3", "dress-noor", "مريم خليل", "2026-04-02", "2026-04-04", 70, "completed"),
+  booking("book-1", "dress-aurora", "عائشة رحمن", "2026-03-12", "2026-03-15", 54, "completed", {
+    needsFitting: true,
+    bookedAt: "2026-03-05",
+  }),
+  booking("book-2", "dress-celeste", "فاطمة الحسن", "2026-03-20", "2026-03-25", 125, "completed", {
+    bookedAt: "2026-03-12",
+  }),
+  booking("book-3", "dress-noor", "مريم خليل", "2026-04-02", "2026-04-04", 70, "completed", {
+    needsAlterations: true,
+    bookedAt: "2026-03-20",
+  }),
   booking("book-4", "dress-zahra", "هناء عبدالله", "2026-04-18", "2026-04-22", 80, "completed"),
   booking("book-5", "dress-layla", "لينا عثمان", "2026-05-08", "2026-05-11", 84, "completed"),
-  booking("book-6", "dress-sultana", "نور الأمين", "2026-05-22", "2026-05-24", 84, "completed"),
+  booking("book-6", "dress-sultana", "نور الأمين", "2026-05-22", "2026-05-24", 84, "completed", {
+    needsFitting: true,
+  }),
   booking("book-7", "dress-aurora", "سارة إبراهيم", "2026-06-10", "2026-06-13", 54, "completed"),
-  booking("book-8", "dress-celeste", "ياسمين فاروق", "2026-06-28", "2026-07-01", 75, "completed"),
+  booking("book-8", "dress-celeste", "فاطمة الحسن", "2026-06-28", "2026-07-01", 75, "completed", {
+    bookedAt: "2026-06-18",
+  }),
   booking("book-9", "dress-zahra", "أميرة صالح", "2026-08-29", "2026-09-01", 60, "completed"),
-  booking("book-10", "dress-aurora", "دينا كريم", "2026-08-01", "2026-08-04", 54, "completed"),
-  booking("book-11", "dress-noor", "لين قريشي", "2026-08-14", "2026-08-18", 140, "completed"),
+  booking("book-10", "dress-aurora", "عائشة رحمن", "2026-08-01", "2026-08-04", 54, "completed", {
+    needsFitting: true,
+    bookedAt: "2026-07-20",
+  }),
+  booking("book-11", "dress-noor", "مريم خليل", "2026-08-14", "2026-08-18", 140, "completed", {
+    needsAlterations: true,
+    bookedAt: "2026-08-01",
+  }),
   booking("book-12", "dress-celeste", "ليلى حداد", "2026-09-01", "2026-09-05", 100, "active", {
     depositPaid: 40,
     remainingAmount: 60,
+    needsFitting: true,
+    bookedAt: "2026-08-22",
   }),
   booking("book-13", "dress-sultana", "رانيا محمود", "2026-09-02", "2026-09-06", 168, "active", {
     depositPaid: 70,
     remainingAmount: 98,
+    needsAlterations: true,
+    bookedAt: "2026-08-20",
   }),
   booking("book-14", "dress-aurora", "هند سالم", "2026-09-08", "2026-09-08", 18, "completed", {
     depositPaid: 18,
@@ -217,6 +327,8 @@ export const INITIAL_BOOKINGS: Booking[] = [
   booking("book-15", "dress-layla", "جواهر ناصر", "2026-09-18", "2026-09-20", 56, "active", {
     depositPaid: 20,
     remainingAmount: 36,
+    needsAlterations: true,
+    bookedAt: "2026-09-04",
   }),
 ];
 

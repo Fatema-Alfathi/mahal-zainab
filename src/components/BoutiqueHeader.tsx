@@ -6,13 +6,15 @@ import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { useShop } from "@/context/ShopContext";
 import { cn } from "@/lib/format";
 
-export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses" }) {
+export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses" | "customers" }) {
   const { isOwner } = useShop();
+  const onHome = active === "home";
   const onDresses = active === "dresses";
+  const onCustomers = active === "customers";
 
   return (
     <header className="sticky top-0 z-30 border-b border-rose-200/70 bg-white/70 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between lg:px-8">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-400 via-pink-400 to-amber-300 text-white shadow-md shadow-rose-300/50">
             <Sparkles className="h-5 w-5" aria-hidden />
@@ -27,10 +29,19 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
             href="/"
             className={cn(
               "rounded-2xl px-3 py-1.5 transition",
-              !onDresses ? "shop-btn shadow-sm" : "bg-rose-50 text-rose-600 hover:bg-rose-100",
+              onHome ? "shop-btn shadow-sm" : "bg-rose-50 text-rose-600 hover:bg-rose-100",
             )}
           >
             لوحة المحل
+          </Link>
+          <Link
+            href="/customers"
+            className={cn(
+              "rounded-2xl px-3 py-1.5 transition",
+              onCustomers ? "shop-btn shadow-sm" : "bg-rose-50 text-rose-600 hover:bg-rose-100",
+            )}
+          >
+            العميلات
           </Link>
           <Link
             href="/dresses"
@@ -45,7 +56,7 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
         <div className="flex flex-col items-start gap-2 sm:items-end">
           <RoleSwitcher />
           <p className="text-sm text-rose-400">
-            {isOwner ? "لوحة التحكم: الدخل، الحجوزات، والمخزون" : "التوفر والحجوزات فقط"}
+            {isOwner ? "لوحة التحكم، العميلات، والحجوزات" : "الحجوزات وملفات العميلات"}
           </p>
         </div>
       </div>

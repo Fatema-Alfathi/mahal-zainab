@@ -10,12 +10,27 @@ import {
 } from "react";
 import {
   INITIAL_BOOKINGS,
+  INITIAL_CUSTOMERS,
   INITIAL_DRESSES,
   INITIAL_DISCOUNT_POLICY,
+  INITIAL_EMPLOYEES,
   INITIAL_FIXED_EXPENSES,
   INITIAL_VARIABLE_EXPENSES,
 } from "@/data/mockData";
+import {
+  isCustomerNumberTaken,
+  matchCustomer,
+  normalizeCustomerDraft,
+  resolveFitting,
+  suggestCustomerNumber,
+} from "@/lib/customers";
 import { isBarcodeTaken, normalizeDressDraft } from "@/lib/dressCatalog";
+import {
+  isEmployeeNumberTaken,
+  isEmployeePhoneTaken,
+  normalizeEmployeeDraft,
+  syncSalaryExpense,
+} from "@/lib/employees";
 import {
   applyBookingDiscount,
   calculateBookingSubtotal,
@@ -25,9 +40,11 @@ import {
 import { todayIso } from "@/lib/format";
 import {
   DRY_CLEANING_FEE,
+  type CustomerDraft,
   type DiscountType,
   type DressCatalogDraft,
   type EmployeeDiscountPolicy,
+  type EmployeeDraft,
   type ShopState,
   type UserRole,
   type VariableExpense,
@@ -53,13 +70,22 @@ type Action =
   | {
       type: "create-booking";
       dressId: string;
+      customerId?: string;
       customerName: string;
+      phone?: string;
+      eventDate?: string;
       startDate: string;
       endDate: string;
       discountType: DiscountType;
       discountValue: number;
       depositPaid: number;
+      needsAlterations: boolean;
+      needsFitting: boolean;
     }
+  | { type: "add-customer"; draft: CustomerDraft }
+  | { type: "update-customer"; customerId: string; draft: CustomerDraft }
+  | { type: "add-employee"; draft: EmployeeDraft }
+  | { type: "update-employee"; employeeId: string; draft: EmployeeDraft }
   | { type: "set-discount-policy"; policy: EmployeeDiscountPolicy }
   | { type: "pickup-dress"; dressId: string }
   | { type: "return-dress"; dressId: string }
@@ -95,8 +121,35 @@ function shopReducer(state: ShopState, action: Action): ShopState {
       );
       const payment = settleDeposit(total, action.depositPaid);
       const startsLater = action.startDate > todayIso();
+      const fitting = resolveFitting(action.needsAlterations, action.needsFitting, action.startDate);
+      const selected = action.customerId
+        ? state.customers.find((item) => item.id === action.customerId)
+        : matchCustomer(state.customers, action.customerName, action.phone);
+      const customer =
+        selected ??
+        {
+          id: crypto.randomUUID(),
+          number: suggestCustomerNumber(state.customers),
+          name: action.customerName.trim(),
+          phone: (action.phone ?? "").trim(),
+          eventDate: action.eventDate ?? "",
+          notes: "",
+        };
+      const customers = selected
+        ? state.customers.map((item) =>
+            item.id === selected.id
+              ? {
+                  ...item,
+                  name: action.customerName.trim() || item.name,
+                  phone: action.phone?.trim() || item.phone,
+                  eventDate: action.eventDate || item.eventDate,
+                }
+              : item,
+          )
+        : [customer, ...state.customers];
       return {
         ...state,
+        customers,
         dresses: state.dresses.map((item) =>
           item.id === action.dressId ? { ...item, status: startsLater ? "reserved" : "rented" } : item,
         ),
@@ -104,9 +157,16 @@ function shopReducer(state: ShopState, action: Action): ShopState {
           {
             id: crypto.randomUUID(),
             dressId: action.dressId,
-            customerName: action.customerName,
+            customerId: customer.id,
+            customerName: customer.name,
+            bookedAt: todayIso(),
             startDate: action.startDate,
             endDate: action.endDate,
+            pickupDate: action.startDate,
+            returnDate: action.endDate,
+            needsFitting: fitting.needsFitting,
+            needsAlterations: fitting.needsAlterations,
+            fittingDate: fitting.fittingDate,
             subtotal,
             discountType: authorized.discountType,
             discountValue: authorized.discountValue,
@@ -114,10 +174,72 @@ function shopReducer(state: ShopState, action: Action): ShopState {
             totalRevenueGenerated: total,
             depositPaid: payment.depositPaid,
             remainingAmount: payment.remainingAmount,
+            insuranceAmount: dress.insuranceAmount,
+            insurancePaid: dress.insuranceAmount,
+            insuranceReturned: false,
             status: "active",
           },
           ...state.bookings,
         ],
+      };
+    }
+
+    case "add-customer": {
+      const draft = normalizeCustomerDraft(action.draft);
+      if (!draft || isCustomerNumberTaken(state.customers, draft.number)) return state;
+      if (matchCustomer(state.customers, draft.name, draft.phone)) return state;
+      return {
+        ...state,
+        customers: [
+          {
+            id: crypto.randomUUID(),
+            ...draft,
+          },
+          ...state.customers,
+        ],
+      };
+    }
+
+    case "update-customer": {
+      const current = state.customers.find((item) => item.id === action.customerId);
+      const draft = normalizeCustomerDraft(action.draft);
+      if (!current || !draft || isCustomerNumberTaken(state.customers, draft.number, action.customerId)) return state;
+      return {
+        ...state,
+        customers: state.customers.map((item) => (item.id === action.customerId ? { ...item, ...draft } : item)),
+        bookings: state.bookings.map((booking) =>
+          booking.customerId === action.customerId ? { ...booking, customerName: draft.name } : booking,
+        ),
+      };
+    }
+
+    case "add-employee": {
+      if (state.role !== "owner") return state;
+      const draft = normalizeEmployeeDraft(action.draft);
+      if (!draft || isEmployeeNumberTaken(state.employees, draft.number)) return state;
+      if (isEmployeePhoneTaken(state.employees, draft.phone)) return state;
+      const employees = [{ id: crypto.randomUUID(), ...draft }, ...state.employees];
+      return {
+        ...state,
+        employees,
+        fixedExpenses: syncSalaryExpense(state.fixedExpenses, employees),
+      };
+    }
+
+    case "update-employee": {
+      if (state.role !== "owner") return state;
+      const current = state.employees.find((item) => item.id === action.employeeId);
+      const draft = normalizeEmployeeDraft(action.draft);
+      if (!current || !draft) return state;
+      if (isEmployeeNumberTaken(state.employees, draft.number, action.employeeId)) return state;
+      if (isEmployeePhoneTaken(state.employees, draft.phone, action.employeeId)) return state;
+      const employees = state.employees.map((item) =>
+        item.id === action.employeeId ? { ...item, ...draft } : item,
+      );
+      return {
+        ...state,
+        employees,
+        fixedExpenses: syncSalaryExpense(state.fixedExpenses, employees),
       };
     }
 
@@ -152,7 +274,7 @@ function shopReducer(state: ShopState, action: Action): ShopState {
         ),
         bookings: state.bookings.map((booking) =>
           booking.id === activeBooking?.id
-            ? { ...booking, status: "completed", remainingAmount: 0 }
+            ? { ...booking, status: "completed", remainingAmount: 0, insuranceReturned: true }
             : booking,
         ),
         variableExpenses: [dryCleaning, ...state.variableExpenses],
@@ -201,6 +323,7 @@ function shopReducer(state: ShopState, action: Action): ShopState {
             measurements: draft.measurements,
             images: draft.images,
             rentalPricePerDay: draft.rentalPricePerDay,
+            insuranceAmount: draft.insuranceAmount,
             purchasePrice: state.role === "owner" ? draft.purchasePrice : 0,
             status: "available",
             totalMaintenanceCost: 0,
@@ -231,6 +354,7 @@ function shopReducer(state: ShopState, action: Action): ShopState {
                 measurements: draft.measurements,
                 images: draft.images,
                 rentalPricePerDay: draft.rentalPricePerDay,
+                insuranceAmount: draft.insuranceAmount,
                 purchasePrice: state.role === "owner" ? draft.purchasePrice : item.purchasePrice,
               }
             : item,
@@ -273,6 +397,8 @@ function shopReducer(state: ShopState, action: Action): ShopState {
 const initialState: ShopState = {
   role: "owner",
   dresses: INITIAL_DRESSES,
+  customers: INITIAL_CUSTOMERS,
+  employees: INITIAL_EMPLOYEES,
   fixedExpenses: INITIAL_FIXED_EXPENSES,
   variableExpenses: INITIAL_VARIABLE_EXPENSES,
   bookings: INITIAL_BOOKINGS,
@@ -284,13 +410,22 @@ interface ShopContextValue extends ShopState {
   setRole: (role: UserRole) => void;
   createBooking: (input: {
     dressId: string;
+    customerId?: string;
     customerName: string;
+    phone?: string;
+    eventDate?: string;
     startDate: string;
     endDate: string;
     discountType: DiscountType;
     discountValue: number;
     depositPaid: number;
+    needsAlterations: boolean;
+    needsFitting: boolean;
   }) => void;
+  addCustomer: (draft: CustomerDraft) => boolean;
+  updateCustomer: (customerId: string, draft: CustomerDraft) => boolean;
+  addEmployee: (draft: EmployeeDraft) => boolean;
+  updateEmployee: (employeeId: string, draft: EmployeeDraft) => boolean;
   setDiscountPolicy: (policy: EmployeeDiscountPolicy) => void;
   pickupDress: (dressId: string) => void;
   returnDress: (dressId: string) => void;
@@ -313,16 +448,69 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const createBooking = useCallback(
     (input: {
       dressId: string;
+      customerId?: string;
       customerName: string;
+      phone?: string;
+      eventDate?: string;
       startDate: string;
       endDate: string;
       discountType: DiscountType;
       discountValue: number;
       depositPaid: number;
+      needsAlterations: boolean;
+      needsFitting: boolean;
     }) => {
       dispatch({ type: "create-booking", ...input });
     },
     [],
+  );
+
+  const addCustomer = useCallback(
+    (draft: CustomerDraft) => {
+      const normalized = normalizeCustomerDraft(draft);
+      if (!normalized || isCustomerNumberTaken(state.customers, normalized.number)) return false;
+      if (matchCustomer(state.customers, normalized.name, normalized.phone)) return false;
+      dispatch({ type: "add-customer", draft: normalized });
+      return true;
+    },
+    [state.customers],
+  );
+
+  const updateCustomer = useCallback(
+    (customerId: string, draft: CustomerDraft) => {
+      const current = state.customers.find((item) => item.id === customerId);
+      const normalized = normalizeCustomerDraft(draft);
+      if (!current || !normalized || isCustomerNumberTaken(state.customers, normalized.number, customerId)) return false;
+      dispatch({ type: "update-customer", customerId, draft: normalized });
+      return true;
+    },
+    [state.customers],
+  );
+
+  const addEmployee = useCallback(
+    (draft: EmployeeDraft) => {
+      if (state.role !== "owner") return false;
+      const normalized = normalizeEmployeeDraft(draft);
+      if (!normalized || isEmployeeNumberTaken(state.employees, normalized.number)) return false;
+      if (isEmployeePhoneTaken(state.employees, normalized.phone)) return false;
+      dispatch({ type: "add-employee", draft: normalized });
+      return true;
+    },
+    [state.employees, state.role],
+  );
+
+  const updateEmployee = useCallback(
+    (employeeId: string, draft: EmployeeDraft) => {
+      if (state.role !== "owner") return false;
+      const current = state.employees.find((item) => item.id === employeeId);
+      const normalized = normalizeEmployeeDraft(draft);
+      if (!current || !normalized) return false;
+      if (isEmployeeNumberTaken(state.employees, normalized.number, employeeId)) return false;
+      if (isEmployeePhoneTaken(state.employees, normalized.phone, employeeId)) return false;
+      dispatch({ type: "update-employee", employeeId, draft: normalized });
+      return true;
+    },
+    [state.employees, state.role],
   );
 
   const setDiscountPolicy = useCallback((policy: EmployeeDiscountPolicy) => {
@@ -383,6 +571,10 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       isOwner: state.role === "owner",
       setRole,
       createBooking,
+      addCustomer,
+      updateCustomer,
+      addEmployee,
+      updateEmployee,
       setDiscountPolicy,
       pickupDress,
       returnDress,
@@ -396,6 +588,10 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       state,
       setRole,
       createBooking,
+      addCustomer,
+      updateCustomer,
+      addEmployee,
+      updateEmployee,
       setDiscountPolicy,
       pickupDress,
       returnDress,

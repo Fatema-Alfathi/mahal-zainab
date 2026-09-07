@@ -114,6 +114,11 @@ export function ownerSnapshot(
     yearBookings: bookingsInRange(bookings, year),
     remainingDue: roundMoney(bookings.reduce((sum, booking) => sum + booking.remainingAmount, 0)),
     depositsPaid: roundMoney(bookings.reduce((sum, booking) => sum + booking.depositPaid, 0)),
+    insuranceHeld: roundMoney(
+      bookings
+        .filter((booking) => !booking.insuranceReturned)
+        .reduce((sum, booking) => sum + booking.insurancePaid, 0),
+    ),
     availableDresses: dresses.filter((dress) => dress.status === "available").length,
     reservedDresses: dresses.filter((dress) => dress.status === "reserved").length,
     rentedDresses: dresses.filter((dress) => dress.status === "rented").length,

@@ -138,10 +138,11 @@ export function OwnerSnapshot() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="dash-panel rounded-3xl p-5">
-          <h3 className="text-lg text-rose-900">عربون ومتبقي</h3>
-          <p className="mt-1 text-xs text-rose-400">فلوس داخلة وفلوس باقية على العميلات</p>
+          <h3 className="text-lg text-rose-900">عربون وتأمين ومتبقي</h3>
+          <p className="mt-1 text-xs text-rose-400">العربون من الإيجار، والتأمين عند المحل لين يرجع الفستان سليم</p>
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
             <PeriodCard label="عربون مدفوع" value={snap.depositsPaid} tone="mint" />
+            <PeriodCard label="تأمين عند المحل" value={snap.insuranceHeld} tone="mint" />
             <PeriodCard label="متبقي على العميلات" value={snap.remainingDue} tone="gold" />
           </dl>
         </div>

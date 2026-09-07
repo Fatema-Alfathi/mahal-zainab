@@ -49,6 +49,7 @@ const EMPTY_DRAFT: DressCatalogDraft = {
   images: ["", "", ""],
   rentalPricePerDay: 20,
   purchasePrice: 0,
+  insuranceAmount: 20,
 };
 
 function draftFromDress(dress: Dress): DressCatalogDraft {
@@ -66,6 +67,7 @@ function draftFromDress(dress: Dress): DressCatalogDraft {
     images: images.slice(0, 3),
     rentalPricePerDay: dress.rentalPricePerDay,
     purchasePrice: dress.purchasePrice,
+    insuranceAmount: dress.insuranceAmount,
   };
 }
 
@@ -150,6 +152,9 @@ export function DressManager() {
                   <p className="mt-2 text-sm text-rose-700">
                     إيجار اليوم{" "}
                     <span className="tabular-nums text-rose-900">{formatCurrency(dress.rentalPricePerDay)}</span>
+                    {" "}
+                    · تأمين{" "}
+                    <span className="tabular-nums text-rose-900">{formatCurrency(dress.insuranceAmount)}</span>
                     {isOwner ? (
                       <>
                         {" "}
@@ -276,6 +281,11 @@ function DressFormDialog({
       setError("أدخلي إيجار يوم أكبر من صفر.");
       return;
     }
+    const insurance = Number(draft.insuranceAmount);
+    if (!Number.isFinite(insurance) || insurance < 0) {
+      setError("تأمين الفستان صفر أو أكثر.");
+      return;
+    }
     if (isOwner) {
       const purchase = Number(draft.purchasePrice);
       if (!Number.isFinite(purchase) || purchase < 0) {
@@ -381,6 +391,7 @@ function DressFormDialog({
                   styleId: source.styleId,
                   rentalPricePerDay: source.rentalPricePerDay,
                   purchasePrice: source.purchasePrice,
+                  insuranceAmount: source.insuranceAmount,
                   images: source.images.length > 0 ? [...source.images, "", ""].slice(0, 3) : current.images,
                 }));
               }}
@@ -436,6 +447,22 @@ function DressFormDialog({
               }
               className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
             />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block text-rose-700">تأمين الفستان (ر.ع.)</span>
+            <input
+              type="number"
+              min="0"
+              step="0.1"
+              value={draft.insuranceAmount}
+              onChange={(event) =>
+                setDraft((current) => ({ ...current, insuranceAmount: Number(event.target.value) }))
+              }
+              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+            />
+            <span className="mt-1 block text-xs text-rose-400">
+              يُحصَل من العميلة عند الحجز ويُرجَع لها إذا رجّعت الفستان سليم. مو من فلوس الإيجار.
+            </span>
           </label>
           {isOwner ? (
             <label className="block text-sm">

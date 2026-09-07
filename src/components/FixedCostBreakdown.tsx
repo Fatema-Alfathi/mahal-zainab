@@ -7,7 +7,7 @@ import { formatCurrency } from "@/lib/format";
 
 const ICONS: Record<string, typeof Building2> = {
   "إيجار المحل": Building2,
-  "رواتب الموظفين": Users,
+  "رواتب الموظفات": Users,
   "اشتراكات البرامج": Laptop,
 };
 

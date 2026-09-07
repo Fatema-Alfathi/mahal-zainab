@@ -6,7 +6,9 @@ import { formatCurrency } from "@/lib/format";
 import { DRY_CLEANING_FEE, type Dress } from "@/types";
 
 export function ReturnDialog({ dress, onClose }: { dress: Dress; onClose: () => void }) {
-  const { isOwner, returnDress } = useShop();
+  const { bookings, isOwner, returnDress } = useShop();
+  const activeBooking = bookings.find((booking) => booking.dressId === dress.id && booking.status === "active");
+  const insuranceToReturn = activeBooking?.insurancePaid ?? dress.insuranceAmount;
 
   function confirm() {
     returnDress(dress.id);
@@ -44,6 +46,11 @@ export function ReturnDialog({ dress, onClose }: { dress: Dress; onClose: () => 
               تُسجَّل العناية القياسية بعد التأجير تلقائياً. يعود الفستان إلى الصالة بعد انتهاء الصيانة.
             </p>
           )}
+          {insuranceToReturn > 0 ? (
+            <p className="rounded-xl bg-violet-50 px-3 py-2 text-violet-900">
+              إذا الفستان سليم، رجّعي للعميلة تأمينها {formatCurrency(insuranceToReturn)}. التأمين مو من فلوس الإيجار.
+            </p>
+          ) : null}
         </div>
         <div className="mt-5 flex gap-2">
           <button

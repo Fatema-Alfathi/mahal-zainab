@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { DiscountPolicyPanel } from "@/components/DiscountPolicyPanel";
 import { DressGrid } from "@/components/DressGrid";
+import { EmployeeManager } from "@/components/EmployeeManager";
 import { DressRoiTable } from "@/components/DressRoiTable";
 import { FixedCostBreakdown } from "@/components/FixedCostBreakdown";
+import { CustomerManager } from "@/components/CustomerManager";
 import { OwnerHistory } from "@/components/OwnerHistory";
 import { OwnerSnapshot } from "@/components/OwnerSnapshot";
 import { VariableExpenseLog } from "@/components/VariableExpenseLog";
@@ -13,10 +14,11 @@ import { cn } from "@/lib/format";
 const TABS = [
   { id: "overview", label: "لوحة التحكم" },
   { id: "floor", label: "الصالة" },
+  { id: "customers", label: "العميلات" },
   { id: "months", label: "الأشهر والسنوات" },
   { id: "money", label: "الحسابات" },
   { id: "roi", label: "أرباح الفساتين" },
-  { id: "discount", label: "خصم الموظفات" },
+  { id: "staff", label: "الموظفات" },
 ] as const;
 
 type OwnerTab = (typeof TABS)[number]["id"];
@@ -55,6 +57,7 @@ export function OwnerDashboard() {
 
       {tab === "overview" ? <OwnerSnapshot /> : null}
       {tab === "floor" ? <DressGrid /> : null}
+      {tab === "customers" ? <CustomerManager /> : null}
       {tab === "months" ? <OwnerHistory /> : null}
       {tab === "money" ? (
         <div className="grid gap-6 xl:grid-cols-2">
@@ -63,7 +66,7 @@ export function OwnerDashboard() {
         </div>
       ) : null}
       {tab === "roi" ? <DressRoiTable /> : null}
-      {tab === "discount" ? <DiscountPolicyPanel /> : null}
+      {tab === "staff" ? <EmployeeManager /> : null}
     </div>
   );
 }
