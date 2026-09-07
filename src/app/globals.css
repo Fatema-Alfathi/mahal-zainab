@@ -68,3 +68,14 @@ body {
 .shop-btn-violet:hover {
   filter: brightness(1.06);
 }
+
+.dash-panel {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 186, 210, 0.7);
+  box-shadow: 0 18px 40px -22px rgba(199, 52, 102, 0.32);
+}
+
+.dash-hero {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 232, 242, 0.9) 48%, rgba(255, 244, 214, 0.75) 100%);
+}

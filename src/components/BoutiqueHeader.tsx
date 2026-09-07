@@ -45,7 +45,7 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
         <div className="flex flex-col items-start gap-2 sm:items-end">
           <RoleSwitcher />
           <p className="text-sm text-rose-400">
-            {isOwner ? "الصالة والحسابات في تبويبات واضحة" : "التوفر والحجوزات فقط"}
+            {isOwner ? "لوحة التحكم: الدخل، الحجوزات، والمخزون" : "التوفر والحجوزات فقط"}
           </p>
         </div>
       </div>

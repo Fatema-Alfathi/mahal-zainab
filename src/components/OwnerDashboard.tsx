@@ -11,6 +11,7 @@ import { VariableExpenseLog } from "@/components/VariableExpenseLog";
 import { cn } from "@/lib/format";
 
 const TABS = [
+  { id: "overview", label: "لوحة التحكم" },
   { id: "floor", label: "الصالة" },
   { id: "months", label: "الأشهر والسنوات" },
   { id: "money", label: "الحسابات" },
@@ -21,14 +22,16 @@ const TABS = [
 type OwnerTab = (typeof TABS)[number]["id"];
 
 export function OwnerDashboard() {
-  const [tab, setTab] = useState<OwnerTab>("floor");
+  const [tab, setTab] = useState<OwnerTab>("overview");
 
   return (
-    <div className="space-y-8">
-      <OwnerSnapshot />
-
+    <div className="space-y-6">
       <div className="-mx-1 overflow-x-auto px-1">
-        <div className="inline-flex min-w-full rounded-2xl bg-white/80 p-1 shadow-sm ring-1 ring-rose-100 backdrop-blur-md sm:min-w-0" role="tablist" aria-label="أقسام لوحة المالك">
+        <div
+          className="inline-flex min-w-full rounded-2xl bg-white/80 p-1 shadow-sm ring-1 ring-rose-100 backdrop-blur-md sm:min-w-0"
+          role="tablist"
+          aria-label="أقسام لوحة المالك"
+        >
           {TABS.map((item) => {
             const selected = tab === item.id;
             return (
@@ -50,6 +53,7 @@ export function OwnerDashboard() {
         </div>
       </div>
 
+      {tab === "overview" ? <OwnerSnapshot /> : null}
       {tab === "floor" ? <DressGrid /> : null}
       {tab === "months" ? <OwnerHistory /> : null}
       {tab === "money" ? (

@@ -11,7 +11,7 @@ export function BoutiqueApp() {
   return (
     <div className="min-h-full text-[#5a3144]">
       <BoutiqueHeader />
-      <main className="mx-auto max-w-6xl px-5 py-10 lg:px-8">
+      <main className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
         {isOwner ? <OwnerDashboard /> : <DressGrid />}
       </main>
     </div>

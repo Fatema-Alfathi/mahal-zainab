@@ -1,10 +1,28 @@
 "use client";
 
 import { useMemo } from "react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  CalendarDays,
+  CalendarRange,
+  CircleDollarSign,
+  Shirt,
+  Sparkles,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 import { useShop } from "@/context/ShopContext";
 import { ownerHistory, ownerSnapshot } from "@/lib/ownerSnapshot";
-import { cn, formatCurrency } from "@/lib/format";
 import { comparisonLabel } from "@/lib/labels";
+import {
+  cn,
+  formatCurrency,
+  formatDateLong,
+  formatSignedCurrency,
+  monthNameShortAr,
+  todayIso,
+} from "@/lib/format";
 
 export function OwnerSnapshot() {
   const { dresses, bookings, fixedExpenses, variableExpenses } = useShop();
@@ -16,149 +34,274 @@ export function OwnerSnapshot() {
     () => ownerHistory(bookings, fixedExpenses, variableExpenses),
     [bookings, fixedExpenses, variableExpenses],
   );
+  const recentMonths = history.months.slice(-12);
+  const maxMonthIncome = Math.max(...recentMonths.map((row) => row.income), 1);
+  const dressTotal = Math.max(snap.totalDresses, 1);
 
   return (
-    <section className="shop-card rounded-3xl p-5 sm:p-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-sm text-rose-400">نظرة سريعة</p>
-          <h2 className="mt-1 text-2xl font-medium text-rose-900 sm:text-3xl">محل زينب اليوم</h2>
-          <p className="mt-2 text-sm leading-7 text-rose-600/80">
-            {snap.monthProfit >= 0
-              ? `دخل ${snap.thisMonthLabel} حتى اليوم يغطي المصروفات.`
-              : `مصروفات ${snap.thisMonthLabel} حتى اليوم أعلى من دخل التأجير.`}
-          </p>
+    <section className="space-y-5">
+      <div className="dash-hero dash-panel rounded-3xl px-5 py-6 sm:px-7">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="inline-flex items-center gap-2 text-sm text-rose-500">
+              <Sparkles className="h-4 w-4" aria-hidden />
+              لوحة تحكم المالك
+            </p>
+            <h2 className="mt-2 font-serif text-3xl text-rose-900 sm:text-4xl">محل زينب</h2>
+            <p className="mt-2 text-sm text-rose-500">{formatDateLong(todayIso())}</p>
+            <p className="mt-3 max-w-xl text-sm leading-7 text-rose-700/80">
+              {snap.monthProfit >= 0
+                ? `دخل ${snap.thisMonthLabel} حتى اليوم يغطي المصروفات، والمحل رابح.`
+                : `مصروفات ${snap.thisMonthLabel} حتى اليوم أعلى من دخل التأجير.`}
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <MiniChip label="متاح" value={snap.availableDresses} tone="mint" />
+            <MiniChip label="محجوز" value={snap.reservedDresses} tone="sky" />
+            <MiniChip label="عند العميلة" value={snap.rentedDresses} tone="gold" />
+          </div>
         </div>
-        <p className="text-sm text-rose-500">
-          متاح {snap.availableDresses} · محجوز {snap.reservedDresses} · عند العميلات {snap.rentedDresses}
-        </p>
       </div>
 
-      <h3 className="mt-6 text-sm text-rose-400">إجمالي الدخل</h3>
-      <dl className="mt-2 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MoneyStat label="اليوم" value={snap.todayIncome} tint="rose" />
-        <MoneyStat label="هذا الأسبوع" value={snap.weekIncome} tint="rose" />
-        <MoneyStat label={`شهر ${snap.thisMonthLabel}`} value={snap.monthIncome} tint="rose" />
-        <MoneyStat label="هذه السنة" value={snap.yearIncome} tint="rose" />
+      <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Kpi
+          label={`دخل ${snap.thisMonthLabel}`}
+          value={formatCurrency(snap.monthIncome)}
+          hint="حتى اليوم"
+          icon={CircleDollarSign}
+          change={snap.comparison.income.change}
+        />
+        <Kpi
+          label="المصروفات"
+          value={formatCurrency(snap.monthExpenses)}
+          hint="ثابت ومتغير هذا الشهر"
+          icon={Wallet}
+          change={snap.comparison.expenses.change}
+          invert
+        />
+        <Kpi
+          label="صافي الربح"
+          value={formatSignedCurrency(snap.monthProfit)}
+          hint={snap.monthProfit >= 0 ? "بعد المصروفات" : "المصروفات أعلى حالياً"}
+          icon={TrendingUp}
+          change={snap.comparison.profit.change}
+          emphasize={snap.monthProfit >= 0 ? "good" : "bad"}
+        />
+        <Kpi
+          label="الحجوزات"
+          value={String(snap.monthBookings)}
+          hint={`${snap.yearBookings} حجز هذه السنة`}
+          icon={CalendarDays}
+          change={snap.comparison.bookings.change}
+        />
       </dl>
 
-      <h3 className="mt-6 text-sm text-rose-400">حسابات {snap.thisMonthLabel} حتى اليوم</h3>
-      <dl className="mt-2 grid gap-3 sm:grid-cols-3">
-        <MoneyStat label="إجمالي المصروفات" value={snap.monthExpenses} tint="gold" />
-        <MoneyStat label="صافي الربح" value={snap.monthProfit} emphasize tint="mint" />
-        <CountStat label="عدد الحجوزات" value={snap.monthBookings} hint={`${snap.yearBookings} حجز هذه السنة`} />
-      </dl>
+      <div className="grid gap-4 xl:grid-cols-3">
+        <div className="dash-panel rounded-3xl p-5 xl:col-span-2">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg text-rose-900">الدخل عبر الفترات</h3>
+              <p className="mt-1 text-xs text-rose-400">اليوم، الأسبوع، الشهر، والسنة</p>
+            </div>
+            <CalendarRange className="h-4 w-4 text-rose-300" aria-hidden />
+          </div>
+          <dl className="grid gap-3 sm:grid-cols-2">
+            <PeriodCard label="اليوم" value={snap.todayIncome} />
+            <PeriodCard label="هذا الأسبوع" value={snap.weekIncome} />
+            <PeriodCard label={`شهر ${snap.thisMonthLabel}`} value={snap.monthIncome} />
+            <PeriodCard label="هذه السنة" value={snap.yearIncome} />
+          </dl>
+        </div>
 
-      <h3 className="mt-6 text-sm text-rose-400">عربون ومتبقي</h3>
-      <dl className="mt-2 grid gap-3 sm:grid-cols-2">
-        <MoneyStat label="المبالغ المتبقية على العميلات" value={snap.remainingDue} tint="gold" />
-        <MoneyStat label="العربون المدفوع من العميلات" value={snap.depositsPaid} tint="mint" />
-      </dl>
-
-      <h3 className="mt-6 text-sm text-rose-400">حالة الفساتين</h3>
-      <dl className="mt-2 grid gap-3 sm:grid-cols-3">
-        <CountStat label="فساتين متاحة" value={snap.availableDresses} />
-        <CountStat label="فساتين محجوزة" value={snap.reservedDresses} hint="محجوزة ولسه في المحل" />
-        <CountStat label="عند العميلات" value={snap.rentedDresses} hint="مسلَّمة وخارج المحل" />
-      </dl>
-
-      <div className="mt-6 rounded-2xl bg-rose-50/80 px-4 py-4">
-        <p className="text-sm text-rose-400">مقارنة {snap.thisMonthLabel} بـ {snap.lastMonthLabel}</p>
-        <p className="mt-1 text-xs text-rose-400">نفس عدد الأيام من أول الشهر حتى اليوم.</p>
-        <dl className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <CompareStat
-            label="الدخل"
-            current={snap.comparison.income.current}
-            previous={snap.comparison.income.previous}
-            change={snap.comparison.income.change}
-            money
-          />
-          <CompareStat
-            label="المصروفات"
-            current={snap.comparison.expenses.current}
-            previous={snap.comparison.expenses.previous}
-            change={snap.comparison.expenses.change}
-            money
-            invert
-          />
-          <CompareStat
-            label="صافي الربح"
-            current={snap.comparison.profit.current}
-            previous={snap.comparison.profit.previous}
-            change={snap.comparison.profit.change}
-            money
-          />
-          <CompareStat
-            label="الحجوزات"
-            current={snap.comparison.bookings.current}
-            previous={snap.comparison.bookings.previous}
-            change={snap.comparison.bookings.change}
-          />
-        </dl>
+        <div className="dash-panel rounded-3xl p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg text-rose-900">مخزون الفساتين</h3>
+              <p className="mt-1 text-xs text-rose-400">{snap.totalDresses} فستان في المحل</p>
+            </div>
+            <Shirt className="h-4 w-4 text-rose-300" aria-hidden />
+          </div>
+          <div className="flex h-3 overflow-hidden rounded-full bg-rose-50">
+            <span className="bg-emerald-400" style={{ width: `${(snap.availableDresses / dressTotal) * 100}%` }} />
+            <span className="bg-sky-400" style={{ width: `${(snap.reservedDresses / dressTotal) * 100}%` }} />
+            <span className="bg-amber-400" style={{ width: `${(snap.rentedDresses / dressTotal) * 100}%` }} />
+            <span className="bg-violet-400" style={{ width: `${(snap.maintenanceDresses / dressTotal) * 100}%` }} />
+          </div>
+          <ul className="mt-4 space-y-2 text-sm">
+            <DressRow label="متاحة" value={snap.availableDresses} color="bg-emerald-400" />
+            <DressRow label="محجوزة في المحل" value={snap.reservedDresses} color="bg-sky-400" />
+            <DressRow label="عند العميلات" value={snap.rentedDresses} color="bg-amber-400" />
+            <DressRow label="صيانة" value={snap.maintenanceDresses} color="bg-violet-400" />
+          </ul>
+        </div>
       </div>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
-        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          أعلى شهر دخل: {history.highestIncomeMonth?.label ?? "—"}
-          {history.highestIncomeMonth
-            ? ` · ${history.highestIncomeMonth.income < 0 ? `−${formatCurrency(Math.abs(history.highestIncomeMonth.income))}` : formatCurrency(history.highestIncomeMonth.income)}`
-            : ""}
-        </p>
-        <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          أقل شهر دخل: {history.lowestIncomeMonth?.label ?? "—"}
-          {history.lowestIncomeMonth ? ` · ${formatCurrency(history.lowestIncomeMonth.income)}` : ""}
-        </p>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="dash-panel rounded-3xl p-5">
+          <h3 className="text-lg text-rose-900">عربون ومتبقي</h3>
+          <p className="mt-1 text-xs text-rose-400">فلوس داخلة وفلوس باقية على العميلات</p>
+          <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+            <PeriodCard label="عربون مدفوع" value={snap.depositsPaid} tone="mint" />
+            <PeriodCard label="متبقي على العميلات" value={snap.remainingDue} tone="gold" />
+          </dl>
+        </div>
+        <div className="dash-panel rounded-3xl p-5">
+          <h3 className="text-lg text-rose-900">مقارنة {snap.thisMonthLabel} بـ {snap.lastMonthLabel}</h3>
+          <p className="mt-1 text-xs text-rose-400">نفس عدد الأيام من أول الشهر حتى اليوم</p>
+          <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+            <CompareCard label="الدخل" current={snap.comparison.income.current} previous={snap.comparison.income.previous} change={snap.comparison.income.change} money />
+            <CompareCard label="المصروفات" current={snap.comparison.expenses.current} previous={snap.comparison.expenses.previous} change={snap.comparison.expenses.change} money invert />
+            <CompareCard label="صافي الربح" current={snap.comparison.profit.current} previous={snap.comparison.profit.previous} change={snap.comparison.profit.change} money />
+            <CompareCard label="الحجوزات" current={snap.comparison.bookings.current} previous={snap.comparison.bookings.previous} change={snap.comparison.bookings.change} />
+          </dl>
+        </div>
+      </div>
+
+      <div className="dash-panel rounded-3xl p-5">
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-lg text-rose-900">حركة الدخل الشهرية</h3>
+            <p className="mt-1 text-xs text-rose-400">آخر {recentMonths.length} شهر · الأعلى والأقل مميزين</p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">
+              أعلى: {history.highestIncomeMonth?.label ?? "—"}
+            </span>
+            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-800">
+              أقل: {history.lowestIncomeMonth?.label ?? "—"}
+            </span>
+          </div>
+        </div>
+        <div className="flex h-44 items-end gap-1.5 sm:gap-2.5">
+          {recentMonths.map((row) => {
+            const high = history.highestIncomeMonth?.key === row.key;
+            const low = history.lowestIncomeMonth?.key === row.key;
+            const height = Math.max(8, (row.income / maxMonthIncome) * 100);
+            return (
+              <div key={row.key} className="flex min-w-0 flex-1 flex-col items-center gap-2">
+                <div className="flex h-32 w-full items-end justify-center">
+                  <div
+                    title={`${row.label}: ${formatCurrency(row.income)}`}
+                    className={cn(
+                      "w-full max-w-8 rounded-t-lg sm:max-w-10",
+                      high ? "bg-emerald-400" : low ? "bg-amber-300" : "bg-gradient-to-t from-rose-400 to-pink-300",
+                    )}
+                    style={{ height: `${height}%` }}
+                  />
+                </div>
+                <span className="text-[10px] text-rose-400">{monthNameShortAr(`${row.key}-01`)}</span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
 }
 
-function MoneyStat({
+function MiniChip({ label, value, tone }: { label: string; value: number; tone: "mint" | "sky" | "gold" }) {
+  return (
+    <div
+      className={cn(
+        "rounded-2xl px-3 py-2",
+        tone === "mint" && "bg-emerald-50",
+        tone === "sky" && "bg-sky-50",
+        tone === "gold" && "bg-amber-50",
+      )}
+    >
+      <p className="text-[11px] text-rose-400">{label}</p>
+      <p className="mt-0.5 text-lg tabular-nums text-rose-900">{value}</p>
+    </div>
+  );
+}
+
+function Kpi({
   label,
   value,
-  emphasize = false,
-  tint,
+  hint,
+  icon: Icon,
+  change,
+  invert = false,
+  emphasize,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  icon: typeof Wallet;
+  change: number;
+  invert?: boolean;
+  emphasize?: "good" | "bad";
+}) {
+  const up = change > 0.05;
+  const down = change < -0.05;
+  const good = invert ? down : up;
+  return (
+    <div className="dash-panel rounded-3xl p-4 sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs text-rose-400">{label}</p>
+          <p
+            className={cn(
+              "mt-2 text-2xl tabular-nums tracking-tight",
+              emphasize === "good" && "text-emerald-600",
+              emphasize === "bad" && "text-rose-600",
+              !emphasize && "text-rose-900",
+            )}
+          >
+            {value}
+          </p>
+        </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-50 text-rose-400">
+          <Icon className="h-5 w-5" aria-hidden />
+        </div>
+      </div>
+      <p className="mt-2 text-xs text-rose-300">{hint}</p>
+      <p className={cn("mt-2 inline-flex items-center gap-1 text-xs", good ? "text-emerald-600" : down || up ? "text-rose-500" : "text-rose-400")}>
+        {up ? <ArrowUpRight className="h-3.5 w-3.5" aria-hidden /> : null}
+        {down ? <ArrowDownRight className="h-3.5 w-3.5" aria-hidden /> : null}
+        {comparisonLabel(change)}
+      </p>
+    </div>
+  );
+}
+
+function PeriodCard({
+  label,
+  value,
+  tone = "rose",
 }: {
   label: string;
   value: number;
-  emphasize?: boolean;
-  tint: "rose" | "gold" | "mint";
+  tone?: "rose" | "gold" | "mint";
 }) {
-  const profit = emphasize && value >= 0;
-  const loss = emphasize && value < 0;
   return (
     <div
       className={cn(
         "rounded-2xl px-4 py-3",
-        tint === "rose" && "bg-rose-50",
-        tint === "gold" && "bg-amber-50",
-        tint === "mint" && "bg-emerald-50",
+        tone === "rose" && "bg-rose-50/80",
+        tone === "gold" && "bg-amber-50",
+        tone === "mint" && "bg-emerald-50",
       )}
     >
       <dt className="text-xs text-rose-400">{label}</dt>
-      <dd
-        className={cn(
-          "mt-1 text-xl tabular-nums sm:text-2xl",
-          profit ? "text-emerald-600" : loss ? "text-rose-600" : "text-rose-900",
-        )}
-      >
-        {value < 0 ? `−${formatCurrency(Math.abs(value))}` : formatCurrency(value)}
-      </dd>
+      <dd className="mt-1 text-xl tabular-nums text-rose-900">{formatCurrency(value)}</dd>
     </div>
   );
 }
 
-function CountStat({ label, value, hint }: { label: string; value: number; hint?: string }) {
+function DressRow({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-rose-100">
-      <dt className="text-xs text-rose-400">{label}</dt>
-      <dd className="mt-1 text-xl tabular-nums text-rose-900 sm:text-2xl">{value}</dd>
-      {hint ? <p className="mt-1 text-xs text-rose-300">{hint}</p> : null}
-    </div>
+    <li className="flex items-center justify-between gap-3">
+      <span className="inline-flex items-center gap-2 text-rose-700">
+        <span className={cn("h-2.5 w-2.5 rounded-full", color)} />
+        {label}
+      </span>
+      <span className="tabular-nums text-rose-900">{value}</span>
+    </li>
   );
 }
 
-function CompareStat({
+function CompareCard({
   label,
   current,
   previous,
@@ -176,26 +319,13 @@ function CompareStat({
   const up = change > 0.05;
   const down = change < -0.05;
   const good = invert ? down : up;
-  const bad = invert ? up : down;
-  const format = (value: number) =>
-    money
-      ? value < 0
-        ? `−${formatCurrency(Math.abs(value))}`
-        : formatCurrency(value)
-      : String(value);
+  const format = (value: number) => (money ? formatSignedCurrency(value) : String(value));
   return (
-    <div className="rounded-2xl bg-white px-3 py-3">
+    <div className="rounded-2xl bg-rose-50/70 px-3 py-3">
       <dt className="text-xs text-rose-400">{label}</dt>
       <dd className="mt-1 text-lg tabular-nums text-rose-900">{format(current)}</dd>
       <p className="mt-1 text-[11px] text-rose-300">الشهر الماضي {format(previous)}</p>
-      <p
-        className={cn(
-          "mt-1 text-xs",
-          good && "text-emerald-600",
-          bad && "text-rose-600",
-          !good && !bad && "text-rose-400",
-        )}
-      >
+      <p className={cn("mt-1 text-xs", good ? "text-emerald-600" : down || up ? "text-rose-500" : "text-rose-400")}>
         {comparisonLabel(change)}
       </p>
     </div>

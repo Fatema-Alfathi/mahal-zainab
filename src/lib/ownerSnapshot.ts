@@ -117,6 +117,8 @@ export function ownerSnapshot(
     availableDresses: dresses.filter((dress) => dress.status === "available").length,
     reservedDresses: dresses.filter((dress) => dress.status === "reserved").length,
     rentedDresses: dresses.filter((dress) => dress.status === "rented").length,
+    maintenanceDresses: dresses.filter((dress) => dress.status === "maintenance").length,
+    totalDresses: dresses.length,
     thisMonthLabel: monthNameAr(today),
     lastMonthLabel: monthNameAr(lastMonth.start),
     comparison: {

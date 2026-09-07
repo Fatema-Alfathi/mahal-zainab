@@ -1,3 +1,7 @@
+export function formatSignedCurrency(amount: number): string {
+  return amount < 0 ? `−${formatCurrency(Math.abs(amount))}` : formatCurrency(amount);
+}
+
 export function formatCurrency(amount: number): string {
   const rounded = Math.round(amount * 1000) / 1000;
   const hasBaisa = Math.round(rounded * 1000) % 1000 !== 0;
@@ -32,10 +36,24 @@ const MONTHS_AR = [
   "ديسمبر",
 ];
 
+const WEEKDAYS_AR = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+const MONTHS_SHORT_AR = ["ينا", "فبر", "مار", "أبر", "ماي", "يون", "يول", "أغس", "سبت", "أكت", "نوف", "ديس"];
+
 export function formatDate(isoDate: string): string {
   const [year, month, day] = isoDate.split("-").map(Number);
   if (!year || !month || !day) return isoDate;
   return `${day} ${MONTHS_AR[month - 1]} ${year}`;
+}
+
+export function formatDateLong(isoDate: string): string {
+  const date = parseIso(isoDate);
+  if (Number.isNaN(date.getTime())) return isoDate;
+  return `${WEEKDAYS_AR[date.getDay()]} ${formatDate(isoDate)}`;
+}
+
+export function monthNameShortAr(iso: string): string {
+  const month = Number(iso.slice(5, 7));
+  return MONTHS_SHORT_AR[(month || 1) - 1] ?? iso;
 }
 
 export function todayIso(): string {
