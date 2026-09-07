@@ -16,6 +16,7 @@ import {
   dressDisplay,
   isBarcodeTaken,
   isSameVariantTaken,
+  matchesDressQuery,
   measurementLine,
   sizeLabel,
   suggestBarcode,
@@ -79,11 +80,12 @@ export function DressManager() {
   const [sizeFilter, setSizeFilter] = useState<SizeFilterValue>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilterValue>("all");
   const [colorFilter, setColorFilter] = useState<ColorFilterValue>("all");
+  const [query, setQuery] = useState("");
   const visibleDresses = dresses.filter((dress) => {
     const sizeOk = sizeFilter === "all" || dress.size === sizeFilter;
     const categoryOk = categoryFilter === "all" || dress.category === categoryFilter;
     const colorOk = colorFilter === "all" || dress.color === colorFilter;
-    return sizeOk && categoryOk && colorOk;
+    return sizeOk && categoryOk && colorOk && matchesDressQuery(dress, query);
   });
 
   return (
@@ -112,6 +114,14 @@ export function DressManager() {
       {notice ? <p className="mb-4 text-sm text-emerald-600">{notice}</p> : null}
 
       <div className="mb-5 space-y-3">
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="ابحثي بالاسم أو الباركود"
+          className="w-full rounded-2xl border-0 bg-white/90 px-4 py-2.5 text-sm outline-none ring-rose-200 focus:ring-2"
+          aria-label="البحث عن فستان بالاسم أو الباركود"
+        />
         <CategoryFilter value={categoryFilter} onChange={setCategoryFilter} />
         <ColorFilter value={colorFilter} onChange={setColorFilter} />
         <SizeFilter value={sizeFilter} onChange={setSizeFilter} />
@@ -119,7 +129,9 @@ export function DressManager() {
 
       <div className="space-y-3">
         {visibleDresses.length === 0 ? (
-          <p className="shop-card rounded-3xl px-4 py-8 text-center text-sm text-rose-400">ما في فساتين بهالتصنيف أو اللون أو المقاس حالياً.</p>
+          <p className="shop-card rounded-3xl px-4 py-8 text-center text-sm text-rose-400">
+            ما في فساتين بهالبحث أو بهالتصنيف أو اللون أو المقاس حالياً.
+          </p>
         ) : null}
         {visibleDresses.map((dress) => {
           const display = dressDisplay(dress);

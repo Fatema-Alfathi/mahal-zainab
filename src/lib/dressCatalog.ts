@@ -91,6 +91,15 @@ export function sizeLabel(size: DressSize): string {
   return `مقاس ${size}`;
 }
 
+export function matchesDressQuery(dress: Dress, query: string): boolean {
+  const key = query.trim().toLowerCase();
+  if (!key) return true;
+  const compact = key.replace(/\s+/g, "");
+  const name = dress.name.toLowerCase();
+  const barcode = dress.barcode.toLowerCase().replace(/\s+/g, "");
+  return name.includes(key) || name.replace(/\s+/g, "").includes(compact) || barcode.includes(compact);
+}
+
 export function measurementLine(measurements: DressMeasurements): string {
   const parts = [
     measurements.bust ? `صدر ${measurements.bust}` : "",

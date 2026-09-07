@@ -12,7 +12,7 @@ import { ColorFilter, type ColorFilterValue } from "@/components/ColorFilter";
 import { DressVariants } from "@/components/DressVariants";
 import { SizeFilter, type SizeFilterValue } from "@/components/SizeFilter";
 import { useShop } from "@/context/ShopContext";
-import { categoryLabel, dressDisplay, measurementLine, sizeLabel } from "@/lib/dressCatalog";
+import { categoryLabel, dressDisplay, matchesDressQuery, measurementLine, sizeLabel } from "@/lib/dressCatalog";
 import { cn, formatCurrency } from "@/lib/format";
 import type { Dress, DressStatus } from "@/types";
 
@@ -49,6 +49,7 @@ export function DressGrid() {
   const [sizeFilter, setSizeFilter] = useState<SizeFilterValue>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilterValue>("all");
   const [colorFilter, setColorFilter] = useState<ColorFilterValue>("all");
+  const [query, setQuery] = useState("");
 
   const activeCustomerByDress = useMemo(() => {
     const map = new Map<string, string>();
@@ -63,7 +64,7 @@ export function DressGrid() {
     const sizeOk = sizeFilter === "all" || dress.size === sizeFilter;
     const categoryOk = categoryFilter === "all" || dress.category === categoryFilter;
     const colorOk = colorFilter === "all" || dress.color === colorFilter;
-    return statusOk && sizeOk && categoryOk && colorOk;
+    return statusOk && sizeOk && categoryOk && colorOk && matchesDressQuery(dress, query);
   });
 
   return (
@@ -72,13 +73,23 @@ export function DressGrid() {
         <div>
           <p className="text-sm text-rose-400">الصالة</p>
           <h2 className="mt-1 text-3xl font-medium text-rose-900">فساتين المحل</h2>
-          <p className="mt-2 text-sm leading-7 text-rose-600/80">احجزي، رجّعي، أو أرجعي الفستان للصالة بعد العناية.</p>
+          <p className="mt-2 text-sm leading-7 text-rose-600/80">
+            ابحثي بالاسم أو الباركود، بعدين احجزي أو رجّعي أو أرجعي الفستان للصالة.
+          </p>
         </div>
         <Link href="/dresses" className="shop-btn-gold rounded-2xl px-4 py-2 text-sm">
           إدارة الفساتين
         </Link>
       </div>
       <div className="mb-4 space-y-3">
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="ابحثي بالاسم أو الباركود"
+          className="w-full rounded-2xl border-0 bg-white/90 px-4 py-2.5 text-sm outline-none ring-rose-200 focus:ring-2"
+          aria-label="البحث عن فستان بالاسم أو الباركود"
+        />
         <div className="flex flex-wrap gap-2" role="group" aria-label="تصفية حسب الحالة">
           {FILTERS.map((filter) => (
             <button
@@ -101,7 +112,7 @@ export function DressGrid() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {visibleDresses.length === 0 ? (
           <p className="shop-card rounded-3xl px-4 py-8 text-center text-sm text-rose-400 sm:col-span-2 xl:col-span-3">
-            ما في فساتين بهذي الحالة أو التصنيف أو اللون أو المقاس حالياً.
+            ما في فساتين بهالبحث أو بهذي الحالة أو التصنيف أو اللون أو المقاس حالياً.
           </p>
         ) : null}
         {visibleDresses.map((dress) => {
