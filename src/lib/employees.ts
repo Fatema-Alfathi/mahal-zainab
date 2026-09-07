@@ -3,7 +3,7 @@ import { normalizePhone } from "@/lib/customers";
 import type { Employee, EmployeeDraft, FixedExpense } from "@/types";
 
 export const SALARY_EXPENSE_ID = "fixed-salaries";
-export const SALARY_EXPENSE_NAME = "رواتب الموظفات";
+export const SALARY_EXPENSE_NAME = "الرواتب";
 
 export function suggestEmployeeNumber(employees: Employee[]): string {
   const used = new Set(employees.map((item) => item.number.trim().toUpperCase()));

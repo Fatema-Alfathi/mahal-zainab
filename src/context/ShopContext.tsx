@@ -31,10 +31,12 @@ import {
   normalizeEmployeeDraft,
   syncSalaryExpense,
 } from "@/lib/employees";
+import { isSalaryExpense, isStandardMonthlyExpense, normalizeExpenseAmount } from "@/lib/monthlyExpenses";
 import {
   applyBookingDiscount,
   calculateBookingSubtotal,
   createDryCleaningExpense,
+  roundMoney,
   settleDeposit,
 } from "@/lib/finance";
 import { todayIso } from "@/lib/format";
@@ -91,6 +93,9 @@ type Action =
   | { type: "return-dress"; dressId: string }
   | { type: "complete-maintenance"; dressId: string }
   | { type: "add-variable-expense"; expense: Omit<VariableExpense, "id"> }
+  | { type: "update-fixed-expense"; expenseId: string; amount: number }
+  | { type: "add-fixed-expense"; name: string; amount: number }
+  | { type: "delete-fixed-expense"; expenseId: string }
   | { type: "add-dress"; draft: DressCatalogDraft }
   | { type: "update-dress"; dressId: string; draft: DressCatalogDraft }
   | { type: "delete-dress"; dressId: string };
@@ -389,6 +394,50 @@ function shopReducer(state: ShopState, action: Action): ShopState {
       };
     }
 
+    case "update-fixed-expense": {
+      if (state.role !== "owner") return state;
+      const current = state.fixedExpenses.find((item) => item.id === action.expenseId);
+      const amount = normalizeExpenseAmount(action.amount);
+      if (!current || amount === null || isSalaryExpense(action.expenseId)) return state;
+      return {
+        ...state,
+        fixedExpenses: state.fixedExpenses.map((item) =>
+          item.id === action.expenseId ? { ...item, amount } : item,
+        ),
+      };
+    }
+
+    case "add-fixed-expense": {
+      if (state.role !== "owner") return state;
+      const name = action.name.trim();
+      const amount = normalizeExpenseAmount(action.amount);
+      if (!name || amount === null) return state;
+      if (state.fixedExpenses.some((item) => item.name === name)) {
+        return {
+          ...state,
+          fixedExpenses: state.fixedExpenses.map((item) =>
+            item.name === name ? { ...item, amount: roundMoney(item.amount + amount) } : item,
+          ),
+        };
+      }
+      return {
+        ...state,
+        fixedExpenses: [
+          ...state.fixedExpenses,
+          { id: crypto.randomUUID(), name, amount, frequency: "monthly" },
+        ],
+      };
+    }
+
+    case "delete-fixed-expense": {
+      if (state.role !== "owner") return state;
+      if (isStandardMonthlyExpense(action.expenseId)) return state;
+      return {
+        ...state,
+        fixedExpenses: state.fixedExpenses.filter((item) => item.id !== action.expenseId),
+      };
+    }
+
     default:
       return state;
   }
@@ -431,6 +480,9 @@ interface ShopContextValue extends ShopState {
   returnDress: (dressId: string) => void;
   completeMaintenance: (dressId: string) => void;
   addVariableExpense: (expense: Omit<VariableExpense, "id">) => void;
+  updateFixedExpense: (expenseId: string, amount: number) => boolean;
+  addFixedExpense: (name: string, amount: number) => boolean;
+  deleteFixedExpense: (expenseId: string) => boolean;
   addDress: (draft: DressCatalogDraft) => boolean;
   updateDress: (dressId: string, draft: DressCatalogDraft) => boolean;
   deleteDress: (dressId: string) => boolean;
@@ -533,6 +585,36 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "add-variable-expense", expense });
   }, []);
 
+  const updateFixedExpense = useCallback(
+    (expenseId: string, amount: number) => {
+      if (state.role !== "owner" || isSalaryExpense(expenseId)) return false;
+      if (normalizeExpenseAmount(amount) === null) return false;
+      if (!state.fixedExpenses.some((item) => item.id === expenseId)) return false;
+      dispatch({ type: "update-fixed-expense", expenseId, amount });
+      return true;
+    },
+    [state.fixedExpenses, state.role],
+  );
+
+  const addFixedExpense = useCallback(
+    (name: string, amount: number) => {
+      if (state.role !== "owner") return false;
+      if (!name.trim() || normalizeExpenseAmount(amount) === null) return false;
+      dispatch({ type: "add-fixed-expense", name, amount });
+      return true;
+    },
+    [state.role],
+  );
+
+  const deleteFixedExpense = useCallback(
+    (expenseId: string) => {
+      if (state.role !== "owner" || isStandardMonthlyExpense(expenseId)) return false;
+      dispatch({ type: "delete-fixed-expense", expenseId });
+      return true;
+    },
+    [state.role],
+  );
+
   const addDress = useCallback(
     (draft: DressCatalogDraft) => {
       const normalized = normalizeDressDraft(draft);
@@ -580,6 +662,9 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       returnDress,
       completeMaintenance,
       addVariableExpense,
+      updateFixedExpense,
+      addFixedExpense,
+      deleteFixedExpense,
       addDress,
       updateDress,
       deleteDress,
@@ -597,6 +682,9 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       returnDress,
       completeMaintenance,
       addVariableExpense,
+      updateFixedExpense,
+      addFixedExpense,
+      deleteFixedExpense,
       addDress,
       updateDress,
       deleteDress,

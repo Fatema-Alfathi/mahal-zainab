@@ -21,9 +21,11 @@ export function VariableExpenseLog() {
     <section className="shop-card rounded-3xl p-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm text-rose-400">مصروفات ثانية</p>
-          <h3 className="mt-1 text-2xl font-medium text-rose-900">تنظيف وإعلانات</h3>
-          <p className="mt-2 text-sm leading-7 text-rose-600/80">أضيفي أي مبلغ طلع من الصندوق غير الإيجار والرواتب.</p>
+          <p className="text-sm text-rose-400">بتاريخ اليوم</p>
+          <h3 className="mt-1 text-2xl font-medium text-rose-900">مصروف ليوم معيّن</h3>
+          <p className="mt-2 text-sm leading-7 text-rose-600/80">
+            إذا طلع مبلغ يوم معيّن مثل تنظيف فستان بعد التأجير، اكتبيه هنا. المصاريف الشهرية الثابتة في قائمة الشهر.
+          </p>
         </div>
         <button
           type="button"

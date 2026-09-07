@@ -135,9 +135,19 @@ const DRESS_INSURANCE: Record<string, number> = Object.fromEntries(
 );
 
 export const INITIAL_FIXED_EXPENSES: FixedExpense[] = [
-  { id: "fixed-rent", name: "إيجار المحل", amount: 280, frequency: "monthly" },
-  { id: "fixed-salaries", name: "رواتب الموظفات", amount: 450, frequency: "monthly" },
-  { id: "fixed-software", name: "اشتراكات البرامج", amount: 12, frequency: "monthly" },
+  { id: "fixed-rent", name: "الإيجار", amount: 280, frequency: "monthly" },
+  { id: "fixed-salaries", name: "الرواتب", amount: 450, frequency: "monthly" },
+  { id: "fixed-electricity", name: "الكهرباء", amount: 25, frequency: "monthly" },
+  { id: "fixed-internet", name: "الإنترنت", amount: 15, frequency: "monthly" },
+  { id: "fixed-ads", name: "الإعلانات", amount: 40, frequency: "monthly" },
+  { id: "fixed-photos", name: "جلسات التصوير", amount: 0, frequency: "monthly" },
+  { id: "fixed-cleaning", name: "تنظيف الفساتين", amount: 0, frequency: "monthly" },
+  { id: "fixed-repair", name: "تصليح وتعديل الفساتين", amount: 0, frequency: "monthly" },
+  { id: "fixed-purchases", name: "المشتريات", amount: 20, frequency: "monthly" },
+  { id: "fixed-travel", name: "السفر", amount: 0, frequency: "monthly" },
+  { id: "fixed-exhibitions", name: "المعارض", amount: 0, frequency: "monthly" },
+  { id: "fixed-hospitality", name: "الضيافة", amount: 10, frequency: "monthly" },
+  { id: "fixed-other", name: "مصروفات أخرى", amount: 0, frequency: "monthly" },
 ];
 
 export const INITIAL_VARIABLE_EXPENSES: VariableExpense[] = [

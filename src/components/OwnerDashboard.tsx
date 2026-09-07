@@ -60,7 +60,7 @@ export function OwnerDashboard() {
       {tab === "customers" ? <CustomerManager /> : null}
       {tab === "months" ? <OwnerHistory /> : null}
       {tab === "money" ? (
-        <div className="grid gap-6 xl:grid-cols-2">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <FixedCostBreakdown />
           <VariableExpenseLog />
         </div>
