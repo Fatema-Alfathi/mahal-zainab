@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarPlus, CheckCircle2, RotateCcw, Sparkles, X } from "lucide-react";
+import { CalendarPlus, CheckCircle2, HandHeart, RotateCcw, Sparkles, X } from "lucide-react";
 import { BookingModal } from "@/components/BookingModal";
 import { DressBarcode } from "@/components/DressBarcode";
 import { DressGallery } from "@/components/DressGallery";
@@ -18,13 +18,15 @@ import type { Dress, DressStatus } from "@/types";
 
 const STATUS_STYLES: Record<DressStatus, string> = {
   available: "bg-emerald-100 text-emerald-800",
+  reserved: "bg-sky-100 text-sky-800",
   rented: "bg-amber-100 text-amber-800",
   maintenance: "bg-violet-100 text-violet-800",
 };
 
 const STATUS_LABELS: Record<DressStatus, string> = {
   available: "متاح",
-  rented: "مؤجَّر",
+  reserved: "محجوز",
+  rented: "عند العميلة",
   maintenance: "صيانة",
 };
 
@@ -33,12 +35,13 @@ type StatusFilter = "all" | DressStatus;
 const FILTERS: Array<{ id: StatusFilter; label: string }> = [
   { id: "all", label: "الكل" },
   { id: "available", label: "متاح" },
-  { id: "rented", label: "مؤجَّر" },
+  { id: "reserved", label: "محجوز" },
+  { id: "rented", label: "عند العميلة" },
   { id: "maintenance", label: "صيانة" },
 ];
 
 export function DressGrid() {
-  const { dresses, bookings, isOwner, completeMaintenance } = useShop();
+  const { dresses, bookings, isOwner, pickupDress, completeMaintenance } = useShop();
   const [bookingDress, setBookingDress] = useState<Dress | null>(null);
   const [returningDress, setReturningDress] = useState<Dress | null>(null);
   const [barcodeDress, setBarcodeDress] = useState<Dress | null>(null);
@@ -144,15 +147,22 @@ export function DressGrid() {
                   <p className="text-sm text-rose-500">
                     {dress.status === "available"
                       ? "جاهز لحجز زبونة جديدة."
-                      : dress.status === "rented"
+                      : dress.status === "reserved"
                         ? guest
-                          ? `حالياً مع ${guest}.`
-                          : "مؤجَّر حالياً."
-                        : "في العناية بعد التأجير قبل إعادته للصالة."}
+                          ? `محجوز لـ ${guest} ولسه في المحل.`
+                          : "محجوز ولسه في المحل."
+                        : dress.status === "rented"
+                          ? guest
+                            ? `حالياً مع ${guest}.`
+                            : "عند العميلة حالياً."
+                          : "في العناية بعد التأجير قبل إعادته للصالة."}
                   </p>
                 )}
+                {dress.status === "reserved" && guest ? (
+                  <p className="text-xs text-sky-700">محجوز · {guest}</p>
+                ) : null}
                 {dress.status === "rented" && guest ? (
-                  <p className="text-xs text-amber-700">مؤجَّر · {guest}</p>
+                  <p className="text-xs text-amber-700">عند العميلة · {guest}</p>
                 ) : null}
                 <button
                   type="button"
@@ -171,6 +181,16 @@ export function DressGrid() {
                     >
                       <CalendarPlus className="h-3.5 w-3.5" aria-hidden />
                       حجز الفستان
+                    </button>
+                  ) : null}
+                  {dress.status === "reserved" ? (
+                    <button
+                      type="button"
+                      onClick={() => pickupDress(dress.id)}
+                      className="shop-btn-gold inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
+                    >
+                      <HandHeart className="h-3.5 w-3.5" aria-hidden />
+                      تسليم للعميلة
                     </button>
                   ) : null}
                   {dress.status === "rented" ? (

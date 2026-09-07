@@ -31,7 +31,7 @@ export function ReturnDialog({ dress, onClose }: { dress: Dress; onClose: () => 
         <div className="space-y-3 text-sm text-rose-700">
           <p className="flex items-start gap-2">
             <Shirt className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" aria-hidden />
-            تنتقل الحالة من «مؤجَّر» إلى «صيانة» للعناية بعد التأجير.
+            تنتقل الحالة من «عند العميلة» إلى «صيانة» للعناية بعد التأجير.
           </p>
           {isOwner ? (
             <p className="flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-amber-800">

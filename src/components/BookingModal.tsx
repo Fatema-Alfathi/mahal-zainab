@@ -31,6 +31,7 @@ export function BookingModal({
   const [discountType, setDiscountType] = useState<DiscountType>("none");
   const [discountValue, setDiscountValue] = useState("");
   const [applyOwnerDiscount, setApplyOwnerDiscount] = useState(false);
+  const [depositPaid, setDepositPaid] = useState("");
   const [error, setError] = useState("");
   const days = useMemo(() => rentalDayCount(startDate, endDate), [startDate, endDate]);
   const employeeCanDiscount = !isOwner && discountPolicy.enabled && discountPolicy.value > 0;
@@ -64,6 +65,15 @@ export function BookingModal({
       setError("تاريخ الانتهاء يجب أن يكون في يوم البداية أو بعده.");
       return;
     }
+    const parsedDeposit = depositPaid.trim() === "" ? 0 : Number(depositPaid);
+    if (!Number.isFinite(parsedDeposit) || parsedDeposit < 0) {
+      setError("أدخلي عربون صفر أو أكثر.");
+      return;
+    }
+    if (parsedDeposit > quote.total) {
+      setError("العربون أكبر من إجمالي الحجز.");
+      return;
+    }
     if (isOwner && discountType !== "none") {
       const parsedDiscount = Number(discountValue);
       if (!Number.isFinite(parsedDiscount) || parsedDiscount <= 0) {
@@ -86,6 +96,7 @@ export function BookingModal({
       endDate,
       discountType: effectiveType,
       discountValue: effectiveType === "none" ? 0 : effectiveValue,
+      depositPaid: parsedDeposit,
     });
     onClose();
   }
@@ -165,6 +176,21 @@ export function BookingModal({
               />
             </label>
           </div>
+          <label className="block text-sm">
+            <span className="mb-1 block text-rose-700">العربون المدفوع الآن</span>
+            <input
+              type="number"
+              min="0"
+              step="0.001"
+              value={depositPaid}
+              onChange={(event) => setDepositPaid(event.target.value)}
+              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2 text-rose-900"
+              placeholder="0"
+            />
+            <span className="mt-1 block text-xs text-rose-400">
+              المتبقي على العميلة {formatCurrency(Math.max(0, quote.total - (Number(depositPaid) || 0)))}
+            </span>
+          </label>
           {isOwner ? (
             <OwnerDiscountFields
               discountType={discountType}

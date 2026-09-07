@@ -27,6 +27,14 @@ export function calculateBookingSubtotal(
   return roundMoney(rentalPricePerDay * rentalDayCount(startDate, endDate));
 }
 
+export function settleDeposit(total: number, depositPaid: number): { depositPaid: number; remainingAmount: number } {
+  const deposit = Number.isFinite(depositPaid) ? Math.max(0, Math.min(total, depositPaid)) : 0;
+  return {
+    depositPaid: roundMoney(deposit),
+    remainingAmount: roundMoney(Math.max(0, total - deposit)),
+  };
+}
+
 export function applyBookingDiscount(
   subtotal: number,
   discountType: DiscountType,

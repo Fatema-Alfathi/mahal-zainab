@@ -48,6 +48,12 @@ export function piecesLabel(count: number): string {
   return `${count} قطعة`;
 }
 
+export function comparisonLabel(change: number): string {
+  if (Math.abs(change) < 0.1) return "مثل نفس الفترة من الشهر الماضي";
+  if (change > 0) return `أعلى من الشهر الماضي بـ ${change}٪`;
+  return `أقل من الشهر الماضي بـ ${Math.abs(change)}٪`;
+}
+
 export function joinArabic(items: string[]): string {
   if (items.length <= 1) return items[0] ?? "";
   if (items.length === 2) return `${items[0]} و ${items[1]}`;

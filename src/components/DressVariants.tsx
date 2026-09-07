@@ -5,7 +5,8 @@ import type { Dress, DressStatus } from "@/types";
 
 const STATUS_LABELS: Record<DressStatus, string> = {
   available: "متاح",
-  rented: "مؤجَّر",
+  reserved: "محجوز",
+  rented: "عند العميلة",
   maintenance: "صيانة",
 };
 

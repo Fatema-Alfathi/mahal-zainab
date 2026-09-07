@@ -74,7 +74,7 @@ const DRESS_CATALOG = [
     measurements: { bust: 100, waist: 80, hips: 106, length: 154 },
     purchasePrice: 165,
     rentalPricePerDay: 28,
-    status: "available",
+    status: "reserved",
     totalMaintenanceCost: 2.5,
   },
   {
@@ -156,19 +156,28 @@ function booking(
   endDate: string,
   total: number,
   status: Booking["status"],
-  discount?: { type: Booking["discountType"]; value: number; amount: number; subtotal: number },
+  extra?: {
+    depositPaid?: number;
+    remainingAmount?: number;
+    discount?: { type: Booking["discountType"]; value: number; amount: number; subtotal: number };
+  },
 ): Booking {
+  const depositPaid = extra?.depositPaid ?? Math.round(total * 0.4 * 1000) / 1000;
+  const remainingAmount =
+    extra?.remainingAmount ?? (status === "completed" ? 0 : Math.max(0, Math.round((total - depositPaid) * 1000) / 1000));
   return {
     id,
     dressId,
     customerName,
     startDate,
     endDate,
-    subtotal: discount?.subtotal ?? total,
-    discountType: discount?.type ?? "none",
-    discountValue: discount?.value ?? 0,
-    discountAmount: discount?.amount ?? 0,
+    subtotal: extra?.discount?.subtotal ?? total,
+    discountType: extra?.discount?.type ?? "none",
+    discountValue: extra?.discount?.value ?? 0,
+    discountAmount: extra?.discount?.amount ?? 0,
     totalRevenueGenerated: total,
+    depositPaid,
+    remainingAmount: status === "completed" ? 0 : remainingAmount,
     status,
   };
 }
@@ -185,8 +194,22 @@ export const INITIAL_BOOKINGS: Booking[] = [
   booking("book-9", "dress-zahra", "أميرة صالح", "2026-08-29", "2026-09-01", 60, "completed"),
   booking("book-10", "dress-aurora", "دينا كريم", "2026-08-01", "2026-08-04", 54, "completed"),
   booking("book-11", "dress-noor", "لين قريشي", "2026-08-14", "2026-08-18", 140, "completed"),
-  booking("book-12", "dress-celeste", "ليلى حداد", "2026-09-01", "2026-09-05", 100, "active"),
-  booking("book-13", "dress-sultana", "رانيا محمود", "2026-09-02", "2026-09-06", 168, "active"),
+  booking("book-12", "dress-celeste", "ليلى حداد", "2026-09-01", "2026-09-05", 100, "active", {
+    depositPaid: 40,
+    remainingAmount: 60,
+  }),
+  booking("book-13", "dress-sultana", "رانيا محمود", "2026-09-02", "2026-09-06", 168, "active", {
+    depositPaid: 70,
+    remainingAmount: 98,
+  }),
+  booking("book-14", "dress-aurora", "هند سالم", "2026-09-08", "2026-09-08", 18, "completed", {
+    depositPaid: 18,
+    remainingAmount: 0,
+  }),
+  booking("book-15", "dress-layla", "جواهر ناصر", "2026-09-18", "2026-09-20", 56, "active", {
+    depositPaid: 20,
+    remainingAmount: 36,
+  }),
 ];
 
 export const DRESS_PRESENTATION: Record<

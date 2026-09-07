@@ -1,4 +1,4 @@
-export type DressStatus = "available" | "rented" | "maintenance";
+export type DressStatus = "available" | "reserved" | "rented" | "maintenance";
 export const DRESS_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"] as const;
 export type DressSize = (typeof DRESS_SIZES)[number];
 export const DRESS_CATEGORIES = ["wedding", "evening", "soft", "engagement", "henna", "graduation"] as const;
@@ -102,6 +102,8 @@ export interface Booking {
   discountValue: number;
   discountAmount: number;
   totalRevenueGenerated: number;
+  depositPaid: number;
+  remainingAmount: number;
   status: BookingStatus;
 }
 

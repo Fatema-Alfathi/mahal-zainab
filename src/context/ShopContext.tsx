@@ -16,7 +16,12 @@ import {
   INITIAL_VARIABLE_EXPENSES,
 } from "@/data/mockData";
 import { isBarcodeTaken, normalizeDressDraft } from "@/lib/dressCatalog";
-import { applyBookingDiscount, calculateBookingSubtotal, createDryCleaningExpense } from "@/lib/finance";
+import {
+  applyBookingDiscount,
+  calculateBookingSubtotal,
+  createDryCleaningExpense,
+  settleDeposit,
+} from "@/lib/finance";
 import { todayIso } from "@/lib/format";
 import {
   DRY_CLEANING_FEE,
@@ -53,8 +58,10 @@ type Action =
       endDate: string;
       discountType: DiscountType;
       discountValue: number;
+      depositPaid: number;
     }
   | { type: "set-discount-policy"; policy: EmployeeDiscountPolicy }
+  | { type: "pickup-dress"; dressId: string }
   | { type: "return-dress"; dressId: string }
   | { type: "complete-maintenance"; dressId: string }
   | { type: "add-variable-expense"; expense: Omit<VariableExpense, "id"> }
@@ -86,10 +93,12 @@ function shopReducer(state: ShopState, action: Action): ShopState {
         authorized.discountType,
         authorized.discountValue,
       );
+      const payment = settleDeposit(total, action.depositPaid);
+      const startsLater = action.startDate > todayIso();
       return {
         ...state,
         dresses: state.dresses.map((item) =>
-          item.id === action.dressId ? { ...item, status: "rented" } : item,
+          item.id === action.dressId ? { ...item, status: startsLater ? "reserved" : "rented" } : item,
         ),
         bookings: [
           {
@@ -103,10 +112,23 @@ function shopReducer(state: ShopState, action: Action): ShopState {
             discountValue: authorized.discountValue,
             discountAmount,
             totalRevenueGenerated: total,
+            depositPaid: payment.depositPaid,
+            remainingAmount: payment.remainingAmount,
             status: "active",
           },
           ...state.bookings,
         ],
+      };
+    }
+
+    case "pickup-dress": {
+      const dress = state.dresses.find((item) => item.id === action.dressId);
+      if (!dress || dress.status !== "reserved") return state;
+      return {
+        ...state,
+        dresses: state.dresses.map((item) =>
+          item.id === action.dressId ? { ...item, status: "rented" } : item,
+        ),
       };
     }
 
@@ -129,7 +151,9 @@ function shopReducer(state: ShopState, action: Action): ShopState {
             : item,
         ),
         bookings: state.bookings.map((booking) =>
-          booking.id === activeBooking?.id ? { ...booking, status: "completed" } : booking,
+          booking.id === activeBooking?.id
+            ? { ...booking, status: "completed", remainingAmount: 0 }
+            : booking,
         ),
         variableExpenses: [dryCleaning, ...state.variableExpenses],
       };
@@ -216,7 +240,7 @@ function shopReducer(state: ShopState, action: Action): ShopState {
 
     case "delete-dress": {
       const dress = state.dresses.find((item) => item.id === action.dressId);
-      if (!dress || dress.status === "rented") return state;
+      if (!dress || dress.status === "rented" || dress.status === "reserved") return state;
       return {
         ...state,
         dresses: state.dresses.filter((item) => item.id !== action.dressId),
@@ -265,8 +289,10 @@ interface ShopContextValue extends ShopState {
     endDate: string;
     discountType: DiscountType;
     discountValue: number;
+    depositPaid: number;
   }) => void;
   setDiscountPolicy: (policy: EmployeeDiscountPolicy) => void;
+  pickupDress: (dressId: string) => void;
   returnDress: (dressId: string) => void;
   completeMaintenance: (dressId: string) => void;
   addVariableExpense: (expense: Omit<VariableExpense, "id">) => void;
@@ -292,6 +318,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       endDate: string;
       discountType: DiscountType;
       discountValue: number;
+      depositPaid: number;
     }) => {
       dispatch({ type: "create-booking", ...input });
     },
@@ -300,6 +327,10 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
   const setDiscountPolicy = useCallback((policy: EmployeeDiscountPolicy) => {
     dispatch({ type: "set-discount-policy", policy });
+  }, []);
+
+  const pickupDress = useCallback((dressId: string) => {
+    dispatch({ type: "pickup-dress", dressId });
   }, []);
 
   const returnDress = useCallback((dressId: string) => {
@@ -339,7 +370,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const deleteDress = useCallback(
     (dressId: string) => {
       const dress = state.dresses.find((item) => item.id === dressId);
-      if (!dress || dress.status === "rented") return false;
+      if (!dress || dress.status === "rented" || dress.status === "reserved") return false;
       dispatch({ type: "delete-dress", dressId });
       return true;
     },
@@ -353,6 +384,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       setRole,
       createBooking,
       setDiscountPolicy,
+      pickupDress,
       returnDress,
       completeMaintenance,
       addVariableExpense,
@@ -365,6 +397,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       setRole,
       createBooking,
       setDiscountPolicy,
+      pickupDress,
       returnDress,
       completeMaintenance,
       addVariableExpense,

@@ -25,13 +25,15 @@ import type { Dress, DressCatalogDraft, DressStatus } from "@/types";
 
 const STATUS_STYLES: Record<DressStatus, string> = {
   available: "bg-emerald-100 text-emerald-800",
+  reserved: "bg-sky-100 text-sky-800",
   rented: "bg-amber-100 text-amber-800",
   maintenance: "bg-violet-100 text-violet-800",
 };
 
 const STATUS_LABELS: Record<DressStatus, string> = {
   available: "متاح",
-  rented: "مؤجَّر",
+  reserved: "محجوز",
+  rented: "عند العميلة",
   maintenance: "صيانة",
 };
 
@@ -172,8 +174,8 @@ export function DressManager() {
                   <button
                     type="button"
                     onClick={() => {
-                      if (dress.status === "rented") {
-                        setNotice("لا يمكن حذف فستان مؤجَّر. سجّلي الإرجاع أولاً.");
+                      if (dress.status === "rented" || dress.status === "reserved") {
+                        setNotice("لا يمكن حذف فستان محجوز أو عند العميلة.");
                         return;
                       }
                       setPendingDelete(dress);
