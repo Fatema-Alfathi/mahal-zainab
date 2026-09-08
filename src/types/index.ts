@@ -48,6 +48,7 @@ export interface Dress {
   id: string;
   name: string;
   barcode: string;
+  description: string;
   silhouette: string;
   size: DressSize;
   category: DressCategory;
@@ -55,16 +56,21 @@ export interface Dress {
   styleId: string;
   measurements: DressMeasurements;
   images: string[];
+  purchaseDate: string;
   purchasePrice: number;
+  shippingCost: number;
+  customsCost: number;
   rentalPricePerDay: number;
   insuranceAmount: number;
   status: DressStatus;
+  needsAlteration: boolean;
   totalMaintenanceCost: number;
 }
 
 export type DressCatalogDraft = {
   name: string;
   barcode: string;
+  description: string;
   silhouette: string;
   size: DressSize;
   category: DressCategory;
@@ -72,9 +78,14 @@ export type DressCatalogDraft = {
   styleId: string;
   measurements: DressMeasurements;
   images: string[];
+  purchaseDate: string;
   rentalPricePerDay: number;
   purchasePrice: number;
+  shippingCost: number;
+  customsCost: number;
   insuranceAmount: number;
+  needsCleaning: boolean;
+  needsAlteration: boolean;
 };
 
 export interface FixedExpense {

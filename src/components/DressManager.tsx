@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { Pencil, Plus, Trash2, X } from "lucide-react";
+import { DressGallery } from "@/components/DressGallery";
 import { DressPhoto } from "@/components/DressPhoto";
 import { CategoryFilter, type CategoryFilterValue } from "@/components/CategoryFilter";
 import { CategoryPicker } from "@/components/CategoryPicker";
@@ -12,16 +13,27 @@ import { SizeFilter, type SizeFilterValue } from "@/components/SizeFilter";
 import { SizePicker } from "@/components/SizePicker";
 import { useShop } from "@/context/ShopContext";
 import {
+  bookingDateLine,
   categoryLabel,
+  dressActiveBookings,
   dressDisplay,
+  dressNeedsAlteration,
+  dressNeedsCleaning,
   isBarcodeTaken,
   isSameVariantTaken,
   matchesDressQuery,
   measurementLine,
+  padImageSlots,
   sizeLabel,
   suggestBarcode,
 } from "@/lib/dressCatalog";
-import { cn, formatCurrency } from "@/lib/format";
+import {
+  dressAcquisitionCost,
+  dressCleaningCost,
+  dressRentalRevenue,
+  dressRepairCost,
+} from "@/lib/finance";
+import { cn, formatCurrency, formatDate } from "@/lib/format";
 import type { Dress, DressCatalogDraft, DressStatus } from "@/types";
 
 const STATUS_STYLES: Record<DressStatus, string> = {
@@ -35,45 +47,55 @@ const STATUS_LABELS: Record<DressStatus, string> = {
   available: "متاح",
   reserved: "محجوز",
   rented: "عند العميلة",
-  maintenance: "صيانة",
+  maintenance: "يحتاج تنظيف",
 };
 
 const EMPTY_DRAFT: DressCatalogDraft = {
   name: "",
   barcode: "",
+  description: "",
   silhouette: "",
   size: "M",
   category: "evening",
   color: "أبيض",
   styleId: "",
   measurements: {},
-  images: ["", "", ""],
+  images: ["", "", "", ""],
+  purchaseDate: "",
   rentalPricePerDay: 20,
   purchasePrice: 0,
+  shippingCost: 0,
+  customsCost: 0,
   insuranceAmount: 20,
+  needsCleaning: false,
+  needsAlteration: false,
 };
 
 function draftFromDress(dress: Dress): DressCatalogDraft {
-  const images = [...dress.images];
-  while (images.length < 3) images.push("");
   return {
     name: dress.name,
     barcode: dress.barcode,
+    description: dress.description,
     silhouette: dress.silhouette,
     size: dress.size,
     category: dress.category,
     color: dress.color,
     styleId: dress.styleId,
     measurements: dress.measurements,
-    images: images.slice(0, 3),
+    images: padImageSlots(dress.images),
+    purchaseDate: dress.purchaseDate,
     rentalPricePerDay: dress.rentalPricePerDay,
     purchasePrice: dress.purchasePrice,
+    shippingCost: dress.shippingCost,
+    customsCost: dress.customsCost,
     insuranceAmount: dress.insuranceAmount,
+    needsCleaning: dressNeedsCleaning(dress),
+    needsAlteration: dress.needsAlteration,
   };
 }
 
 export function DressManager() {
-  const { dresses, isOwner, addDress, updateDress, deleteDress } = useShop();
+  const { dresses, bookings, variableExpenses, isOwner, addDress, updateDress, deleteDress } = useShop();
   const [editor, setEditor] = useState<{ mode: "add" } | { mode: "edit"; dress: Dress } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Dress | null>(null);
   const [notice, setNotice] = useState("");
@@ -95,7 +117,7 @@ export function DressManager() {
           <p className="text-sm text-rose-400">المخزون</p>
           <h1 className="mt-1 text-3xl font-medium text-rose-900">إدارة الفساتين</h1>
           <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">
-            أضيفي فستاناً جديداً، عدّلي الاسم والباركود والصور والأسعار، أو احذفي فستاناً غير مؤجَّر.
+            ملف كل فستان: الكود، الاسم، الوصف، الصور، المقاس، تكاليف الشراء، الإيجار، الإيرادات، والتنظيف أو التعديل.
           </p>
         </div>
         <button
@@ -118,9 +140,9 @@ export function DressManager() {
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="ابحثي بالاسم أو الباركود"
+          placeholder="ابحثي بالاسم أو كود الفستان"
           className="w-full rounded-2xl border-0 bg-white/90 px-4 py-2.5 text-sm outline-none ring-rose-200 focus:ring-2"
-          aria-label="البحث عن فستان بالاسم أو الباركود"
+          aria-label="البحث عن فستان بالاسم أو الكود"
         />
         <CategoryFilter value={categoryFilter} onChange={setCategoryFilter} />
         <ColorFilter value={colorFilter} onChange={setColorFilter} />
@@ -135,73 +157,113 @@ export function DressManager() {
         ) : null}
         {visibleDresses.map((dress) => {
           const display = dressDisplay(dress);
+          const windows = dressActiveBookings(bookings, dress.id);
+          const needsAlteration = dressNeedsAlteration(dress, bookings);
+          const revenue = dressRentalRevenue(dress.id, bookings);
+          const cleaning = dressCleaningCost(dress.id, variableExpenses);
+          const repair = dressRepairCost(dress.id, variableExpenses);
+          const landed = dressAcquisitionCost(dress);
           return (
-            <article key={dress.id} className="shop-card rounded-3xl p-4 sm:p-5">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <div className="h-28 w-full overflow-hidden rounded-2xl sm:h-24 sm:w-20">
-                  <DressPhoto
-                    src={display.images[0]}
-                    alt={dress.name}
-                    fallbackClassName={display.palette}
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-lg text-rose-900">{dress.name}</h2>
-                    <span className={cn("rounded-full px-2.5 py-1 text-xs", STATUS_STYLES[dress.status])}>
-                      {STATUS_LABELS[dress.status]}
-                    </span>
+            <article key={dress.id} className="shop-card overflow-hidden rounded-3xl">
+              <div className="grid gap-0 lg:grid-cols-[220px_minmax(0,1fr)]">
+                <DressGallery
+                  images={display.images}
+                  alt={dress.name}
+                  fallbackClassName={display.palette}
+                  heightClass="h-56 lg:h-full min-h-56"
+                  className="lg:min-h-full"
+                />
+                <div className="space-y-4 p-4 sm:p-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-rose-400" dir="ltr">
+                        {dress.barcode}
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <h2 className="text-lg text-rose-900">{dress.name}</h2>
+                        <span className={cn("rounded-full px-2.5 py-1 text-xs", STATUS_STYLES[dress.status])}>
+                          {STATUS_LABELS[dress.status]}
+                        </span>
+                        {needsAlteration ? (
+                          <span className="rounded-full bg-yellow-400 px-2.5 py-1 text-xs text-yellow-950">يحتاج تعديل</span>
+                        ) : null}
+                      </div>
+                      <p className="mt-1 text-sm text-rose-400">
+                        {categoryLabel(dress.category)} · {dress.color} · {sizeLabel(dress.size)}
+                        {display.silhouette ? ` · ${display.silhouette}` : ""}
+                      </p>
+                      {dress.description ? (
+                        <p className="mt-2 text-sm leading-7 text-rose-700">{dress.description}</p>
+                      ) : null}
+                      {measurementLine(dress.measurements) ? (
+                        <p className="mt-1 text-xs leading-6 text-rose-400">{measurementLine(dress.measurements)}</p>
+                      ) : null}
+                      <div className="mt-2">
+                        <DressVariants dress={dress} dresses={dresses} />
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotice("");
+                          setEditor({ mode: "edit", dress });
+                        }}
+                        className="shop-soft inline-flex items-center gap-1.5 rounded-2xl px-3 py-2 text-sm text-rose-700 hover:bg-rose-50"
+                      >
+                        <Pencil className="h-3.5 w-3.5" aria-hidden />
+                        تعديل
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (dress.status === "rented" || dress.status === "reserved") {
+                            setNotice("لا يمكن حذف فستان محجوز أو عند العميلة.");
+                            return;
+                          }
+                          setPendingDelete(dress);
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-700 hover:bg-rose-100"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                        حذف
+                      </button>
+                    </div>
                   </div>
-                  <p className="mt-1 text-sm text-rose-400">
-                    {categoryLabel(dress.category)} · {dress.color} · {sizeLabel(dress.size)} · {display.silhouette || "بدون قصة"} · {dress.barcode}
-                  </p>
-                  {measurementLine(dress.measurements) ? (
-                    <p className="mt-1 text-xs leading-6 text-rose-400">{measurementLine(dress.measurements)}</p>
+
+                  {windows.length > 0 ? (
+                    <div className="space-y-1.5 rounded-2xl bg-sky-50 px-3 py-3 text-sm text-sky-900">
+                      {windows.map((booking) => (
+                        <p key={booking.id}>
+                          {dress.status === "rented" ? "عند العميلة" : "محجوز"} {bookingDateLine(booking)}
+                          {booking.customerName ? ` — ${booking.customerName}` : ""}
+                        </p>
+                      ))}
+                    </div>
                   ) : null}
-                  <div className="mt-2">
-                    <DressVariants dress={dress} dresses={dresses} />
-                  </div>
-                  <p className="mt-2 text-sm text-rose-700">
-                    إيجار اليوم{" "}
-                    <span className="tabular-nums text-rose-900">{formatCurrency(dress.rentalPricePerDay)}</span>
-                    {" "}
-                    · تأمين{" "}
-                    <span className="tabular-nums text-rose-900">{formatCurrency(dress.insuranceAmount)}</span>
+
+                  <dl className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                    <Fact label="سعر التأجير / اليوم" value={formatCurrency(dress.rentalPricePerDay)} tone="wine" />
                     {isOwner ? (
                       <>
-                        {" "}
-                        · سعر الشراء{" "}
-                        <span className="tabular-nums text-rose-900">{formatCurrency(dress.purchasePrice)}</span>
+                        <Fact label="إجمالي الإيرادات" value={formatCurrency(revenue)} tone="green" />
+                        <Fact label="تكلفة التنظيف" value={formatCurrency(cleaning)} tone="yellow" />
+                        <Fact label="تكلفة التصليح" value={formatCurrency(repair)} tone="red" />
+                        <Fact
+                          label="تاريخ الشراء"
+                          value={dress.purchaseDate ? formatDate(dress.purchaseDate) : "غير مسجّل"}
+                          tone="wine"
+                        />
+                        <Fact label="تكلفة الشراء" value={formatCurrency(dress.purchasePrice)} tone="wine" />
+                        <Fact label="الشحن" value={formatCurrency(dress.shippingCost)} tone="blue" />
+                        <Fact label="الجمارك" value={formatCurrency(dress.customsCost)} tone="blue" />
+                        <Fact label="إجمالي تكلفة الفستان" value={formatCurrency(landed)} tone="wine" />
+                        <Fact label="التأمين" value={formatCurrency(dress.insuranceAmount)} tone="yellow" />
                       </>
-                    ) : null}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNotice("");
-                      setEditor({ mode: "edit", dress });
-                    }}
-                    className="shop-soft inline-flex items-center gap-1.5 rounded-2xl px-3 py-2 text-sm text-rose-700 hover:bg-rose-50"
-                  >
-                    <Pencil className="h-3.5 w-3.5" aria-hidden />
-                    تعديل
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (dress.status === "rented" || dress.status === "reserved") {
-                        setNotice("لا يمكن حذف فستان محجوز أو عند العميلة.");
-                        return;
-                      }
-                      setPendingDelete(dress);
-                    }}
-                    className="inline-flex items-center gap-1.5 rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-700 hover:bg-rose-100"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                    حذف
-                  </button>
+                    ) : (
+                      <Fact label="التأمين" value={formatCurrency(dress.insuranceAmount)} tone="yellow" />
+                    )}
+                  </dl>
                 </div>
               </div>
             </article>
@@ -214,7 +276,7 @@ export function DressManager() {
           title={editor.mode === "add" ? "إضافة فستان جديد" : `تعديل ${editor.dress.name}`}
           initialDraft={
             editor.mode === "add"
-              ? { ...EMPTY_DRAFT, barcode: suggestBarcode(dresses), images: ["", "", ""] }
+              ? { ...EMPTY_DRAFT, barcode: suggestBarcode(dresses), images: padImageSlots([]) }
               : draftFromDress(editor.dress)
           }
           excludeId={editor.mode === "edit" ? editor.dress.id : undefined}
@@ -261,6 +323,8 @@ function DressFormDialog({
   const [draft, setDraft] = useState<DressCatalogDraft>(initialDraft);
   const [error, setError] = useState("");
   const preview = useMemo(() => draft.images.find((url) => /^https?:\/\//i.test(url.trim())), [draft.images]);
+  const editing = dresses.find((item) => item.id === excludeId);
+  const cleaningLocked = editing?.status === "reserved" || editing?.status === "rented";
 
   function updateImage(index: number, value: string) {
     setDraft((current) => {
@@ -277,11 +341,11 @@ function DressFormDialog({
       return;
     }
     if (!draft.barcode.trim()) {
-      setError("الباركود مطلوب.");
+      setError("كود الفستان مطلوب.");
       return;
     }
     if (isBarcodeTaken(dresses, draft.barcode, excludeId)) {
-      setError("هذا الباركود مستخدم لفستان آخر.");
+      setError("هذا الكود مستخدم لفستان آخر.");
       return;
     }
     if (isSameVariantTaken(dresses, draft, excludeId)) {
@@ -301,7 +365,17 @@ function DressFormDialog({
     if (isOwner) {
       const purchase = Number(draft.purchasePrice);
       if (!Number.isFinite(purchase) || purchase < 0) {
-        setError("سعر الشراء يجب أن يكون صفراً أو أكثر.");
+        setError("تكلفة الشراء صفر أو أكثر.");
+        return;
+      }
+      const shipping = Number(draft.shippingCost);
+      if (!Number.isFinite(shipping) || shipping < 0) {
+        setError("تكاليف الشحن صفر أو أكثر.");
+        return;
+      }
+      const customs = Number(draft.customsCost);
+      if (!Number.isFinite(customs) || customs < 0) {
+        setError("الجمارك صفر أو أكثر.");
         return;
       }
     }
@@ -319,7 +393,7 @@ function DressFormDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="dress-form-title"
-        className="shop-card relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-3xl p-6"
+        className="shop-card relative max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl p-6"
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -350,11 +424,21 @@ function DressFormDialog({
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">الباركود</span>
+            <span className="mb-1 block text-rose-700">كود الفستان</span>
             <input
               type="text"
               value={draft.barcode}
               onChange={(event) => setDraft((current) => ({ ...current, barcode: event.target.value }))}
+              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block text-rose-700">وصف الفستان</span>
+            <textarea
+              value={draft.description}
+              onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
+              rows={3}
+              placeholder="القصة، القماش، وملاحظات العناية أو التعديل"
               className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
             />
           </label>
@@ -398,13 +482,17 @@ function DressFormDialog({
                 setDraft((current) => ({
                   ...current,
                   name: source.name,
+                  description: source.description,
                   silhouette: source.silhouette,
                   category: source.category,
                   styleId: source.styleId,
                   rentalPricePerDay: source.rentalPricePerDay,
+                  purchaseDate: source.purchaseDate,
                   purchasePrice: source.purchasePrice,
+                  shippingCost: source.shippingCost,
+                  customsCost: source.customsCost,
                   insuranceAmount: source.insuranceAmount,
-                  images: source.images.length > 0 ? [...source.images, "", ""].slice(0, 3) : current.images,
+                  images: padImageSlots(source.images.length > 0 ? source.images : current.images),
                 }));
               }}
               className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 text-rose-900"
@@ -448,7 +536,7 @@ function DressFormDialog({
             </div>
           </div>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">إيجار اليوم (ر.ع.)</span>
+            <span className="mb-1 block text-rose-700">سعر التأجير لليوم (ر.ع.)</span>
             <input
               type="number"
               min="0"
@@ -477,21 +565,85 @@ function DressFormDialog({
             </span>
           </label>
           {isOwner ? (
-            <label className="block text-sm">
-              <span className="mb-1 block text-rose-700">سعر الشراء (ر.ع.)</span>
-              <input
-                type="number"
-                min="0"
-                step="0.1"
-                value={draft.purchasePrice}
-                onChange={(event) =>
-                  setDraft((current) => ({ ...current, purchasePrice: Number(event.target.value) }))
-                }
-                className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
-              />
-            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block text-sm sm:col-span-2">
+                <span className="mb-1 block text-rose-700">تاريخ شراء الفستان</span>
+                <input
+                  type="date"
+                  value={draft.purchaseDate}
+                  onChange={(event) => setDraft((current) => ({ ...current, purchaseDate: event.target.value }))}
+                  className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-rose-700">تكلفة الشراء (ر.ع.)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={draft.purchasePrice}
+                  onChange={(event) =>
+                    setDraft((current) => ({ ...current, purchasePrice: Number(event.target.value) }))
+                  }
+                  className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-rose-700">تكاليف الشحن (ر.ع.)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={draft.shippingCost}
+                  onChange={(event) =>
+                    setDraft((current) => ({ ...current, shippingCost: Number(event.target.value) }))
+                  }
+                  className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-rose-700">الجمارك (ر.ع.)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={draft.customsCost}
+                  onChange={(event) =>
+                    setDraft((current) => ({ ...current, customsCost: Number(event.target.value) }))
+                  }
+                  className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+                />
+              </label>
+            </div>
           ) : null}
-          {[0, 1, 2].map((index) => (
+          <div className="space-y-2 rounded-2xl bg-rose-50/80 px-3 py-3">
+            <p className="text-sm text-rose-700">حالة الفستان</p>
+            <label className="flex items-start gap-2 text-sm text-rose-800">
+              <input
+                type="checkbox"
+                checked={draft.needsCleaning}
+                disabled={cleaningLocked}
+                onChange={(event) => setDraft((current) => ({ ...current, needsCleaning: event.target.checked }))}
+                className="mt-0.5"
+              />
+              <span>
+                يحتاج تنظيف
+                {cleaningLocked ? (
+                  <span className="mt-0.5 block text-xs text-rose-400">التنظيف يُسجَّل بعد إرجاع الفستان.</span>
+                ) : null}
+              </span>
+            </label>
+            <label className="flex items-start gap-2 text-sm text-rose-800">
+              <input
+                type="checkbox"
+                checked={draft.needsAlteration}
+                onChange={(event) => setDraft((current) => ({ ...current, needsAlteration: event.target.checked }))}
+                className="mt-0.5"
+              />
+              يحتاج تعديل
+            </label>
+          </div>
+          {[0, 1, 2, 3].map((index) => (
             <label key={index} className="block text-sm">
               <span className="mb-1 block text-rose-700">رابط الصورة {index + 1}</span>
               <input
@@ -515,6 +667,43 @@ function DressFormDialog({
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+function Fact({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "wine" | "green" | "red" | "yellow" | "blue";
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-2xl px-3 py-2.5",
+        tone === "wine" && "bg-rose-50",
+        tone === "green" && "bg-emerald-50",
+        tone === "red" && "bg-red-50",
+        tone === "yellow" && "bg-yellow-50",
+        tone === "blue" && "bg-sky-50",
+      )}
+    >
+      <dt
+        className={cn(
+          "text-[11px] font-medium",
+          tone === "wine" && "text-rose-400",
+          tone === "green" && "text-emerald-800",
+          tone === "red" && "text-red-800",
+          tone === "yellow" && "text-yellow-800",
+          tone === "blue" && "text-sky-800",
+        )}
+      >
+        {label}
+      </dt>
+      <dd className="mt-0.5 text-sm font-semibold tabular-nums text-rose-900">{value}</dd>
     </div>
   );
 }

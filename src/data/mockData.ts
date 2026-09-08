@@ -130,6 +130,68 @@ const DRESS_CATALOG = [
   },
 ] as const;
 
+const DRESS_FILES: Record<
+  string,
+  { description: string; purchaseDate: string; shippingCost: number; customsCost: number; needsAlteration: boolean }
+> = {
+  "dress-aurora": {
+    description: "فستان حريري ناعم بلون عاجي، مناسب للسهرات الهادئة والملكة.",
+    purchaseDate: "2024-08-12",
+    shippingCost: 8,
+    customsCost: 4,
+    needsAlteration: false,
+  },
+  "dress-celeste": {
+    description: "فستان مطرّز باللون العاجي، قصة A تناسب الخطوبة والمناسبات الرسمية.",
+    purchaseDate: "2024-09-03",
+    shippingCost: 12,
+    customsCost: 6,
+    needsAlteration: false,
+  },
+  "dress-noor": {
+    description: "فستان زفاف لؤلؤي بذيل واضح، يحتاج عناية بعد كل تأجير.",
+    purchaseDate: "2024-06-20",
+    shippingCost: 18,
+    customsCost: 12,
+    needsAlteration: false,
+  },
+  "dress-zahra": {
+    description: "فستان شمبانيا خفيف بقصة A، مناسب للسهرات الناعمة.",
+    purchaseDate: "2025-01-15",
+    shippingCost: 7,
+    customsCost: 3,
+    needsAlteration: false,
+  },
+  "dress-layla": {
+    description: "فستان سهرة مخملي خمري، قصة عمود تبرز القوام.",
+    purchaseDate: "2024-11-02",
+    shippingCost: 10,
+    customsCost: 5,
+    needsAlteration: true,
+  },
+  "dress-sultana": {
+    description: "فستان زفاف كريستال ذهبي بقصة حورية البحر.",
+    purchaseDate: "2024-05-10",
+    shippingCost: 22,
+    customsCost: 15,
+    needsAlteration: true,
+  },
+  "dress-aurora-blush": {
+    description: "نفس قصة أورورا بلون وردي، قطعة ثانية للمقاس المتوسط.",
+    purchaseDate: "2025-03-01",
+    shippingCost: 8,
+    customsCost: 4,
+    needsAlteration: false,
+  },
+  "dress-noor-gold": {
+    description: "نفس قصة نور بلون ذهبي، مناسب للزفاف والملكة.",
+    purchaseDate: "2025-04-18",
+    shippingCost: 18,
+    customsCost: 12,
+    needsAlteration: false,
+  },
+};
+
 const DRESS_INSURANCE: Record<string, number> = Object.fromEntries(
   DRESS_CATALOG.map((dress) => [dress.id, dress.insuranceAmount]),
 );
@@ -430,6 +492,7 @@ export const DRESS_PRESENTATION: Record<
 
 export const INITIAL_DRESSES: Dress[] = DRESS_CATALOG.map((dress) => ({
   ...dress,
+  ...DRESS_FILES[dress.id],
   silhouette: DRESS_PRESENTATION[dress.id].silhouette,
   images: DRESS_PRESENTATION[dress.id].images,
 }));

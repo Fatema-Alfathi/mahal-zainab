@@ -7,7 +7,7 @@ const STATUS_LABELS: Record<DressStatus, string> = {
   available: "متاح",
   reserved: "محجوز",
   rented: "عند العميلة",
-  maintenance: "صيانة",
+  maintenance: "يحتاج تنظيف",
 };
 
 export function DressVariants({

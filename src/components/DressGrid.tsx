@@ -12,7 +12,7 @@ import { ColorFilter, type ColorFilterValue } from "@/components/ColorFilter";
 import { DressVariants } from "@/components/DressVariants";
 import { SizeFilter, type SizeFilterValue } from "@/components/SizeFilter";
 import { useShop } from "@/context/ShopContext";
-import { categoryLabel, dressDisplay, matchesDressQuery, measurementLine, sizeLabel } from "@/lib/dressCatalog";
+import { categoryLabel, bookingDateLine, dressActiveBookings, dressDisplay, dressNeedsAlteration, matchesDressQuery, measurementLine, sizeLabel } from "@/lib/dressCatalog";
 import { cn, formatCurrency } from "@/lib/format";
 import type { Dress, DressStatus } from "@/types";
 
@@ -27,7 +27,7 @@ const STATUS_LABELS: Record<DressStatus, string> = {
   available: "متاح",
   reserved: "محجوز",
   rented: "عند العميلة",
-  maintenance: "صيانة",
+  maintenance: "يحتاج تنظيف",
 };
 
 type StatusFilter = "all" | DressStatus;
@@ -54,7 +54,7 @@ const FILTERS: Array<{ id: StatusFilter; label: string }> = [
   { id: "available", label: "متاح" },
   { id: "reserved", label: "محجوز" },
   { id: "rented", label: "عند العميلة" },
-  { id: "maintenance", label: "صيانة" },
+  { id: "maintenance", label: "يحتاج تنظيف" },
 ];
 
 export function DressGrid() {
@@ -135,6 +135,8 @@ export function DressGrid() {
         {visibleDresses.map((dress) => {
           const presentation = dressDisplay(dress);
           const guest = activeCustomerByDress.get(dress.id);
+          const windows = dressActiveBookings(bookings, dress.id);
+          const needsAlteration = dressNeedsAlteration(dress, bookings);
           return (
             <article key={dress.id} className="shop-card overflow-hidden rounded-3xl transition hover:-translate-y-0.5">
               <div className="relative">
@@ -151,10 +153,15 @@ export function DressGrid() {
                 </div>
               </div>
               <div className="space-y-4 p-4">
-                <div className="flex items-center justify-between gap-2">
-                  <span className={cn("inline-flex items-center rounded-full px-2.5 py-1 text-xs", STATUS_STYLES[dress.status])}>
-                    {STATUS_LABELS[dress.status]}
-                  </span>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={cn("inline-flex items-center rounded-full px-2.5 py-1 text-xs", STATUS_STYLES[dress.status])}>
+                      {STATUS_LABELS[dress.status]}
+                    </span>
+                    {needsAlteration ? (
+                      <span className="rounded-full bg-yellow-400 px-2.5 py-1 text-xs text-yellow-950">يحتاج تعديل</span>
+                    ) : null}
+                  </div>
                   <span className="text-xs text-rose-400">{presentation.silhouette}</span>
                 </div>
                 <p className="flex flex-wrap gap-2 text-sm text-rose-800">
@@ -196,10 +203,18 @@ export function DressGrid() {
                     <span className="text-rose-400"> · يُرجَع إذا الفستان سليم</span>
                   </p>
                 ) : null}
-                {dress.status === "reserved" && guest ? (
+                {windows.length > 0 ? (
+                  <div className="space-y-1 text-xs text-sky-800">
+                    {windows.map((booking) => (
+                      <p key={booking.id}>
+                        {dress.status === "rented" ? "عند العميلة" : "محجوز"} {bookingDateLine(booking)}
+                        {booking.customerName ? ` — ${booking.customerName}` : ""}
+                      </p>
+                    ))}
+                  </div>
+                ) : dress.status === "reserved" && guest ? (
                   <p className="text-xs text-sky-700">محجوز · {guest}</p>
-                ) : null}
-                {dress.status === "rented" && guest ? (
+                ) : dress.status === "rented" && guest ? (
                   <p className="text-xs text-amber-700">عند العميلة · {guest}</p>
                 ) : null}
                 <button

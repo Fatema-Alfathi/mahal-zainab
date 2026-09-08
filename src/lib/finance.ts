@@ -106,14 +106,30 @@ export function dressRentalRevenue(dressId: string, bookings: Booking[]): number
     .reduce((sum, booking) => sum + booking.totalRevenueGenerated, 0);
 }
 
-export function dressDirectExpenses(dressId: string, variableExpenses: VariableExpense[]): number {
+export function dressAcquisitionCost(dress: Dress): number {
+  return roundMoney(dress.purchasePrice + dress.shippingCost + dress.customsCost);
+}
+
+function sumDressCategory(
+  dressId: string,
+  variableExpenses: VariableExpense[],
+  category: VariableExpense["category"],
+): number {
   return variableExpenses
-    .filter(
-      (expense) =>
-        expense.associatedDressId === dressId &&
-        (expense.category === "Dry Cleaning" || expense.category === "Dress Repair"),
-    )
+    .filter((expense) => expense.associatedDressId === dressId && expense.category === category)
     .reduce((sum, expense) => sum + expense.amount, 0);
+}
+
+export function dressCleaningCost(dressId: string, variableExpenses: VariableExpense[]): number {
+  return sumDressCategory(dressId, variableExpenses, "Dry Cleaning");
+}
+
+export function dressRepairCost(dressId: string, variableExpenses: VariableExpense[]): number {
+  return sumDressCategory(dressId, variableExpenses, "Dress Repair");
+}
+
+export function dressDirectExpenses(dressId: string, variableExpenses: VariableExpense[]): number {
+  return dressCleaningCost(dressId, variableExpenses) + dressRepairCost(dressId, variableExpenses);
 }
 
 export function dressNetProfit(
@@ -123,7 +139,7 @@ export function dressNetProfit(
 ): number {
   return (
     dressRentalRevenue(dress.id, bookings) -
-    dress.purchasePrice -
+    dressAcquisitionCost(dress) -
     dressDirectExpenses(dress.id, variableExpenses)
   );
 }
@@ -133,8 +149,9 @@ export function dressRoiPercent(
   bookings: Booking[],
   variableExpenses: VariableExpense[],
 ): number {
-  if (dress.purchasePrice <= 0) return 0;
-  return (dressNetProfit(dress, bookings, variableExpenses) / dress.purchasePrice) * 100;
+  const cost = dressAcquisitionCost(dress);
+  if (cost <= 0) return 0;
+  return (dressNetProfit(dress, bookings, variableExpenses) / cost) * 100;
 }
 
 export function capitalRecoveryPercent(
@@ -144,8 +161,9 @@ export function capitalRecoveryPercent(
 ): number {
   const recovered =
     dressRentalRevenue(dress.id, bookings) - dressDirectExpenses(dress.id, variableExpenses);
-  if (dress.purchasePrice <= 0) return 0;
-  return (recovered / dress.purchasePrice) * 100;
+  const cost = dressAcquisitionCost(dress);
+  if (cost <= 0) return 0;
+  return (recovered / cost) * 100;
 }
 
 export function hasBrokenEven(

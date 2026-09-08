@@ -24,7 +24,7 @@ import {
   resolveFitting,
   suggestCustomerNumber,
 } from "@/lib/customers";
-import { isBarcodeTaken, normalizeDressDraft } from "@/lib/dressCatalog";
+import { isBarcodeTaken, normalizeDressDraft, statusAfterCare } from "@/lib/dressCatalog";
 import {
   isEmployeeNumberTaken,
   isEmployeePhoneTaken,
@@ -156,7 +156,13 @@ function shopReducer(state: ShopState, action: Action): ShopState {
         ...state,
         customers,
         dresses: state.dresses.map((item) =>
-          item.id === action.dressId ? { ...item, status: startsLater ? "reserved" : "rented" } : item,
+          item.id === action.dressId
+            ? {
+                ...item,
+                status: startsLater ? "reserved" : "rented",
+                needsAlteration: item.needsAlteration || fitting.needsAlterations,
+              }
+            : item,
         ),
         bookings: [
           {
@@ -329,8 +335,13 @@ function shopReducer(state: ShopState, action: Action): ShopState {
             images: draft.images,
             rentalPricePerDay: draft.rentalPricePerDay,
             insuranceAmount: draft.insuranceAmount,
+            description: draft.description,
+            purchaseDate: state.role === "owner" ? draft.purchaseDate : "",
             purchasePrice: state.role === "owner" ? draft.purchasePrice : 0,
-            status: "available",
+            shippingCost: state.role === "owner" ? draft.shippingCost : 0,
+            customsCost: state.role === "owner" ? draft.customsCost : 0,
+            status: statusAfterCare("available", draft.needsCleaning),
+            needsAlteration: draft.needsAlteration,
             totalMaintenanceCost: 0,
           },
           ...state.dresses,
@@ -357,10 +368,16 @@ function shopReducer(state: ShopState, action: Action): ShopState {
                 color: draft.color,
                 styleId: draft.styleId || item.styleId,
                 measurements: draft.measurements,
+                description: draft.description,
                 images: draft.images,
                 rentalPricePerDay: draft.rentalPricePerDay,
                 insuranceAmount: draft.insuranceAmount,
+                purchaseDate: state.role === "owner" ? draft.purchaseDate : item.purchaseDate,
                 purchasePrice: state.role === "owner" ? draft.purchasePrice : item.purchasePrice,
+                shippingCost: state.role === "owner" ? draft.shippingCost : item.shippingCost,
+                customsCost: state.role === "owner" ? draft.customsCost : item.customsCost,
+                status: statusAfterCare(item.status, draft.needsCleaning),
+                needsAlteration: draft.needsAlteration,
               }
             : item,
         ),

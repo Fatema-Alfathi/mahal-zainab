@@ -1,15 +1,18 @@
 import { DRESS_PRESENTATION } from "@/data/mockData";
+import { formatDate } from "@/lib/format";
 import { DRESS_CATEGORY_LABELS, joinArabic, piecesLabel } from "@/lib/labels";
 import {
   DRESS_CATEGORIES,
   DRESS_COLORS,
   DRESS_SIZES,
+  type Booking,
   type Dress,
   type DressCatalogDraft,
   type DressCategory,
   type DressColor,
   type DressMeasurements,
   type DressSize,
+  type DressStatus,
 } from "@/types";
 
 export function isDressSize(value: string): value is DressSize {
@@ -97,7 +100,13 @@ export function matchesDressQuery(dress: Dress, query: string): boolean {
   const compact = key.replace(/\s+/g, "");
   const name = dress.name.toLowerCase();
   const barcode = dress.barcode.toLowerCase().replace(/\s+/g, "");
-  return name.includes(key) || name.replace(/\s+/g, "").includes(compact) || barcode.includes(compact);
+  const description = dress.description.toLowerCase();
+  return (
+    name.includes(key) ||
+    name.replace(/\s+/g, "").includes(compact) ||
+    barcode.includes(compact) ||
+    description.includes(key)
+  );
 }
 
 export function measurementLine(measurements: DressMeasurements): string {
@@ -127,6 +136,50 @@ export function sanitizeImageUrls(urls: string[]): string[] {
     .slice(0, 6);
 }
 
+export function padImageSlots(images: string[], slots = 4): string[] {
+  const next = [...images];
+  while (next.length < slots) next.push("");
+  return next.slice(0, slots);
+}
+
+function nonNegativeMoney(value: number): number | null {
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount < 0) return null;
+  return amount;
+}
+
+function normalizeIsoDate(value: string): string {
+  const trimmed = value.trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : "";
+}
+
+export function dressNeedsCleaning(dress: Dress): boolean {
+  return dress.status === "maintenance";
+}
+
+export function dressNeedsAlteration(dress: Dress, bookings: Booking[]): boolean {
+  if (dress.needsAlteration) return true;
+  return bookings.some(
+    (booking) => booking.dressId === dress.id && booking.status === "active" && booking.needsAlterations,
+  );
+}
+
+export function dressActiveBookings(bookings: Booking[], dressId: string): Booking[] {
+  return bookings
+    .filter((booking) => booking.dressId === dressId && booking.status === "active")
+    .sort((left, right) => left.startDate.localeCompare(right.startDate));
+}
+
+export function bookingDateLine(booking: Pick<Booking, "startDate" | "endDate">): string {
+  if (booking.startDate === booking.endDate) return formatDate(booking.startDate);
+  return `من ${formatDate(booking.startDate)} إلى ${formatDate(booking.endDate)}`;
+}
+
+export function statusAfterCare(current: DressStatus, needsCleaning: boolean): DressStatus {
+  if (current === "reserved" || current === "rented") return current;
+  return needsCleaning ? "maintenance" : "available";
+}
+
 export function isBarcodeTaken(dresses: Dress[], barcode: string, excludeId?: string): boolean {
   const key = barcode.trim().toUpperCase();
   if (!key) return false;
@@ -148,15 +201,19 @@ export function normalizeDressDraft(draft: DressCatalogDraft): DressCatalogDraft
   const name = draft.name.trim();
   const barcode = draft.barcode.trim();
   const rentalPricePerDay = Number(draft.rentalPricePerDay);
-  const purchasePrice = Number(draft.purchasePrice);
-  const insuranceAmount = Number(draft.insuranceAmount);
+  const purchasePrice = nonNegativeMoney(draft.purchasePrice);
+  const shippingCost = nonNegativeMoney(draft.shippingCost);
+  const customsCost = nonNegativeMoney(draft.customsCost);
+  const insuranceAmount = nonNegativeMoney(draft.insuranceAmount);
   if (!name || !barcode) return null;
   if (!Number.isFinite(rentalPricePerDay) || rentalPricePerDay <= 0) return null;
-  if (!Number.isFinite(purchasePrice) || purchasePrice < 0) return null;
-  if (!Number.isFinite(insuranceAmount) || insuranceAmount < 0) return null;
+  if (purchasePrice === null || shippingCost === null || customsCost === null || insuranceAmount === null) {
+    return null;
+  }
   return {
     name,
     barcode,
+    description: draft.description.trim(),
     silhouette: draft.silhouette.trim() || "فستان سهرة",
     size: isDressSize(draft.size) ? draft.size : "M",
     category: isDressCategory(draft.category) ? draft.category : "evening",
@@ -164,8 +221,13 @@ export function normalizeDressDraft(draft: DressCatalogDraft): DressCatalogDraft
     styleId: draft.styleId.trim(),
     measurements: normalizeMeasurements(draft.measurements),
     images: sanitizeImageUrls(draft.images),
+    purchaseDate: normalizeIsoDate(draft.purchaseDate),
     rentalPricePerDay,
     purchasePrice,
+    shippingCost,
+    customsCost,
     insuranceAmount,
+    needsCleaning: Boolean(draft.needsCleaning),
+    needsAlteration: Boolean(draft.needsAlteration),
   };
 }

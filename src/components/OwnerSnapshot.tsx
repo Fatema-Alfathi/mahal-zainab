@@ -61,7 +61,7 @@ export function OwnerSnapshot() {
             <MiniChip label="متاح" value={snap.availableDresses} tone="mint" />
             <MiniChip label="محجوز" value={snap.reservedDresses} tone="sky" />
             <MiniChip label="عند العميلة" value={snap.rentedDresses} tone="gold" />
-            <MiniChip label="صيانة" value={snap.maintenanceDresses} tone="red" />
+          <MiniChip label="يحتاج تنظيف" value={snap.maintenanceDresses} tone="red" />
           </div>
         </div>
       </div>
@@ -138,7 +138,7 @@ export function OwnerSnapshot() {
             <DressRow label="متاحة" value={snap.availableDresses} color="bg-emerald-500" />
             <DressRow label="محجوزة في المحل" value={snap.reservedDresses} color="bg-sky-500" />
             <DressRow label="عند العميلات" value={snap.rentedDresses} color="bg-yellow-400" />
-            <DressRow label="صيانة" value={snap.maintenanceDresses} color="bg-red-500" />
+            <DressRow label="يحتاج تنظيف" value={snap.maintenanceDresses} color="bg-red-500" />
           </ul>
         </div>
       </div>

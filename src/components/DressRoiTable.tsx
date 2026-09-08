@@ -5,9 +5,11 @@ import { DressVariants } from "@/components/DressVariants";
 import { useShop } from "@/context/ShopContext";
 import {
   capitalRecoveryPercent,
-  dressDirectExpenses,
+  dressAcquisitionCost,
+  dressCleaningCost,
   dressNetProfit,
   dressRentalRevenue,
+  dressRepairCost,
   hasBrokenEven,
 } from "@/lib/finance";
 import { cn, formatCurrency } from "@/lib/format";
@@ -27,7 +29,9 @@ export function DressRoiTable() {
       <div className="grid gap-4 md:grid-cols-2">
         {dresses.map((dress) => {
           const revenue = dressRentalRevenue(dress.id, bookings);
-          const direct = dressDirectExpenses(dress.id, variableExpenses);
+          const cleaning = dressCleaningCost(dress.id, variableExpenses);
+          const repair = dressRepairCost(dress.id, variableExpenses);
+          const landed = dressAcquisitionCost(dress);
           const net = dressNetProfit(dress, bookings, variableExpenses);
           const recovered = capitalRecoveryPercent(dress, bookings, variableExpenses);
           const brokenEven = hasBrokenEven(dress, bookings, variableExpenses);
@@ -53,18 +57,22 @@ export function DressRoiTable() {
               <div className="mt-3">
                 <DressVariants dress={dress} dresses={dresses} />
               </div>
-              <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
+              <dl className="mt-4 grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
                 <div className="rounded-2xl bg-rose-50 px-3 py-2">
-                  <dt className="text-[11px] text-rose-400">اشتريناه</dt>
-                  <dd className="mt-0.5 tabular-nums text-rose-900">{formatCurrency(dress.purchasePrice)}</dd>
+                  <dt className="text-[11px] text-rose-400">تكلفة الفستان</dt>
+                  <dd className="mt-0.5 tabular-nums text-rose-900">{formatCurrency(landed)}</dd>
                 </div>
                 <div className="rounded-2xl bg-amber-50 px-3 py-2">
                   <dt className="text-[11px] text-amber-600">دخل منه</dt>
                   <dd className="mt-0.5 tabular-nums text-amber-900">{formatCurrency(revenue)}</dd>
                 </div>
-                <div className="rounded-2xl bg-violet-50 px-3 py-2">
-                  <dt className="text-[11px] text-violet-400">تنظيف وإصلاح</dt>
-                  <dd className="mt-0.5 tabular-nums text-violet-900">{formatCurrency(direct)}</dd>
+                <div className="rounded-2xl bg-yellow-50 px-3 py-2">
+                  <dt className="text-[11px] text-yellow-700">تنظيف</dt>
+                  <dd className="mt-0.5 tabular-nums text-yellow-900">{formatCurrency(cleaning)}</dd>
+                </div>
+                <div className="rounded-2xl bg-red-50 px-3 py-2">
+                  <dt className="text-[11px] text-red-700">تصليح</dt>
+                  <dd className="mt-0.5 tabular-nums text-red-900">{formatCurrency(repair)}</dd>
                 </div>
               </dl>
               <div className="mt-4">
