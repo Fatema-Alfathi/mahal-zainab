@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Amiri, Cairo } from "next/font/google";
 import { Providers } from "@/app/providers";
 import "./globals.css";
@@ -15,8 +15,16 @@ const amiri = Amiri({
 });
 
 export const metadata: Metadata = {
-  title: "محل زينب · تأجير فساتين الزفاف والسهرات",
+  title: "YAL · محل زينب · تأجير فساتين الزفاف والسهرات",
   description: "نظام مالي ومخزوني لمحل زينب لتأجير فساتين الزفاف والسهرات.",
+  icons: {
+    icon: "/yal-logo.jpg",
+    apple: "/yal-logo.jpg",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2d0503",
 };
 
 export default function RootLayout({
@@ -30,7 +38,7 @@ export default function RootLayout({
       dir="rtl"
       className={`${cairo.variable} ${amiri.variable} h-full antialiased`}
     >
-      <body className="min-h-full font-sans text-[#5a3144]">
+      <body className="min-h-full font-sans text-[#2d0503]">
         <Providers>{children}</Providers>
       </body>
     </html>

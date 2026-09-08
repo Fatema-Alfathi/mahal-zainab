@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fff4f0;
-  --foreground: #5a3144;
+  --yal-burgundy: #2d0503;
+  --yal-burgundy-mid: #4a1210;
+  --yal-gold: #ebd8bb;
+  --yal-gold-bright: #ffe9d9;
+  --background: #f4eee4;
+  --foreground: #2d0503;
 }
 
 @theme inline {
@@ -10,6 +14,22 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-cairo);
   --font-serif: var(--font-amiri);
+  --color-rose-50: #faf6ef;
+  --color-rose-100: #f3ead8;
+  --color-rose-200: #e4d4b8;
+  --color-rose-300: #c9ae86;
+  --color-rose-400: #9a6f5c;
+  --color-rose-500: #7a3d42;
+  --color-rose-600: #6b2c32;
+  --color-rose-700: #5c1a22;
+  --color-rose-800: #4a1210;
+  --color-rose-900: #2d0503;
+  --color-rose-950: #1c0808;
+  --color-pink-50: #faf6ef;
+  --color-pink-100: #f3ead8;
+  --color-pink-200: #e8d5b0;
+  --color-pink-300: #d4bc94;
+  --color-pink-800: #4a1210;
 }
 
 html {
@@ -19,12 +39,12 @@ html {
 body {
   color: var(--foreground);
   font-family: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
-  background-color: #fff4f0;
+  background-color: #f4eee4;
   background-image:
-    radial-gradient(ellipse 75% 50% at 0% 0%, rgba(255, 168, 205, 0.55) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 42% at 100% 8%, rgba(255, 214, 130, 0.48) 0%, transparent 52%),
-    radial-gradient(ellipse 55% 36% at 88% 100%, rgba(255, 176, 198, 0.42) 0%, transparent 50%),
-    radial-gradient(ellipse 42% 30% at 12% 92%, rgba(170, 230, 200, 0.32) 0%, transparent 46%);
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' viewBox='0 0 88 88'%3E%3Cpath fill='none' stroke='%232d0503' stroke-opacity='0.06' stroke-width='0.8' d='M44 10 L66 44 L44 78 L22 44 Z'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse 70% 48% at 100% 0%, rgba(45, 5, 3, 0.16) 0%, transparent 58%),
+    radial-gradient(ellipse 55% 40% at 0% 100%, rgba(235, 216, 187, 0.55) 0%, transparent 52%),
+    radial-gradient(ellipse 45% 32% at 90% 92%, rgba(74, 18, 16, 0.1) 0%, transparent 50%);
   background-attachment: fixed;
 }
 
@@ -32,50 +52,60 @@ body {
   font-family: var(--font-amiri), ui-serif, Georgia, serif;
 }
 
+.shop-header {
+  background: linear-gradient(180deg, #3a0a08 0%, #2d0503 100%);
+  border-bottom: 1px solid rgba(235, 216, 187, 0.22);
+  box-shadow: 0 12px 32px -18px rgba(45, 5, 3, 0.65);
+}
+
 .shop-card {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 186, 210, 0.75);
-  box-shadow: 0 14px 36px -16px rgba(199, 52, 102, 0.28);
+  background: rgba(255, 252, 247, 0.94);
+  border: 1px solid rgba(201, 174, 134, 0.42);
+  box-shadow: 0 14px 36px -16px rgba(45, 5, 3, 0.28);
 }
 
 .shop-soft {
-  background: linear-gradient(180deg, #fff8fb 0%, #ffe9f1 100%);
+  background: linear-gradient(180deg, #faf6ef 0%, #f0e4d0 100%);
 }
 
 .shop-btn {
-  background: linear-gradient(135deg, #f06292 0%, #e24b7a 48%, #c73466 100%);
-  color: #fff;
+  background: linear-gradient(135deg, #5c1a16 0%, #3a0a08 48%, #2d0503 100%);
+  color: #ebd8bb;
 }
 
 .shop-btn:hover {
-  filter: brightness(1.07);
+  filter: brightness(1.12);
 }
 
 .shop-btn-gold {
-  background: linear-gradient(135deg, #ffe08a 0%, #f0c14b 55%, #e0a52a 100%);
-  color: #5a3d12;
+  background: linear-gradient(135deg, #ffe9d9 0%, #ebd8bb 48%, #c9ae86 100%);
+  color: #2d0503;
 }
 
 .shop-btn-gold:hover {
-  filter: brightness(1.06);
+  filter: brightness(1.05);
 }
 
 .shop-btn-violet {
-  background: linear-gradient(135deg, #c4b5fd 0%, #8b5cf6 100%);
-  color: #fff;
+  background: linear-gradient(135deg, #6b2c28 0%, #4a1210 100%);
+  color: #ebd8bb;
 }
 
 .shop-btn-violet:hover {
-  filter: brightness(1.06);
+  filter: brightness(1.08);
 }
 
 .dash-panel {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(255, 186, 210, 0.7);
-  box-shadow: 0 18px 40px -22px rgba(199, 52, 102, 0.32);
+  background: rgba(255, 252, 247, 0.94);
+  border: 1px solid rgba(201, 174, 134, 0.4);
+  box-shadow: 0 18px 40px -22px rgba(45, 5, 3, 0.32);
 }
 
 .dash-hero {
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 232, 242, 0.9) 48%, rgba(255, 244, 214, 0.75) 100%);
+    radial-gradient(ellipse 80% 120% at 0% 0%, rgba(235, 216, 187, 0.16), transparent 55%),
+    linear-gradient(135deg, #3a0a08 0%, #2d0503 52%, #4a1210 100%);
+  border: 1px solid rgba(235, 216, 187, 0.28);
+  box-shadow: 0 18px 40px -18px rgba(45, 5, 3, 0.55);
+  color: #ebd8bb;
 }

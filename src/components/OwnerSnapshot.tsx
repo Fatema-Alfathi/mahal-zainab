@@ -8,10 +8,10 @@ import {
   CalendarRange,
   CircleDollarSign,
   Shirt,
-  Sparkles,
   TrendingUp,
   Wallet,
 } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { useShop } from "@/context/ShopContext";
 import { ownerHistory, ownerSnapshot } from "@/lib/ownerSnapshot";
 import { comparisonLabel } from "@/lib/labels";
@@ -42,18 +42,20 @@ export function OwnerSnapshot() {
     <section className="space-y-5">
       <div className="dash-hero dash-panel rounded-3xl px-5 py-6 sm:px-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="inline-flex items-center gap-2 text-sm text-rose-500">
-              <Sparkles className="h-4 w-4" aria-hidden />
-              لوحة تحكم المالك
-            </p>
-            <h2 className="mt-2 font-serif text-3xl text-rose-900 sm:text-4xl">محل زينب</h2>
-            <p className="mt-2 text-sm text-rose-500">{formatDateLong(todayIso())}</p>
-            <p className="mt-3 max-w-xl text-sm leading-7 text-rose-700/80">
-              {snap.monthProfit >= 0
-                ? `دخل ${snap.thisMonthLabel} حتى اليوم يغطي المصروفات، والمحل رابح.`
-                : `مصروفات ${snap.thisMonthLabel} حتى اليوم أعلى من دخل التأجير.`}
-            </p>
+          <div className="flex items-start gap-4">
+            <BrandLogo size="md" />
+            <div>
+              <p className="text-sm text-[#ebd8bb]/75">لوحة تحكم المالك</p>
+              <h2 className="mt-2 font-serif text-3xl text-[#ffe9d9] sm:text-4xl">محل زينب</h2>
+              <p className="mt-2 text-sm text-[#ebd8bb]/70" suppressHydrationWarning>
+                {formatDateLong(todayIso())}
+              </p>
+              <p className="mt-3 max-w-xl text-sm leading-7 text-[#ebd8bb]/85">
+                {snap.monthProfit >= 0
+                  ? `دخل ${snap.thisMonthLabel} حتى اليوم يغطي المصروفات، والمحل رابح.`
+                  : `مصروفات ${snap.thisMonthLabel} حتى اليوم أعلى من دخل التأجير.`}
+              </p>
+            </div>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
             <MiniChip label="متاح" value={snap.availableDresses} tone="mint" />
@@ -185,7 +187,7 @@ export function OwnerSnapshot() {
                     title={`${row.label}: ${formatCurrency(row.income)}`}
                     className={cn(
                       "w-full max-w-8 rounded-t-lg sm:max-w-10",
-                      high ? "bg-emerald-400" : low ? "bg-amber-300" : "bg-gradient-to-t from-rose-400 to-pink-300",
+                      high ? "bg-emerald-400" : low ? "bg-amber-300" : "bg-gradient-to-t from-[#2d0503] to-[#ebd8bb]",
                     )}
                     style={{ height: `${height}%` }}
                   />
@@ -205,13 +207,13 @@ function MiniChip({ label, value, tone }: { label: string; value: number; tone: 
     <div
       className={cn(
         "rounded-2xl px-3 py-2",
-        tone === "mint" && "bg-emerald-50",
-        tone === "sky" && "bg-sky-50",
-        tone === "gold" && "bg-amber-50",
+        tone === "mint" && "bg-emerald-400/18 ring-1 ring-emerald-300/25",
+        tone === "sky" && "bg-[#ebd8bb]/12 ring-1 ring-[#ebd8bb]/25",
+        tone === "gold" && "bg-[#ebd8bb]/20 ring-1 ring-[#ebd8bb]/35",
       )}
     >
-      <p className="text-[11px] text-rose-400">{label}</p>
-      <p className="mt-0.5 text-lg tabular-nums text-rose-900">{value}</p>
+      <p className="text-[11px] text-[#ebd8bb]/70">{label}</p>
+      <p className="mt-0.5 text-lg tabular-nums text-[#ffe9d9]">{value}</p>
     </div>
   );
 }
