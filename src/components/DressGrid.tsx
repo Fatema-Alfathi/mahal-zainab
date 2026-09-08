@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarPlus, CheckCircle2, HandHeart, RotateCcw, Sparkles, X } from "lucide-react";
-import { BookingModal } from "@/components/BookingModal";
+import { CalendarDays, CalendarPlus, CheckCircle2, HandHeart, RotateCcw, Sparkles, X } from "lucide-react";
+import { DressCalendarPanel } from "@/components/DressBookingCalendar";
 import { DressBarcode } from "@/components/DressBarcode";
 import { DressGallery } from "@/components/DressGallery";
 import { ReturnDialog } from "@/components/ReturnDialog";
@@ -67,6 +67,7 @@ export function DressGrid() {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilterValue>("all");
   const [colorFilter, setColorFilter] = useState<ColorFilterValue>("all");
   const [query, setQuery] = useState("");
+  const [calendarDressId, setCalendarDressId] = useState<string | null>(null);
 
   const activeCustomerByDress = useMemo(() => {
     const map = new Map<string, string>();
@@ -83,6 +84,9 @@ export function DressGrid() {
     const colorOk = colorFilter === "all" || dress.color === colorFilter;
     return statusOk && sizeOk && categoryOk && colorOk && matchesDressQuery(dress, query);
   });
+  const calendarDress =
+    visibleDresses.find((dress) => dress.id === calendarDressId) ??
+    (query.trim() ? visibleDresses[0] : null);
 
   return (
     <section>
@@ -94,19 +98,33 @@ export function DressGrid() {
             ابحثي بالاسم أو الباركود، بعدين احجزي أو رجّعي أو أرجعي الفستان للصالة.
           </p>
         </div>
-        <Link href="/dresses" className="shop-btn-gold rounded-2xl px-4 py-2 text-sm">
-          إدارة الفساتين
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/calendar" className="shop-soft rounded-2xl px-4 py-2 text-sm text-rose-800 hover:bg-rose-50">
+            تقويم الحجوزات
+          </Link>
+          <Link href="/dresses" className="shop-btn-gold rounded-2xl px-4 py-2 text-sm">
+            إدارة الفساتين
+          </Link>
+        </div>
       </div>
       <div className="mb-4 space-y-3">
         <input
           type="search"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setCalendarDressId(null);
+          }}
           placeholder="ابحثي بالاسم أو الباركود"
           className="w-full rounded-2xl border-0 bg-white/90 px-4 py-2.5 text-sm outline-none ring-rose-200 focus:ring-2"
           aria-label="البحث عن فستان بالاسم أو الباركود"
         />
+        {calendarDress ? (
+          <p className="text-sm text-rose-600">
+            تقويم {calendarDress.name} من البحث
+            {visibleDresses.length > 1 ? ` · ${visibleDresses.length} فساتين` : ""}
+          </p>
+        ) : null}
         <div className="flex flex-wrap gap-2" role="group" aria-label="تصفية حسب الحالة">
           {FILTERS.map((filter) => (
             <button
@@ -126,6 +144,11 @@ export function DressGrid() {
         <ColorFilter value={colorFilter} onChange={setColorFilter} />
         <SizeFilter value={sizeFilter} onChange={setSizeFilter} />
       </div>
+      {calendarDress ? (
+        <div className="mb-5">
+          <DressCalendarPanel key={calendarDress.id} dress={calendarDress} bookings={bookings} />
+        </div>
+      ) : null}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {visibleDresses.length === 0 ? (
           <p className="shop-card rounded-3xl px-4 py-8 text-center text-sm text-rose-400 sm:col-span-2 xl:col-span-3">
@@ -226,6 +249,24 @@ export function DressGrid() {
                   <DressBarcode value={dress.barcode} height={38} moduleWidth={1} />
                 </button>
                 <div className="flex flex-wrap gap-2">
+                  {query.trim() ? (
+                    <button
+                      type="button"
+                      onClick={() => setCalendarDressId(dress.id)}
+                      className="shop-soft inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs text-rose-800 hover:bg-rose-50"
+                    >
+                      <CalendarDays className="h-3.5 w-3.5" aria-hidden />
+                      التقويم
+                    </button>
+                  ) : (
+                    <Link
+                      href={`/calendar/?dress=${dress.id}`}
+                      className="shop-soft inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs text-rose-800 hover:bg-rose-50"
+                    >
+                      <CalendarDays className="h-3.5 w-3.5" aria-hidden />
+                      التقويم
+                    </Link>
+                  )}
                   {dress.status === "available" ? (
                     <button
                       type="button"

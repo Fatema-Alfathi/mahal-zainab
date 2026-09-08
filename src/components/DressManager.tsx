@@ -1,8 +1,9 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { Pencil, Plus, Trash2, X } from "lucide-react";
-import { DressGallery } from "@/components/DressGallery";
+import Link from "next/link";
+import { CalendarDays, Pencil, Plus, Trash2, X } from "lucide-react";
+import { DressCalendarPanel } from "@/components/DressBookingCalendar";
 import { DressPhoto } from "@/components/DressPhoto";
 import { CategoryFilter, type CategoryFilterValue } from "@/components/CategoryFilter";
 import { CategoryPicker } from "@/components/CategoryPicker";
@@ -144,10 +145,19 @@ export function DressManager() {
           className="w-full rounded-2xl border-0 bg-white/90 px-4 py-2.5 text-sm outline-none ring-rose-200 focus:ring-2"
           aria-label="البحث عن فستان بالاسم أو الكود"
         />
+        {query.trim() && visibleDresses[0] ? (
+          <p className="text-sm text-rose-600">تقويم {visibleDresses[0].name} من البحث</p>
+        ) : null}
         <CategoryFilter value={categoryFilter} onChange={setCategoryFilter} />
         <ColorFilter value={colorFilter} onChange={setColorFilter} />
         <SizeFilter value={sizeFilter} onChange={setSizeFilter} />
       </div>
+
+      {query.trim() && visibleDresses[0] ? (
+        <div className="mb-5">
+          <DressCalendarPanel key={visibleDresses[0].id} dress={visibleDresses[0]} bookings={bookings} />
+        </div>
+      ) : null}
 
       <div className="space-y-3">
         {visibleDresses.length === 0 ? (
@@ -203,6 +213,13 @@ export function DressManager() {
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/calendar/?dress=${dress.id}`}
+                        className="shop-soft inline-flex items-center gap-1.5 rounded-2xl px-3 py-2 text-sm text-rose-700 hover:bg-rose-50"
+                      >
+                        <CalendarDays className="h-3.5 w-3.5" aria-hidden />
+                        التقويم
+                      </Link>
                       <button
                         type="button"
                         onClick={() => {

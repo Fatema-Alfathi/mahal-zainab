@@ -128,6 +128,24 @@ export function isIsoInRange(date: string, start: string, end: string): boolean 
   return date >= start && date <= end;
 }
 
+export function eachIsoDate(start: string, end: string): string[] {
+  if (!start || !end || end < start) return start ? [start] : [];
+  const dates: string[] = [];
+  let cursor = start;
+  while (cursor <= end) {
+    dates.push(cursor);
+    cursor = shiftIso(cursor, 1);
+  }
+  return dates;
+}
+
+export const WEEKDAYS_SAT_AR = ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"] as const;
+
+export function weekdaySatIndex(iso: string): number {
+  const [year, month, day] = iso.split("-").map(Number);
+  return (new Date(year, (month ?? 1) - 1, day ?? 1).getDay() + 1) % 7;
+}
+
 export function monthNameAr(iso: string): string {
   const month = Number(iso.slice(5, 7));
   return MONTHS_AR[(month || 1) - 1] ?? iso;

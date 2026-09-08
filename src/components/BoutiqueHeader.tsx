@@ -6,11 +6,12 @@ import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { useShop } from "@/context/ShopContext";
 import { cn } from "@/lib/format";
 
-export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses" | "customers" }) {
+export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses" | "customers" | "calendar" }) {
   const { isOwner } = useShop();
   const onHome = active === "home";
   const onDresses = active === "dresses";
   const onCustomers = active === "customers";
+  const onCalendar = active === "calendar";
 
   return (
     <header className="shop-header sticky top-0 z-30">
@@ -40,6 +41,15 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
             )}
           >
             العميلات
+          </Link>
+          <Link
+            href="/calendar"
+            className={cn(
+              "rounded-2xl px-3 py-1.5 transition",
+              onCalendar ? "shop-btn-gold shadow-sm" : "text-white hover:bg-white/15",
+            )}
+          >
+            التقويم
           </Link>
           <Link
             href="/dresses"
