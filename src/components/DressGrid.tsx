@@ -19,8 +19,8 @@ import type { Dress, DressStatus } from "@/types";
 const STATUS_STYLES: Record<DressStatus, string> = {
   available: "bg-emerald-600 text-white",
   reserved: "bg-sky-600 text-white",
-  rented: "bg-amber-500 text-[#2a0c12]",
-  maintenance: "bg-rose-800 text-white",
+  rented: "bg-yellow-400 text-yellow-950",
+  maintenance: "bg-red-600 text-white",
 };
 
 const STATUS_LABELS: Record<DressStatus, string> = {
@@ -31,6 +31,23 @@ const STATUS_LABELS: Record<DressStatus, string> = {
 };
 
 type StatusFilter = "all" | DressStatus;
+
+const FILTER_ACTIVE: Record<StatusFilter, string> = {
+  all: "shop-btn",
+  available: "shop-btn-green",
+  reserved: "shop-btn-blue",
+  rented: "shop-btn-yellow",
+  maintenance: "shop-btn-red",
+};
+
+const CATEGORY_CHIP: Record<string, string> = {
+  wedding: "bg-yellow-400 text-yellow-950",
+  evening: "bg-red-600 text-white",
+  soft: "bg-emerald-600 text-white",
+  engagement: "bg-sky-600 text-white",
+  henna: "bg-amber-500 text-amber-950",
+  graduation: "bg-violet-600 text-white",
+};
 
 const FILTERS: Array<{ id: StatusFilter; label: string }> = [
   { id: "all", label: "الكل" },
@@ -98,7 +115,7 @@ export function DressGrid() {
               onClick={() => setStatusFilter(filter.id)}
               className={cn(
                 "rounded-full px-3 py-1.5 text-sm",
-                statusFilter === filter.id ? "shop-btn" : "bg-white font-medium text-rose-800 ring-1 ring-rose-200 hover:bg-rose-50",
+                statusFilter === filter.id ? FILTER_ACTIVE[filter.id] : "bg-white font-medium text-rose-800 ring-1 ring-rose-200 hover:bg-rose-50",
               )}
             >
               {filter.label}
@@ -141,9 +158,9 @@ export function DressGrid() {
                   <span className="text-xs text-rose-400">{presentation.silhouette}</span>
                 </div>
                 <p className="flex flex-wrap gap-2 text-sm text-rose-800">
-                  <span className="rounded-full bg-pink-100 px-2.5 py-1 text-xs text-pink-800">{categoryLabel(dress.category)}</span>
-                  <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs text-violet-800">{dress.color}</span>
-                  <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs text-amber-800">{sizeLabel(dress.size)}</span>
+                  <span className={cn("rounded-full px-2.5 py-1 text-xs", CATEGORY_CHIP[dress.category] ?? "bg-rose-100 text-rose-800")}>{categoryLabel(dress.category)}</span>
+                  <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs text-sky-800">{dress.color}</span>
+                  <span className="rounded-full bg-yellow-100 px-2.5 py-1 text-xs text-yellow-800">{sizeLabel(dress.size)}</span>
                 </p>
                 <DressVariants dress={dress} dresses={dresses} />
                 {measurementLine(dress.measurements) ? (
@@ -198,7 +215,7 @@ export function DressGrid() {
                     <button
                       type="button"
                       onClick={() => setBookingDress(dress)}
-                      className="shop-btn inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
+                      className="shop-btn-green inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
                     >
                       <CalendarPlus className="h-3.5 w-3.5" aria-hidden />
                       حجز الفستان
@@ -208,7 +225,7 @@ export function DressGrid() {
                     <button
                       type="button"
                       onClick={() => pickupDress(dress.id)}
-                      className="shop-btn-gold inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
+                      className="shop-btn-yellow inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
                     >
                       <HandHeart className="h-3.5 w-3.5" aria-hidden />
                       تسليم للعميلة
@@ -218,7 +235,7 @@ export function DressGrid() {
                     <button
                       type="button"
                       onClick={() => setReturningDress(dress)}
-                      className="shop-btn-gold inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
+                      className="shop-btn-red inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
                     >
                       <RotateCcw className="h-3.5 w-3.5" aria-hidden />
                       تسجيل الإرجاع
@@ -228,14 +245,14 @@ export function DressGrid() {
                     <button
                       type="button"
                       onClick={() => completeMaintenance(dress.id)}
-                      className="shop-btn-violet inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
+                      className="shop-btn-green inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
                     >
                       <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
                       إعادة للصالة
                     </button>
                   ) : null}
                   {dress.status === "maintenance" ? (
-                    <span className="inline-flex items-center gap-1 text-xs text-violet-400">
+                    <span className="inline-flex items-center gap-1 text-xs text-red-600">
                       <Sparkles className="h-3.5 w-3.5" aria-hidden />
                       {isOwner ? "تم تسجيل التنظيف الجاف" : "العناية جارية"}
                     </span>

@@ -27,8 +27,8 @@ import type { Dress, DressCatalogDraft, DressStatus } from "@/types";
 const STATUS_STYLES: Record<DressStatus, string> = {
   available: "bg-emerald-600 text-white",
   reserved: "bg-sky-600 text-white",
-  rented: "bg-amber-500 text-[#2a0c12]",
-  maintenance: "bg-rose-800 text-white",
+  rented: "bg-yellow-400 text-yellow-950",
+  maintenance: "bg-red-600 text-white",
 };
 
 const STATUS_LABELS: Record<DressStatus, string> = {
@@ -542,7 +542,7 @@ function ConfirmDeleteDialog({
           <button type="button" onClick={onClose} className="rounded-2xl px-4 py-2 text-sm text-rose-400 hover:bg-rose-50">
             إلغاء
           </button>
-          <button type="button" onClick={onConfirm} className="rounded-2xl bg-rose-700 px-4 py-2 text-sm text-white hover:bg-rose-600">
+          <button type="button" onClick={onConfirm} className="shop-btn-red rounded-2xl px-4 py-2 text-sm">
             نعم، احذفي الفستان
           </button>
         </div>

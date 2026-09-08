@@ -28,20 +28,20 @@ export function OwnerHistory() {
 
       <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Highlight label="أعلى شهر دخل" row={history.highestIncomeMonth} field="income" tone="mint" />
-        <Highlight label="أقل شهر دخل" row={history.lowestIncomeMonth} field="income" tone="gold" />
-        <Highlight label="أضعف شهر فيه حجوزات" row={history.weakestBusyMonth} field="income" tone="gold" />
-        <Highlight label="أكثر شهر حجوزات" row={history.mostBookingsMonth} field="bookings" tone="rose" />
+        <Highlight label="أقل شهر دخل" row={history.lowestIncomeMonth} field="income" tone="red" />
+        <Highlight label="أضعف شهر فيه حجوزات" row={history.weakestBusyMonth} field="income" tone="yellow" />
+        <Highlight label="أكثر شهر حجوزات" row={history.mostBookingsMonth} field="bookings" tone="blue" />
         <Highlight label="أعلى شهر ربح" row={history.highestProfitMonth} field="profit" tone="mint" />
-        <Highlight label="أقل شهر ربح" row={history.lowestProfitMonth} field="profit" tone="gold" />
-        <Highlight label="أعلى سنة دخل" row={history.highestIncomeYear} field="income" tone="rose" />
-        <Highlight label="أقل سنة دخل" row={history.lowestIncomeYear} field="income" tone="gold" />
+        <Highlight label="أقل شهر ربح" row={history.lowestProfitMonth} field="profit" tone="red" />
+        <Highlight label="أعلى سنة دخل" row={history.highestIncomeYear} field="income" tone="mint" />
+        <Highlight label="أقل سنة دخل" row={history.lowestIncomeYear} field="income" tone="red" />
       </dl>
 
       <div className="dash-panel rounded-3xl p-5 sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h3 className="text-xl text-rose-900">دخل كل شهر</h3>
-            <p className="mt-1 text-sm text-rose-400">اختاري السنة. العمود الأخضر أعلى دخل، والذهبي أقل دخل.</p>
+            <p className="mt-1 text-sm text-rose-400">اختاري السنة. العمود الأخضر أعلى دخل، والأحمر أقل دخل.</p>
           </div>
           <div className="flex flex-wrap gap-2" role="group" aria-label="اختيار السنة">
             {years.map((item) => (
@@ -73,7 +73,7 @@ export function OwnerHistory() {
                     title={`${row.label}: ${formatCurrency(row.income)}`}
                     className={cn(
                       "w-full max-w-12 rounded-t-xl",
-                      high ? "bg-emerald-500" : low ? "bg-[#d4a017]" : "bg-gradient-to-t from-[#8b1530] to-[#d4a017]",
+                      high ? "bg-emerald-500" : low ? "bg-red-500" : "bg-gradient-to-t from-[#8b1530] to-[#d4a017]",
                     )}
                     style={{ height: `${height}%` }}
                   />
@@ -158,16 +158,19 @@ function Highlight({
   label: string;
   row: HistoryRow | null;
   field: "income" | "profit" | "bookings";
-  tone: "rose" | "gold" | "mint";
+  tone: "rose" | "gold" | "mint" | "red" | "yellow" | "blue";
 }) {
   const value = row ? row[field] : 0;
   return (
     <div
       className={cn(
-        "rounded-3xl px-4 py-4 ring-1 ring-inset",
-        tone === "rose" && "bg-white ring-rose-100",
-        tone === "gold" && "bg-amber-50/80 ring-amber-100",
-        tone === "mint" && "bg-emerald-50/80 ring-emerald-100",
+        "rounded-3xl px-4 py-4",
+        tone === "rose" && "shop-card",
+        tone === "gold" && "shop-tint-yellow",
+        tone === "mint" && "shop-tint-green",
+        tone === "red" && "shop-tint-red",
+        tone === "yellow" && "shop-tint-yellow",
+        tone === "blue" && "shop-tint-blue",
       )}
     >
       <p className="text-xs text-rose-400">{label}</p>

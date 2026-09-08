@@ -57,10 +57,11 @@ export function OwnerSnapshot() {
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
             <MiniChip label="متاح" value={snap.availableDresses} tone="mint" />
             <MiniChip label="محجوز" value={snap.reservedDresses} tone="sky" />
             <MiniChip label="عند العميلة" value={snap.rentedDresses} tone="gold" />
+            <MiniChip label="صيانة" value={snap.maintenanceDresses} tone="red" />
           </div>
         </div>
       </div>
@@ -72,6 +73,7 @@ export function OwnerSnapshot() {
           hint="حتى اليوم"
           icon={CircleDollarSign}
           change={snap.comparison.income.change}
+          color="green"
         />
         <Kpi
           label="المصروفات"
@@ -80,6 +82,7 @@ export function OwnerSnapshot() {
           icon={Wallet}
           change={snap.comparison.expenses.change}
           invert
+          color="red"
         />
         <Kpi
           label="صافي الربح"
@@ -88,6 +91,7 @@ export function OwnerSnapshot() {
           icon={TrendingUp}
           change={snap.comparison.profit.change}
           emphasize={snap.monthProfit >= 0 ? "good" : "bad"}
+          color={snap.monthProfit >= 0 ? "green" : "red"}
         />
         <Kpi
           label="الحجوزات"
@@ -95,6 +99,7 @@ export function OwnerSnapshot() {
           hint={`${snap.yearBookings} حجز هذه السنة`}
           icon={CalendarDays}
           change={snap.comparison.bookings.change}
+          color="yellow"
         />
       </dl>
 
@@ -108,10 +113,10 @@ export function OwnerSnapshot() {
             <CalendarRange className="h-4 w-4 text-rose-300" aria-hidden />
           </div>
           <dl className="grid gap-3 sm:grid-cols-2">
-            <PeriodCard label="اليوم" value={snap.todayIncome} />
-            <PeriodCard label="هذا الأسبوع" value={snap.weekIncome} />
-            <PeriodCard label={`شهر ${snap.thisMonthLabel}`} value={snap.monthIncome} />
-            <PeriodCard label="هذه السنة" value={snap.yearIncome} />
+            <PeriodCard label="اليوم" value={snap.todayIncome} tone="yellow" />
+            <PeriodCard label="هذا الأسبوع" value={snap.weekIncome} tone="mint" />
+            <PeriodCard label={`شهر ${snap.thisMonthLabel}`} value={snap.monthIncome} tone="rose" />
+            <PeriodCard label="هذه السنة" value={snap.yearIncome} tone="blue" />
           </dl>
         </div>
 
@@ -124,16 +129,16 @@ export function OwnerSnapshot() {
             <Shirt className="h-4 w-4 text-rose-300" aria-hidden />
           </div>
           <div className="flex h-3 overflow-hidden rounded-full bg-rose-50">
-            <span className="bg-emerald-400" style={{ width: `${(snap.availableDresses / dressTotal) * 100}%` }} />
-            <span className="bg-sky-400" style={{ width: `${(snap.reservedDresses / dressTotal) * 100}%` }} />
-            <span className="bg-amber-400" style={{ width: `${(snap.rentedDresses / dressTotal) * 100}%` }} />
-            <span className="bg-violet-400" style={{ width: `${(snap.maintenanceDresses / dressTotal) * 100}%` }} />
+            <span className="bg-emerald-500" style={{ width: `${(snap.availableDresses / dressTotal) * 100}%` }} />
+            <span className="bg-sky-500" style={{ width: `${(snap.reservedDresses / dressTotal) * 100}%` }} />
+            <span className="bg-yellow-400" style={{ width: `${(snap.rentedDresses / dressTotal) * 100}%` }} />
+            <span className="bg-red-500" style={{ width: `${(snap.maintenanceDresses / dressTotal) * 100}%` }} />
           </div>
           <ul className="mt-4 space-y-2 text-sm">
-            <DressRow label="متاحة" value={snap.availableDresses} color="bg-emerald-400" />
-            <DressRow label="محجوزة في المحل" value={snap.reservedDresses} color="bg-sky-400" />
-            <DressRow label="عند العميلات" value={snap.rentedDresses} color="bg-amber-400" />
-            <DressRow label="صيانة" value={snap.maintenanceDresses} color="bg-violet-400" />
+            <DressRow label="متاحة" value={snap.availableDresses} color="bg-emerald-500" />
+            <DressRow label="محجوزة في المحل" value={snap.reservedDresses} color="bg-sky-500" />
+            <DressRow label="عند العميلات" value={snap.rentedDresses} color="bg-yellow-400" />
+            <DressRow label="صيانة" value={snap.maintenanceDresses} color="bg-red-500" />
           </ul>
         </div>
       </div>
@@ -144,18 +149,18 @@ export function OwnerSnapshot() {
           <p className="mt-1 text-xs text-rose-400">العربون من الإيجار، والتأمين عند المحل لين يرجع الفستان سليم</p>
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
             <PeriodCard label="عربون مدفوع" value={snap.depositsPaid} tone="mint" />
-            <PeriodCard label="تأمين عند المحل" value={snap.insuranceHeld} tone="mint" />
-            <PeriodCard label="متبقي على العميلات" value={snap.remainingDue} tone="gold" />
+            <PeriodCard label="تأمين عند المحل" value={snap.insuranceHeld} tone="yellow" />
+            <PeriodCard label="متبقي على العميلات" value={snap.remainingDue} tone="red" />
           </dl>
         </div>
         <div className="dash-panel rounded-3xl p-5">
           <h3 className="text-lg text-rose-900">مقارنة {snap.thisMonthLabel} بـ {snap.lastMonthLabel}</h3>
           <p className="mt-1 text-xs text-rose-400">نفس عدد الأيام من أول الشهر حتى اليوم</p>
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-            <CompareCard label="الدخل" current={snap.comparison.income.current} previous={snap.comparison.income.previous} change={snap.comparison.income.change} money />
-            <CompareCard label="المصروفات" current={snap.comparison.expenses.current} previous={snap.comparison.expenses.previous} change={snap.comparison.expenses.change} money invert />
-            <CompareCard label="صافي الربح" current={snap.comparison.profit.current} previous={snap.comparison.profit.previous} change={snap.comparison.profit.change} money />
-            <CompareCard label="الحجوزات" current={snap.comparison.bookings.current} previous={snap.comparison.bookings.previous} change={snap.comparison.bookings.change} />
+            <CompareCard label="الدخل" current={snap.comparison.income.current} previous={snap.comparison.income.previous} change={snap.comparison.income.change} money color="green" />
+            <CompareCard label="المصروفات" current={snap.comparison.expenses.current} previous={snap.comparison.expenses.previous} change={snap.comparison.expenses.change} money invert color="red" />
+            <CompareCard label="صافي الربح" current={snap.comparison.profit.current} previous={snap.comparison.profit.previous} change={snap.comparison.profit.change} money color={snap.comparison.profit.current >= 0 ? "green" : "red"} />
+            <CompareCard label="الحجوزات" current={snap.comparison.bookings.current} previous={snap.comparison.bookings.previous} change={snap.comparison.bookings.change} color="yellow" />
           </dl>
         </div>
       </div>
@@ -167,10 +172,10 @@ export function OwnerSnapshot() {
             <p className="mt-1 text-xs text-rose-400">آخر {recentMonths.length} شهر · الأعلى والأقل مميزين</p>
           </div>
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">
+            <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-white">
               أعلى: {history.highestIncomeMonth?.label ?? "—"}
             </span>
-            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-800">
+            <span className="rounded-full bg-red-600 px-2.5 py-1 text-white">
               أقل: {history.lowestIncomeMonth?.label ?? "—"}
             </span>
           </div>
@@ -187,7 +192,7 @@ export function OwnerSnapshot() {
                     title={`${row.label}: ${formatCurrency(row.income)}`}
                     className={cn(
                       "w-full max-w-8 rounded-t-lg sm:max-w-10",
-                      high ? "bg-emerald-500" : low ? "bg-[#d4a017]" : "bg-gradient-to-t from-[#8b1530] to-[#d4a017]",
+                      high ? "bg-emerald-500" : low ? "bg-red-500" : "bg-gradient-to-t from-[#8b1530] to-[#d4a017]",
                     )}
                     style={{ height: `${height}%` }}
                   />
@@ -202,14 +207,15 @@ export function OwnerSnapshot() {
   );
 }
 
-function MiniChip({ label, value, tone }: { label: string; value: number; tone: "mint" | "sky" | "gold" }) {
+function MiniChip({ label, value, tone }: { label: string; value: number; tone: "mint" | "sky" | "gold" | "red" }) {
   return (
     <div
       className={cn(
         "rounded-2xl px-3 py-2",
         tone === "mint" && "bg-emerald-500 text-white",
         tone === "sky" && "bg-sky-500 text-white",
-        tone === "gold" && "bg-[#d4a017] text-[#2a0c12]",
+        tone === "gold" && "bg-yellow-400 text-[#1c1400]",
+        tone === "red" && "bg-red-600 text-white",
       )}
     >
       <p className="text-[11px] font-medium opacity-95">{label}</p>
@@ -226,6 +232,7 @@ function Kpi({
   change,
   invert = false,
   emphasize,
+  color = "wine",
 }: {
   label: string;
   value: string;
@@ -234,32 +241,62 @@ function Kpi({
   change: number;
   invert?: boolean;
   emphasize?: "good" | "bad";
+  color?: "green" | "red" | "yellow" | "wine";
 }) {
   const up = change > 0.05;
   const down = change < -0.05;
   const good = invert ? down : up;
   return (
-    <div className="dash-panel rounded-3xl p-4 sm:p-5">
+    <div
+      className={cn(
+        "rounded-3xl p-4 sm:p-5",
+        color === "green" && "shop-tint-green",
+        color === "red" && "shop-tint-red",
+        color === "yellow" && "shop-tint-yellow",
+        color === "wine" && "dash-panel",
+      )}
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs text-rose-400">{label}</p>
           <p
             className={cn(
-              "mt-2 text-2xl tabular-nums tracking-tight",
-              emphasize === "good" && "text-emerald-600",
-              emphasize === "bad" && "text-rose-600",
-              !emphasize && "text-rose-900",
+              "text-xs font-medium",
+              color === "green" && "text-emerald-800",
+              color === "red" && "text-red-800",
+              color === "yellow" && "text-yellow-800",
+              color === "wine" && "text-rose-400",
+            )}
+          >
+            {label}
+          </p>
+          <p
+            className={cn(
+              "mt-2 text-2xl font-semibold tabular-nums tracking-tight",
+              emphasize === "good" && "text-emerald-700",
+              emphasize === "bad" && "text-red-700",
+              !emphasize && color === "green" && "text-emerald-800",
+              !emphasize && color === "red" && "text-red-800",
+              !emphasize && color === "yellow" && "text-yellow-900",
+              !emphasize && color === "wine" && "text-rose-900",
             )}
           >
             {value}
           </p>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-50 text-rose-400">
+        <div
+          className={cn(
+            "flex h-10 w-10 items-center justify-center rounded-2xl",
+            color === "green" && "bg-emerald-600 text-white",
+            color === "red" && "bg-red-600 text-white",
+            color === "yellow" && "bg-yellow-400 text-yellow-950",
+            color === "wine" && "bg-rose-50 text-rose-400",
+          )}
+        >
           <Icon className="h-5 w-5" aria-hidden />
         </div>
       </div>
-      <p className="mt-2 text-xs text-rose-300">{hint}</p>
-      <p className={cn("mt-2 inline-flex items-center gap-1 text-xs", good ? "text-emerald-600" : down || up ? "text-rose-500" : "text-rose-400")}>
+      <p className="mt-2 text-xs text-rose-700/80">{hint}</p>
+      <p className={cn("mt-2 inline-flex items-center gap-1 text-xs font-medium", good ? "text-emerald-700" : down || up ? "text-red-600" : "text-rose-500")}>
         {up ? <ArrowUpRight className="h-3.5 w-3.5" aria-hidden /> : null}
         {down ? <ArrowDownRight className="h-3.5 w-3.5" aria-hidden /> : null}
         {comparisonLabel(change)}
@@ -275,19 +312,33 @@ function PeriodCard({
 }: {
   label: string;
   value: number;
-  tone?: "rose" | "gold" | "mint";
+  tone?: "rose" | "gold" | "mint" | "yellow" | "red" | "blue";
 }) {
   return (
     <div
       className={cn(
         "rounded-2xl px-4 py-3",
-        tone === "rose" && "bg-rose-50/80",
+        tone === "rose" && "bg-rose-50",
         tone === "gold" && "bg-amber-50",
-        tone === "mint" && "bg-emerald-50",
+        tone === "mint" && "bg-emerald-100",
+        tone === "yellow" && "bg-yellow-100",
+        tone === "red" && "bg-red-100",
+        tone === "blue" && "bg-sky-100",
       )}
     >
-      <dt className="text-xs text-rose-400">{label}</dt>
-      <dd className="mt-1 text-xl tabular-nums text-rose-900">{formatCurrency(value)}</dd>
+      <dt
+        className={cn(
+          "text-xs font-medium",
+          tone === "mint" && "text-emerald-800",
+          tone === "yellow" && "text-yellow-800",
+          tone === "red" && "text-red-800",
+          tone === "blue" && "text-sky-800",
+          (tone === "rose" || tone === "gold") && "text-rose-400",
+        )}
+      >
+        {label}
+      </dt>
+      <dd className="mt-1 text-xl font-semibold tabular-nums text-rose-900">{formatCurrency(value)}</dd>
     </div>
   );
 }
@@ -311,6 +362,7 @@ function CompareCard({
   change,
   money = false,
   invert = false,
+  color = "wine",
 }: {
   label: string;
   current: number;
@@ -318,17 +370,26 @@ function CompareCard({
   change: number;
   money?: boolean;
   invert?: boolean;
+  color?: "green" | "red" | "yellow" | "wine";
 }) {
   const up = change > 0.05;
   const down = change < -0.05;
   const good = invert ? down : up;
   const format = (value: number) => (money ? formatSignedCurrency(value) : String(value));
   return (
-    <div className="rounded-2xl bg-rose-50/70 px-3 py-3">
-      <dt className="text-xs text-rose-400">{label}</dt>
-      <dd className="mt-1 text-lg tabular-nums text-rose-900">{format(current)}</dd>
-      <p className="mt-1 text-[11px] text-rose-300">الشهر الماضي {format(previous)}</p>
-      <p className={cn("mt-1 text-xs", good ? "text-emerald-600" : down || up ? "text-rose-500" : "text-rose-400")}>
+    <div
+      className={cn(
+        "rounded-2xl px-3 py-3",
+        color === "green" && "bg-emerald-100",
+        color === "red" && "bg-red-100",
+        color === "yellow" && "bg-yellow-100",
+        color === "wine" && "bg-rose-50",
+      )}
+    >
+      <dt className="text-xs font-medium text-rose-800">{label}</dt>
+      <dd className="mt-1 text-lg font-semibold tabular-nums text-rose-900">{format(current)}</dd>
+      <p className="mt-1 text-[11px] text-rose-700">الشهر الماضي {format(previous)}</p>
+      <p className={cn("mt-1 text-xs font-medium", good ? "text-emerald-700" : down || up ? "text-red-600" : "text-rose-500")}>
         {comparisonLabel(change)}
       </p>
     </div>
