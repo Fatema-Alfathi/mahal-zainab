@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, Pencil, Plus, Trash2, X } from "lucide-react";
 import { DressCalendarPanel } from "@/components/DressBookingCalendar";
+import { DressGallery } from "@/components/DressGallery";
 import { DressPhoto } from "@/components/DressPhoto";
 import { CategoryFilter, type CategoryFilterValue } from "@/components/CategoryFilter";
 import { CategoryPicker } from "@/components/CategoryPicker";

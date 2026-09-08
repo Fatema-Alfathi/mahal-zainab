@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, CalendarPlus, CheckCircle2, HandHeart, RotateCcw, Sparkles, X } from "lucide-react";
+import { BookingModal } from "@/components/BookingModal";
 import { DressCalendarPanel } from "@/components/DressBookingCalendar";
 import { DressBarcode } from "@/components/DressBarcode";
 import { DressGallery } from "@/components/DressGallery";
