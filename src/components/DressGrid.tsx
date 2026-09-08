@@ -17,10 +17,10 @@ import { cn, formatCurrency } from "@/lib/format";
 import type { Dress, DressStatus } from "@/types";
 
 const STATUS_STYLES: Record<DressStatus, string> = {
-  available: "bg-emerald-100 text-emerald-800",
-  reserved: "bg-sky-100 text-sky-800",
-  rented: "bg-amber-100 text-amber-800",
-  maintenance: "bg-violet-100 text-violet-800",
+  available: "bg-emerald-600 text-white",
+  reserved: "bg-sky-600 text-white",
+  rented: "bg-amber-500 text-[#2a0c12]",
+  maintenance: "bg-rose-800 text-white",
 };
 
 const STATUS_LABELS: Record<DressStatus, string> = {
@@ -98,7 +98,7 @@ export function DressGrid() {
               onClick={() => setStatusFilter(filter.id)}
               className={cn(
                 "rounded-full px-3 py-1.5 text-sm",
-                statusFilter === filter.id ? "shop-btn" : "bg-white/80 text-rose-400 hover:bg-white",
+                statusFilter === filter.id ? "shop-btn" : "bg-white font-medium text-rose-800 ring-1 ring-rose-200 hover:bg-rose-50",
               )}
             >
               {filter.label}

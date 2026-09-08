@@ -14,14 +14,14 @@ export function ColorFilter({
 }) {
   return (
     <div role="group" aria-label="تصفية حسب اللون">
-      <p className="mb-2 text-xs text-rose-400">اللون</p>
+      <p className="mb-2 text-xs font-medium text-rose-700">اللون</p>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => onChange("all")}
           className={cn(
             "rounded-full px-3 py-1.5 text-sm",
-            value === "all" ? "shop-btn" : "bg-white/80 text-rose-400 hover:bg-white",
+            value === "all" ? "shop-btn" : "bg-white font-medium text-rose-800 ring-1 ring-rose-200 hover:bg-rose-50",
           )}
         >
           كل الألوان
@@ -33,7 +33,7 @@ export function ColorFilter({
             onClick={() => onChange(color)}
             className={cn(
               "rounded-full px-3 py-1.5 text-sm",
-              value === color ? "shop-btn" : "bg-white/80 text-rose-400 hover:bg-white",
+              value === color ? "shop-btn" : "bg-white font-medium text-rose-800 ring-1 ring-rose-200 hover:bg-rose-50",
             )}
           >
             {color}

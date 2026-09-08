@@ -25,10 +25,10 @@ import { cn, formatCurrency } from "@/lib/format";
 import type { Dress, DressCatalogDraft, DressStatus } from "@/types";
 
 const STATUS_STYLES: Record<DressStatus, string> = {
-  available: "bg-emerald-100 text-emerald-800",
-  reserved: "bg-sky-100 text-sky-800",
-  rented: "bg-amber-100 text-amber-800",
-  maintenance: "bg-violet-100 text-violet-800",
+  available: "bg-emerald-600 text-white",
+  reserved: "bg-sky-600 text-white",
+  rented: "bg-amber-500 text-[#2a0c12]",
+  maintenance: "bg-rose-800 text-white",
 };
 
 const STATUS_LABELS: Record<DressStatus, string> = {

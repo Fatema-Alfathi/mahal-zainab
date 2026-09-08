@@ -73,7 +73,7 @@ export function OwnerHistory() {
                     title={`${row.label}: ${formatCurrency(row.income)}`}
                     className={cn(
                       "w-full max-w-12 rounded-t-xl",
-                      high ? "bg-emerald-400" : low ? "bg-amber-300" : "bg-gradient-to-t from-[#2d0503] to-[#ebd8bb]",
+                      high ? "bg-emerald-500" : low ? "bg-[#d4a017]" : "bg-gradient-to-t from-[#8b1530] to-[#d4a017]",
                     )}
                     style={{ height: `${height}%` }}
                   />

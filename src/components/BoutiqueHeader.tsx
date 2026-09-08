@@ -18,8 +18,8 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
         <div className="flex items-center gap-3">
           <BrandLogo />
           <div>
-            <p className="font-serif text-2xl text-[#fffaf3]">محل زينب</p>
-            <p className="text-sm text-[#fffaf3]">تأجير فساتين الزفاف والسهرات</p>
+            <p className="font-serif text-2xl text-white">محل زينب</p>
+            <p className="text-sm font-medium text-[#ffd76a]">تأجير فساتين الزفاف والسهرات</p>
           </div>
         </div>
         <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label="صفحات المحل">
@@ -27,7 +27,7 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
             href="/"
             className={cn(
               "rounded-2xl px-3 py-1.5 transition",
-              onHome ? "shop-btn-gold shadow-sm" : "text-[#fffaf3] hover:bg-white/15",
+              onHome ? "shop-btn-gold shadow-sm" : "text-white hover:bg-white/15",
             )}
           >
             لوحة المحل
@@ -36,7 +36,7 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
             href="/customers"
             className={cn(
               "rounded-2xl px-3 py-1.5 transition",
-              onCustomers ? "shop-btn-gold shadow-sm" : "text-[#fffaf3] hover:bg-white/15",
+              onCustomers ? "shop-btn-gold shadow-sm" : "text-white hover:bg-white/15",
             )}
           >
             العميلات
@@ -45,7 +45,7 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
             href="/dresses"
             className={cn(
               "rounded-2xl px-3 py-1.5 transition",
-              onDresses ? "shop-btn-gold shadow-sm" : "text-[#fffaf3] hover:bg-white/15",
+              onDresses ? "shop-btn-gold shadow-sm" : "text-white hover:bg-white/15",
             )}
           >
             إدارة الفساتين
@@ -53,7 +53,7 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
         </nav>
         <div className="flex flex-col items-start gap-2 sm:items-end">
           <RoleSwitcher />
-          <p className="text-sm text-[#fffaf3]/90">
+          <p className="text-sm font-medium text-[#ffd76a]">
             {isOwner ? "لوحة التحكم، العميلات، والحجوزات" : "الحجوزات وملفات العميلات"}
           </p>
         </div>

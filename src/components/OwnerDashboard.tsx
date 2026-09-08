@@ -30,7 +30,7 @@ export function OwnerDashboard() {
     <div className="space-y-6">
       <div className="-mx-1 overflow-x-auto px-1">
         <div
-          className="inline-flex min-w-full rounded-2xl bg-[#fffdf9]/90 p-1 shadow-sm ring-1 ring-[#c9ae86]/35 backdrop-blur-md sm:min-w-0"
+          className="inline-flex min-w-full rounded-2xl bg-white p-1 shadow-sm ring-2 ring-[#8b1530] sm:min-w-0"
           role="tablist"
           aria-label="أقسام لوحة المالك"
         >
@@ -45,7 +45,7 @@ export function OwnerDashboard() {
                 onClick={() => setTab(item.id)}
                 className={cn(
                   "flex-1 whitespace-nowrap rounded-xl px-3 py-2 text-sm transition sm:px-4",
-                  selected ? "shop-btn shadow-sm" : "text-rose-400 hover:bg-rose-50 hover:text-rose-700",
+                  selected ? "shop-btn shadow-sm" : "font-medium text-rose-700 hover:bg-rose-50",
                 )}
               >
                 {item.label}

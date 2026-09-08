@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#4a1614",
+  themeColor: "#6e1024",
 };
 
 export default function RootLayout({
@@ -38,7 +38,7 @@ export default function RootLayout({
       dir="rtl"
       className={`${cairo.variable} ${amiri.variable} h-full antialiased`}
     >
-      <body className="min-h-full font-sans text-[#2a1210]">
+      <body className="min-h-full font-sans text-[#2a0c12]">
         <Providers>{children}</Providers>
       </body>
     </html>

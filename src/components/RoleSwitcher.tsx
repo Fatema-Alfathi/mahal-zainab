@@ -27,12 +27,12 @@ export function RoleSwitcher() {
             onClick={() => setRole(item.id)}
             className={cn(
               "flex items-center gap-2 rounded-xl px-4 py-2 text-sm transition-colors",
-              active ? "shop-btn-gold shadow-sm" : "text-[#fffaf3] hover:bg-white/10",
+              active ? "shop-btn-gold shadow-sm" : "text-white hover:bg-white/10",
             )}
           >
             <Icon className="h-3.5 w-3.5" aria-hidden />
             <span>{item.label}</span>
-            <span className="hidden text-xs text-[#fffaf3]/90 sm:inline">{item.hint}</span>
+            <span className="hidden text-xs text-[#ffd76a] sm:inline">{item.hint}</span>
           </button>
         );
       })}

@@ -45,12 +45,12 @@ export function OwnerSnapshot() {
           <div className="flex items-start gap-4">
             <BrandLogo size="md" />
             <div>
-              <p className="text-sm text-rose-500">لوحة تحكم المالك</p>
-              <h2 className="mt-2 font-serif text-3xl text-rose-900 sm:text-4xl">محل زينب</h2>
-              <p className="mt-2 text-sm text-rose-500" suppressHydrationWarning>
+              <p className="text-sm font-medium text-[#ffd76a]">لوحة تحكم المالك</p>
+              <h2 className="mt-2 font-serif text-3xl text-white sm:text-4xl">محل زينب</h2>
+              <p className="mt-2 text-sm text-white" suppressHydrationWarning>
                 {formatDateLong(todayIso())}
               </p>
-              <p className="mt-3 max-w-xl text-sm leading-7 text-rose-700">
+              <p className="mt-3 max-w-xl text-sm leading-7 text-white">
                 {snap.monthProfit >= 0
                   ? `دخل ${snap.thisMonthLabel} حتى اليوم يغطي المصروفات، والمحل رابح.`
                   : `مصروفات ${snap.thisMonthLabel} حتى اليوم أعلى من دخل التأجير.`}
@@ -187,7 +187,7 @@ export function OwnerSnapshot() {
                     title={`${row.label}: ${formatCurrency(row.income)}`}
                     className={cn(
                       "w-full max-w-8 rounded-t-lg sm:max-w-10",
-                      high ? "bg-emerald-400" : low ? "bg-amber-300" : "bg-gradient-to-t from-[#2d0503] to-[#ebd8bb]",
+                      high ? "bg-emerald-500" : low ? "bg-[#d4a017]" : "bg-gradient-to-t from-[#8b1530] to-[#d4a017]",
                     )}
                     style={{ height: `${height}%` }}
                   />
@@ -207,13 +207,13 @@ function MiniChip({ label, value, tone }: { label: string; value: number; tone: 
     <div
       className={cn(
         "rounded-2xl px-3 py-2",
-        tone === "mint" && "bg-emerald-50",
-        tone === "sky" && "bg-sky-50",
-        tone === "gold" && "bg-amber-50",
+        tone === "mint" && "bg-emerald-500 text-white",
+        tone === "sky" && "bg-sky-500 text-white",
+        tone === "gold" && "bg-[#d4a017] text-[#2a0c12]",
       )}
     >
-      <p className="text-[11px] text-rose-500">{label}</p>
-      <p className="mt-0.5 text-lg tabular-nums text-rose-900">{value}</p>
+      <p className="text-[11px] font-medium opacity-95">{label}</p>
+      <p className="mt-0.5 text-lg font-semibold tabular-nums">{value}</p>
     </div>
   );
 }
