@@ -45,12 +45,12 @@ export function OwnerSnapshot() {
           <div className="flex items-start gap-4">
             <BrandLogo size="md" />
             <div>
-              <p className="text-sm text-[#ebd8bb]/75">لوحة تحكم المالك</p>
-              <h2 className="mt-2 font-serif text-3xl text-[#ffe9d9] sm:text-4xl">محل زينب</h2>
-              <p className="mt-2 text-sm text-[#ebd8bb]/70" suppressHydrationWarning>
+              <p className="text-sm text-rose-500">لوحة تحكم المالك</p>
+              <h2 className="mt-2 font-serif text-3xl text-rose-900 sm:text-4xl">محل زينب</h2>
+              <p className="mt-2 text-sm text-rose-500" suppressHydrationWarning>
                 {formatDateLong(todayIso())}
               </p>
-              <p className="mt-3 max-w-xl text-sm leading-7 text-[#ebd8bb]/85">
+              <p className="mt-3 max-w-xl text-sm leading-7 text-rose-700">
                 {snap.monthProfit >= 0
                   ? `دخل ${snap.thisMonthLabel} حتى اليوم يغطي المصروفات، والمحل رابح.`
                   : `مصروفات ${snap.thisMonthLabel} حتى اليوم أعلى من دخل التأجير.`}
@@ -207,13 +207,13 @@ function MiniChip({ label, value, tone }: { label: string; value: number; tone: 
     <div
       className={cn(
         "rounded-2xl px-3 py-2",
-        tone === "mint" && "bg-emerald-400/18 ring-1 ring-emerald-300/25",
-        tone === "sky" && "bg-[#ebd8bb]/12 ring-1 ring-[#ebd8bb]/25",
-        tone === "gold" && "bg-[#ebd8bb]/20 ring-1 ring-[#ebd8bb]/35",
+        tone === "mint" && "bg-emerald-50",
+        tone === "sky" && "bg-sky-50",
+        tone === "gold" && "bg-amber-50",
       )}
     >
-      <p className="text-[11px] text-[#ebd8bb]/70">{label}</p>
-      <p className="mt-0.5 text-lg tabular-nums text-[#ffe9d9]">{value}</p>
+      <p className="text-[11px] text-rose-500">{label}</p>
+      <p className="mt-0.5 text-lg tabular-nums text-rose-900">{value}</p>
     </div>
   );
 }

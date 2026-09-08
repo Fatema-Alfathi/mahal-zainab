@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --yal-burgundy: #2d0503;
-  --yal-burgundy-mid: #4a1210;
+  --yal-burgundy: #4a1614;
+  --yal-burgundy-deep: #2d0503;
   --yal-gold: #ebd8bb;
-  --yal-gold-bright: #ffe9d9;
-  --background: #f4eee4;
-  --foreground: #2d0503;
+  --yal-ivory: #fffaf3;
+  --background: #faf7f2;
+  --foreground: #2a1210;
 }
 
 @theme inline {
@@ -14,22 +14,22 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-cairo);
   --font-serif: var(--font-amiri);
-  --color-rose-50: #faf6ef;
-  --color-rose-100: #f3ead8;
-  --color-rose-200: #e4d4b8;
-  --color-rose-300: #c9ae86;
-  --color-rose-400: #9a6f5c;
-  --color-rose-500: #7a3d42;
-  --color-rose-600: #6b2c32;
-  --color-rose-700: #5c1a22;
-  --color-rose-800: #4a1210;
-  --color-rose-900: #2d0503;
+  --color-rose-50: #fffdf9;
+  --color-rose-100: #f6efe4;
+  --color-rose-200: #e6d5b8;
+  --color-rose-300: #8a5c52;
+  --color-rose-400: #6e433c;
+  --color-rose-500: #5c322c;
+  --color-rose-600: #4f2622;
+  --color-rose-700: #3f1b18;
+  --color-rose-800: #331412;
+  --color-rose-900: #2a1210;
   --color-rose-950: #1c0808;
-  --color-pink-50: #faf6ef;
-  --color-pink-100: #f3ead8;
-  --color-pink-200: #e8d5b0;
-  --color-pink-300: #d4bc94;
-  --color-pink-800: #4a1210;
+  --color-pink-50: #fffdf9;
+  --color-pink-100: #f6efe4;
+  --color-pink-200: #ebd8bb;
+  --color-pink-300: #c9ae86;
+  --color-pink-800: #3f1b18;
 }
 
 html {
@@ -39,12 +39,11 @@ html {
 body {
   color: var(--foreground);
   font-family: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
-  background-color: #f4eee4;
+  background-color: #faf7f2;
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' viewBox='0 0 88 88'%3E%3Cpath fill='none' stroke='%232d0503' stroke-opacity='0.06' stroke-width='0.8' d='M44 10 L66 44 L44 78 L22 44 Z'/%3E%3C/svg%3E"),
-    radial-gradient(ellipse 70% 48% at 100% 0%, rgba(45, 5, 3, 0.16) 0%, transparent 58%),
-    radial-gradient(ellipse 55% 40% at 0% 100%, rgba(235, 216, 187, 0.55) 0%, transparent 52%),
-    radial-gradient(ellipse 45% 32% at 90% 92%, rgba(74, 18, 16, 0.1) 0%, transparent 50%);
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' viewBox='0 0 88 88'%3E%3Cpath fill='none' stroke='%234a1614' stroke-opacity='0.045' stroke-width='0.8' d='M44 10 L66 44 L44 78 L22 44 Z'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse 70% 40% at 100% 0%, rgba(74, 22, 20, 0.06) 0%, transparent 58%),
+    radial-gradient(ellipse 50% 36% at 0% 100%, rgba(235, 216, 187, 0.35) 0%, transparent 52%);
   background-attachment: fixed;
 }
 
@@ -53,59 +52,56 @@ body {
 }
 
 .shop-header {
-  background: linear-gradient(180deg, #3a0a08 0%, #2d0503 100%);
-  border-bottom: 1px solid rgba(235, 216, 187, 0.22);
-  box-shadow: 0 12px 32px -18px rgba(45, 5, 3, 0.65);
+  background: #4a1614;
+  border-bottom: 1px solid rgba(255, 250, 243, 0.18);
 }
 
 .shop-card {
-  background: rgba(255, 252, 247, 0.94);
-  border: 1px solid rgba(201, 174, 134, 0.42);
-  box-shadow: 0 14px 36px -16px rgba(45, 5, 3, 0.28);
+  background: #ffffff;
+  border: 1px solid #ead9c0;
+  box-shadow: 0 10px 28px -18px rgba(42, 18, 16, 0.22);
 }
 
 .shop-soft {
-  background: linear-gradient(180deg, #faf6ef 0%, #f0e4d0 100%);
+  background: #f6efe4;
 }
 
 .shop-btn {
-  background: linear-gradient(135deg, #5c1a16 0%, #3a0a08 48%, #2d0503 100%);
-  color: #ebd8bb;
+  background: #4a1614;
+  color: #fffaf3;
 }
 
 .shop-btn:hover {
-  filter: brightness(1.12);
+  background: #5c1e1b;
 }
 
 .shop-btn-gold {
-  background: linear-gradient(135deg, #ffe9d9 0%, #ebd8bb 48%, #c9ae86 100%);
-  color: #2d0503;
+  background: #fffaf3;
+  color: #2a1210;
 }
 
 .shop-btn-gold:hover {
-  filter: brightness(1.05);
+  background: #ebd8bb;
 }
 
 .shop-btn-violet {
-  background: linear-gradient(135deg, #6b2c28 0%, #4a1210 100%);
-  color: #ebd8bb;
+  background: #6b2c28;
+  color: #fffaf3;
 }
 
 .shop-btn-violet:hover {
-  filter: brightness(1.08);
+  background: #7a3833;
 }
 
 .dash-panel {
-  background: rgba(255, 252, 247, 0.94);
-  border: 1px solid rgba(201, 174, 134, 0.4);
-  box-shadow: 0 18px 40px -22px rgba(45, 5, 3, 0.32);
+  background: #ffffff;
+  border: 1px solid #ead9c0;
+  box-shadow: 0 10px 28px -18px rgba(42, 18, 16, 0.22);
 }
 
 .dash-hero {
-  background:
-    radial-gradient(ellipse 80% 120% at 0% 0%, rgba(235, 216, 187, 0.16), transparent 55%),
-    linear-gradient(135deg, #3a0a08 0%, #2d0503 52%, #4a1210 100%);
-  border: 1px solid rgba(235, 216, 187, 0.28);
-  box-shadow: 0 18px 40px -18px rgba(45, 5, 3, 0.55);
-  color: #ebd8bb;
+  background: linear-gradient(180deg, #fffdf9 0%, #f6efe4 100%);
+  border: 1px solid #ead9c0;
+  box-shadow: 0 10px 28px -18px rgba(42, 18, 16, 0.22);
+  color: #2a1210;
 }
