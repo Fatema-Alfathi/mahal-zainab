@@ -122,7 +122,7 @@ export function DressBookingCalendar() {
                       className={cn(
                         "flex w-full items-center gap-3 rounded-xl p-2 text-start transition",
                         active
-                          ? "bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#1d1e20]"
+                          ? "bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#200000]"
                           : "hover:bg-[var(--salla-soft)]",
                       )}
                     >
@@ -134,7 +134,7 @@ export function DressBookingCalendar() {
                         <span
                           className={cn(
                             "mt-0.5 block text-xs",
-                            active ? "text-white/80 dark:text-[#1d1e20]/70" : "text-[var(--salla-muted)]",
+                            active ? "text-white/80 dark:text-[#200000]/70" : "text-[var(--salla-muted)]",
                           )}
                           dir="ltr"
                         >
@@ -143,7 +143,7 @@ export function DressBookingCalendar() {
                         <span
                           className={cn(
                             "mt-0.5 block text-xs",
-                            active ? "text-white/75 dark:text-[#1d1e20]/65" : "text-[var(--salla-muted)]",
+                            active ? "text-white/75 dark:text-[#200000]/65" : "text-[var(--salla-muted)]",
                           )}
                         >
                           {categoryLabel(dress.category)} · {sizeLabel(dress.size)}
@@ -220,7 +220,7 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
                   setMonthIso(startOfMonthIso(today));
                   setPickedDate(today);
                 }}
-                className="ms-1 rounded-lg bg-[var(--salla-primary)] px-3 py-1.5 text-xs font-medium text-white dark:text-[#1d1e20]"
+                className="ms-1 rounded-lg bg-[var(--salla-primary)] px-3 py-1.5 text-xs font-medium text-white dark:text-[#200000]"
               >
                 اليوم
               </button>
@@ -255,7 +255,7 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
                       "bg-[var(--salla-soft)]/70 text-[var(--foreground)] hover:bg-[var(--salla-soft)]",
                     mark === "upcoming" && "bg-sky-600 text-white",
                     mark === "out" && "bg-amber-400 text-amber-950",
-                    mark === "past" && "bg-[var(--salla-primary)] text-white dark:text-[#1d1e20]",
+                    mark === "past" && "bg-[var(--salla-primary)] text-white dark:text-[#200000]",
                     isToday && "ring-2 ring-[var(--salla-secondary)] ring-offset-1 ring-offset-[var(--salla-surface)]",
                     isPicked && "outline outline-2 outline-offset-1 outline-[var(--salla-primary)]",
                   )}

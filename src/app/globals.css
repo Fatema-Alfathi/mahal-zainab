@@ -3,35 +3,36 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --salla-primary: #004d5b;
-  --salla-primary-hover: #003d48;
-  --salla-secondary: #73fcd7;
-  --salla-secondary-text: #004d5b;
-  --salla-success: #00b259;
-  --salla-danger: #f5434a;
-  --salla-bg: #f8f8f8;
-  --salla-surface: #ffffff;
-  --salla-soft: #f1f5f9;
-  --salla-border: #e5e7eb;
-  --salla-muted: #6b7280;
-  --background: #f8f8f8;
-  --foreground: #1a1a1a;
+  /* YAL logo identity: burgundy + champagne gold */
+  --salla-primary: #6e1024;
+  --salla-primary-hover: #540d1c;
+  --salla-secondary: #d4b896;
+  --salla-secondary-text: #2a0505;
+  --salla-success: #1f7a4d;
+  --salla-danger: #c0392b;
+  --salla-bg: #faf6f2;
+  --salla-surface: #fffbf8;
+  --salla-soft: #f3ebe3;
+  --salla-border: #e6d9ce;
+  --salla-muted: #8a6f68;
+  --background: #faf6f2;
+  --foreground: #2a0c12;
 }
 
 html.dark {
-  --salla-primary: #baefe3;
-  --salla-primary-hover: #d5f7ef;
-  --salla-secondary: #004d5b;
-  --salla-secondary-text: #baefe3;
-  --salla-success: #00b259;
-  --salla-danger: #f5434a;
-  --salla-bg: #1d1e20;
-  --salla-surface: #2a2b2e;
-  --salla-soft: #35363a;
-  --salla-border: #3f4045;
-  --salla-muted: #a1a1aa;
-  --background: #1d1e20;
-  --foreground: #f4f4f5;
+  --salla-primary: #e5d5c0;
+  --salla-primary-hover: #f0e4d4;
+  --salla-secondary: #8b1530;
+  --salla-secondary-text: #e5d5c0;
+  --salla-success: #3dba78;
+  --salla-danger: #e57373;
+  --salla-bg: #200000;
+  --salla-surface: #2e0a0a;
+  --salla-soft: #3a1212;
+  --salla-border: #4a2020;
+  --salla-muted: #c4a99a;
+  --background: #200000;
+  --foreground: #f5ebe0;
 }
 
 @theme inline {
@@ -39,22 +40,22 @@ html.dark {
   --color-foreground: var(--foreground);
   --font-sans: var(--font-thmanyah);
   --font-serif: var(--font-thmanyah);
-  --color-rose-50: #f8fafc;
-  --color-rose-100: #f1f5f9;
-  --color-rose-200: #e2e8f0;
-  --color-rose-300: #94a3b8;
-  --color-rose-400: #64748b;
-  --color-rose-500: #004d5b;
-  --color-rose-600: #003d48;
-  --color-rose-700: #0f172a;
-  --color-rose-800: #1e293b;
-  --color-rose-900: #0f172a;
-  --color-rose-950: #020617;
-  --color-pink-50: #f0fdfa;
-  --color-pink-100: #ccfbf1;
-  --color-pink-200: #99f6e4;
-  --color-pink-300: #73fcd7;
-  --color-pink-800: #004d5b;
+  --color-rose-50: #faf6f2;
+  --color-rose-100: #f3ebe3;
+  --color-rose-200: #e6d9ce;
+  --color-rose-300: #c4a99a;
+  --color-rose-400: #8a6f68;
+  --color-rose-500: #6e1024;
+  --color-rose-600: #540d1c;
+  --color-rose-700: #3a0a14;
+  --color-rose-800: #2a0c12;
+  --color-rose-900: #2a0505;
+  --color-rose-950: #140202;
+  --color-pink-50: #faf6f2;
+  --color-pink-100: #f3ebe3;
+  --color-pink-200: #e6d9ce;
+  --color-pink-300: #d4b896;
+  --color-pink-800: #6e1024;
 }
 
 html {
@@ -66,22 +67,22 @@ html.dark {
 }
 
 html.dark {
-  --color-rose-50: #2a2b2e;
-  --color-rose-100: #35363a;
-  --color-rose-200: #3f4045;
-  --color-rose-300: #a1a1aa;
-  --color-rose-400: #d4d4d8;
-  --color-rose-500: #baefe3;
-  --color-rose-600: #d5f7ef;
-  --color-rose-700: #e4e4e7;
-  --color-rose-800: #f4f4f5;
-  --color-rose-900: #fafafa;
+  --color-rose-50: #2e0a0a;
+  --color-rose-100: #3a1212;
+  --color-rose-200: #4a2020;
+  --color-rose-300: #c4a99a;
+  --color-rose-400: #e5d5c0;
+  --color-rose-500: #e5d5c0;
+  --color-rose-600: #f0e4d4;
+  --color-rose-700: #f5ebe0;
+  --color-rose-800: #faf6f2;
+  --color-rose-900: #fffbf8;
   --color-rose-950: #000000;
-  --color-pink-50: #1a2e2b;
-  --color-pink-100: #1f3d38;
-  --color-pink-200: #2a524c;
-  --color-pink-300: #baefe3;
-  --color-pink-800: #baefe3;
+  --color-pink-50: #2e0a0a;
+  --color-pink-100: #3a1212;
+  --color-pink-200: #4a2020;
+  --color-pink-300: #d4b896;
+  --color-pink-800: #e5d5c0;
 }
 
 body {
@@ -119,7 +120,7 @@ html.dark .shop-card {
 }
 
 html.dark .shop-btn {
-  color: #1d1e20;
+  color: #200000;
 }
 
 .shop-btn:hover {
@@ -136,12 +137,12 @@ html.dark .shop-btn {
 }
 
 .shop-btn-violet {
-  background: #0f766e;
-  color: #ffffff;
+  background: #540d1c;
+  color: #fffbf8;
 }
 
 .shop-btn-violet:hover {
-  background: #115e59;
+  background: #6e1024;
 }
 
 .shop-btn-green {
@@ -256,20 +257,20 @@ html.dark .dash-panel {
 
 html.dark .shell-nav-active {
   background: var(--salla-primary);
-  color: #1d1e20;
+  color: #200000;
   border-color: var(--salla-primary);
 }
 
 .shell-nav-idle {
   background: var(--salla-surface);
-  color: #0f172a;
+  color: #2a0c12;
   border: 1px solid var(--salla-border);
   opacity: 1;
 }
 
 html.dark .shell-nav-idle {
   background: var(--salla-soft);
-  color: #f4f4f5;
+  color: #f5ebe0;
   border-color: var(--salla-border);
 }
 
@@ -284,13 +285,13 @@ html.dark .shell-nav-idle {
 html.dark .text-slate-900,
 html.dark .text-slate-800,
 html.dark .text-slate-700 {
-  color: #f4f4f5;
+  color: #f5ebe0;
 }
 
 html.dark .text-slate-600,
 html.dark .text-slate-500,
 html.dark .text-slate-400 {
-  color: #a1a1aa;
+  color: #c4a99a;
 }
 
 html.dark .bg-slate-100,

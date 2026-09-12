@@ -32,7 +32,7 @@ export function DiscountPolicyPanel() {
             className={cn(
               "rounded-xl border px-4 py-4 text-start text-sm transition",
               discountPolicy.enabled
-                ? "border-[var(--salla-primary)] bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#1d1e20]"
+                ? "border-[var(--salla-primary)] bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#200000]"
                 : "border-[var(--salla-border)] bg-[var(--salla-soft)]/50 text-[var(--foreground)] hover:bg-[var(--salla-soft)]",
             )}
           >
@@ -40,7 +40,7 @@ export function DiscountPolicyPanel() {
             <span
               className={cn(
                 "mt-1 block text-xs",
-                discountPolicy.enabled ? "text-white/80 dark:text-[#1d1e20]/70" : "text-[var(--salla-muted)]",
+                discountPolicy.enabled ? "text-white/80 dark:text-[#200000]/70" : "text-[var(--salla-muted)]",
               )}
             >
               يعطون الخصم اللي حددتيه فقط
@@ -86,7 +86,7 @@ export function DiscountPolicyPanel() {
                     className={cn(
                       "rounded-lg px-3 py-2 text-sm font-medium transition",
                       discountPolicy.type === type
-                        ? "bg-[var(--salla-primary)] text-white dark:text-[#1d1e20]"
+                        ? "bg-[var(--salla-primary)] text-white dark:text-[#200000]"
                         : "bg-[var(--salla-surface)] text-[var(--foreground)] ring-1 ring-[var(--salla-border)] hover:bg-[var(--salla-soft)]",
                     )}
                   >
@@ -110,7 +110,7 @@ export function DiscountPolicyPanel() {
                       className={cn(
                         "rounded-lg px-3 py-1.5 text-xs font-medium transition",
                         discountPolicy.value === percent
-                          ? "bg-[var(--salla-primary)] text-white dark:text-[#1d1e20]"
+                          ? "bg-[var(--salla-primary)] text-white dark:text-[#200000]"
                           : "bg-[var(--salla-surface)] text-[var(--foreground)] ring-1 ring-[var(--salla-border)]",
                       )}
                     >

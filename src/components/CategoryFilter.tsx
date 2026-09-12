@@ -62,7 +62,7 @@ export function Chip({
       className={cn(
         "rounded-lg px-2.5 py-1.5 text-xs font-medium transition",
         active
-          ? "bg-[var(--salla-primary)] text-white dark:text-[#1d1e20]"
+          ? "bg-[var(--salla-primary)] text-white dark:text-[#200000]"
           : "bg-[var(--salla-soft)] text-[var(--foreground)] hover:bg-[color-mix(in_srgb,var(--salla-primary)_10%,var(--salla-soft))]",
         className,
       )}

@@ -78,8 +78,8 @@ function NavLinks({
               "inline-flex items-center gap-2 rounded-xl border text-sm font-semibold transition",
               variant === "sidebar" ? "w-full px-3 py-2.5" : "px-3 py-2",
               on
-                ? "border-[var(--salla-primary)] bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#1d1e20]"
-                : "border-[var(--salla-border)] bg-[var(--salla-surface)] text-[#0f172a] hover:border-[var(--salla-primary)] hover:text-[var(--salla-primary)] dark:bg-[var(--salla-soft)] dark:text-[#f4f4f5]",
+                ? "border-[var(--salla-primary)] bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#200000]"
+                : "border-[var(--salla-border)] bg-[var(--salla-surface)] text-[#2a0c12] hover:border-[var(--salla-primary)] hover:text-[var(--salla-primary)] dark:bg-[var(--salla-soft)] dark:text-[#f5ebe0]",
             )}
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden />

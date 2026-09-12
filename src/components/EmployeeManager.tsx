@@ -118,7 +118,7 @@ export function EmployeeManager() {
                     className={cn(
                       "w-full rounded-xl px-3 py-3 text-right transition",
                       active
-                        ? "bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#1d1e20]"
+                        ? "bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#200000]"
                         : "hover:bg-[var(--salla-soft)]",
                     )}
                   >
@@ -127,7 +127,7 @@ export function EmployeeManager() {
                         className={cn(
                           "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
                           active
-                            ? "bg-white/20 text-white dark:bg-black/10 dark:text-[#1d1e20]"
+                            ? "bg-white/20 text-white dark:bg-black/10 dark:text-[#200000]"
                             : "bg-[var(--salla-soft)] text-[var(--salla-primary)]",
                         )}
                       >
@@ -138,7 +138,7 @@ export function EmployeeManager() {
                         <p
                           className={cn(
                             "mt-0.5 truncate text-xs",
-                            active ? "text-white/80 dark:text-[#1d1e20]/70" : "text-[var(--salla-muted)]",
+                            active ? "text-white/80 dark:text-[#200000]/70" : "text-[var(--salla-muted)]",
                           )}
                         >
                           {employee.jobTitle} · {formatCurrency(employee.salary)}
@@ -147,7 +147,7 @@ export function EmployeeManager() {
                           <p
                             className={cn(
                               "mt-1 text-[11px]",
-                              active ? "text-white/70 dark:text-[#1d1e20]/60" : "text-[var(--salla-danger)]",
+                              active ? "text-white/70 dark:text-[#200000]/60" : "text-[var(--salla-danger)]",
                             )}
                           >
                             تركت العمل
@@ -444,7 +444,7 @@ function EmployeeFormDialog({
                   className={cn(
                     "rounded-lg px-3 py-1.5 text-xs font-medium transition",
                     draft.jobTitle === titleOption
-                      ? "bg-[var(--salla-primary)] text-white dark:text-[#1d1e20]"
+                      ? "bg-[var(--salla-primary)] text-white dark:text-[#200000]"
                       : "bg-[var(--salla-soft)] text-[var(--foreground)] hover:bg-[color-mix(in_srgb,var(--salla-primary)_10%,var(--salla-soft))]",
                   )}
                 >

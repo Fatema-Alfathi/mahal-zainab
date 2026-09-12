@@ -113,7 +113,7 @@ export function OwnerHistory() {
                 className={cn(
                   "rounded-lg px-3 py-1.5 text-sm font-medium transition",
                   year === item
-                    ? "bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#1d1e20]"
+                    ? "bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#200000]"
                     : "text-[var(--salla-muted)] hover:bg-[var(--salla-surface)] hover:text-[var(--foreground)]",
                 )}
               >

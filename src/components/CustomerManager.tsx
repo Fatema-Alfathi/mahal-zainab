@@ -102,7 +102,7 @@ export function CustomerManager() {
                     className={cn(
                       "w-full rounded-xl px-3 py-3 text-right transition",
                       active
-                        ? "bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#1d1e20]"
+                        ? "bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#200000]"
                         : "hover:bg-[var(--salla-soft)]",
                     )}
                   >
@@ -111,7 +111,7 @@ export function CustomerManager() {
                         className={cn(
                           "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
                           active
-                            ? "bg-white/20 text-white dark:bg-black/10 dark:text-[#1d1e20]"
+                            ? "bg-white/20 text-white dark:bg-black/10 dark:text-[#200000]"
                             : "bg-[var(--salla-soft)] text-[var(--salla-primary)]",
                         )}
                       >
@@ -122,7 +122,7 @@ export function CustomerManager() {
                         <p
                           className={cn(
                             "mt-0.5 truncate text-xs",
-                            active ? "text-white/80 dark:text-[#1d1e20]/70" : "text-[var(--salla-muted)]",
+                            active ? "text-white/80 dark:text-[#200000]/70" : "text-[var(--salla-muted)]",
                           )}
                         >
                           {customer.number} · {customer.phone}
@@ -130,7 +130,7 @@ export function CustomerManager() {
                         <p
                           className={cn(
                             "mt-1 text-[11px]",
-                            active ? "text-white/70 dark:text-[#1d1e20]/60" : "text-[var(--salla-muted)]",
+                            active ? "text-white/70 dark:text-[#200000]/60" : "text-[var(--salla-muted)]",
                           )}
                         >
                           {count} حجز

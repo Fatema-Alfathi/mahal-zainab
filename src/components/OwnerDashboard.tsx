@@ -56,7 +56,7 @@ export function OwnerDashboard() {
                 className={cn(
                   "inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium transition",
                   selected
-                    ? "bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#1d1e20]"
+                    ? "bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#200000]"
                     : "text-[var(--salla-muted)] hover:bg-[var(--salla-soft)] hover:text-[var(--salla-primary)]",
                 )}
               >
