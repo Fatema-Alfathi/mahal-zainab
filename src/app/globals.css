@@ -12,8 +12,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-cairo);
-  --font-serif: var(--font-amiri);
+  --font-sans: var(--font-thmanyah);
+  --font-serif: var(--font-thmanyah);
   --color-rose-50: #fff6ef;
   --color-rose-100: #fde7d6;
   --color-rose-200: #f0c48a;
@@ -38,7 +38,7 @@ html {
 
 body {
   color: var(--foreground);
-  font-family: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-thmanyah), ui-sans-serif, system-ui, sans-serif;
   background-color: #fff4e8;
   background-image:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' viewBox='0 0 88 88'%3E%3Cpath fill='none' stroke='%238b1530' stroke-opacity='0.08' stroke-width='1.1' d='M44 10 L66 44 L44 78 L22 44 Z'/%3E%3C/svg%3E"),
@@ -50,7 +50,7 @@ body {
 }
 
 .font-serif {
-  font-family: var(--font-amiri), ui-serif, Georgia, serif;
+  font-family: var(--font-thmanyah), ui-sans-serif, system-ui, sans-serif;
 }
 
 .shop-header {

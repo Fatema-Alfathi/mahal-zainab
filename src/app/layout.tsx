@@ -1,17 +1,38 @@
 import type { Metadata, Viewport } from "next";
-import { Amiri, Cairo } from "next/font/google";
+import localFont from "next/font/local";
 import { Providers } from "@/app/providers";
 import "./globals.css";
 
-const cairo = Cairo({
-  variable: "--font-cairo",
-  subsets: ["arabic", "latin"],
-});
-
-const amiri = Amiri({
-  variable: "--font-amiri",
-  subsets: ["arabic", "latin"],
-  weight: ["400", "700"],
+const thmanyah = localFont({
+  src: [
+    {
+      path: "../fonts/thmanyahsans-Light.otf",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "../fonts/thmanyahsans-Regular.otf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../fonts/thmanyahsans-Medium.otf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../fonts/thmanyahsans-Bold.otf",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../fonts/thmanyahsans-Black.otf",
+      weight: "900",
+      style: "normal",
+    },
+  ],
+  variable: "--font-thmanyah",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -33,11 +54,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ar"
-      dir="rtl"
-      className={`${cairo.variable} ${amiri.variable} h-full antialiased`}
-    >
+    <html lang="ar" dir="rtl" className={`${thmanyah.variable} h-full antialiased`}>
       <body className="min-h-full font-sans text-[#2a0c12]">
         <Providers>{children}</Providers>
       </body>
