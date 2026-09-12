@@ -54,8 +54,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className={`${thmanyah.variable} h-full antialiased`}>
-      <body className="min-h-full font-sans text-slate-900">
+    <html lang="ar" dir="rtl" className={`${thmanyah.variable} h-full antialiased`} suppressHydrationWarning>
+      <body className="min-h-full bg-[var(--salla-bg)] font-sans text-[var(--foreground)]">
         <Providers>{children}</Providers>
       </body>
     </html>

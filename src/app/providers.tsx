@@ -2,7 +2,12 @@
 
 import type { ReactNode } from "react";
 import { ShopProvider } from "@/context/ShopContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 export function Providers({ children }: { children: ReactNode }) {
-  return <ShopProvider>{children}</ShopProvider>;
+  return (
+    <ThemeProvider>
+      <ShopProvider>{children}</ShopProvider>
+    </ThemeProvider>
+  );
 }
