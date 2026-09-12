@@ -248,24 +248,35 @@ html.dark .dash-panel {
 }
 
 .shell-nav-active {
-  background: color-mix(in srgb, var(--salla-secondary) 40%, var(--salla-surface));
-  color: var(--salla-primary);
+  background: var(--salla-primary);
+  color: #ffffff;
   font-weight: 600;
+  border: 1px solid var(--salla-primary);
 }
 
 html.dark .shell-nav-active {
-  background: color-mix(in srgb, var(--salla-primary) 18%, var(--salla-surface));
-  color: var(--salla-primary);
+  background: var(--salla-primary);
+  color: #1d1e20;
+  border-color: var(--salla-primary);
 }
 
 .shell-nav-idle {
-  color: var(--foreground);
-  opacity: 0.78;
+  background: var(--salla-surface);
+  color: #0f172a;
+  border: 1px solid var(--salla-border);
+  opacity: 1;
+}
+
+html.dark .shell-nav-idle {
+  background: var(--salla-soft);
+  color: #f4f4f5;
+  border-color: var(--salla-border);
 }
 
 .shell-nav-idle:hover {
   background: var(--salla-soft);
   color: var(--salla-primary);
+  border-color: var(--salla-primary);
   opacity: 1;
 }
 

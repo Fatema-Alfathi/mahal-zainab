@@ -41,7 +41,7 @@ function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--salla-border)] bg-[var(--salla-surface)] text-[var(--salla-primary)] transition hover:bg-[var(--salla-soft)]"
+      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--salla-border)] bg-[var(--salla-surface)] text-[var(--salla-primary)] transition hover:bg-[var(--salla-soft)]"
       aria-label={dark ? "التبديل للوضع النهاري" : "التبديل للوضع الليلي"}
       title={dark ? "وضع نهاري" : "وضع ليلي"}
     >
@@ -61,7 +61,9 @@ function NavLinks({
 }) {
   return (
     <nav
-      className={cn(variant === "sidebar" ? "flex flex-col gap-1 px-3" : "hidden items-center gap-1 md:flex")}
+      className={cn(
+        variant === "sidebar" ? "flex flex-col gap-1.5 px-3" : "flex flex-wrap items-center gap-1.5",
+      )}
       aria-label="صفحات المحل"
     >
       {NAV.map((item) => {
@@ -73,9 +75,11 @@ function NavLinks({
             href={item.href}
             onClick={onNavigate}
             className={cn(
-              "flex items-center gap-2 rounded-xl text-sm font-medium transition-colors",
-              variant === "sidebar" ? "px-3 py-2.5" : "px-3 py-2",
-              on ? "shell-nav-active" : "shell-nav-idle",
+              "inline-flex items-center gap-2 rounded-xl border text-sm font-semibold transition",
+              variant === "sidebar" ? "w-full px-3 py-2.5" : "px-3 py-2",
+              on
+                ? "border-[var(--salla-primary)] bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#1d1e20]"
+                : "border-[var(--salla-border)] bg-[var(--salla-surface)] text-[#0f172a] hover:border-[var(--salla-primary)] hover:text-[var(--salla-primary)] dark:bg-[var(--salla-soft)] dark:text-[#f4f4f5]",
             )}
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden />
@@ -99,7 +103,7 @@ export function AppShell({
 
   return (
     <div className="flex min-h-full bg-[var(--salla-bg)] text-[var(--foreground)]">
-      <aside className="shell-sidebar sticky top-0 hidden h-screen w-64 shrink-0 flex-col py-5 lg:flex">
+      <aside className="shell-sidebar sticky top-0 hidden h-screen w-64 shrink-0 flex-col py-5 lg:flex lg:flex-col">
         <div className="mb-6 flex items-center gap-3 px-5">
           <BrandLogo />
           <div className="min-w-0">
@@ -108,7 +112,7 @@ export function AppShell({
           </div>
         </div>
         <NavLinks active={active} variant="sidebar" />
-        <div className="mt-auto space-y-3 px-5 pt-6">
+        <div className="mt-auto px-5 pt-6">
           <p className="text-xs leading-5 text-[var(--salla-muted)]">
             {isOwner ? "لوحة التحكم، العميلات، والحجوزات" : "الحجوزات وملفات العميلات"}
           </p>
@@ -145,24 +149,31 @@ export function AppShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="shop-header sticky top-0 z-30">
-          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-            <div className="flex min-w-0 flex-1 items-center gap-3">
-              <button
-                type="button"
-                className="rounded-xl p-2 text-[var(--salla-muted)] hover:bg-[var(--salla-soft)] lg:hidden"
-                onClick={() => setOpen(true)}
-                aria-label="فتح القائمة"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-              <div className="min-w-0 lg:hidden">
-                <h1 className="truncate text-base font-semibold text-[var(--foreground)]">{TITLES[active]}</h1>
+          <div className="flex flex-col gap-3 px-4 py-3 sm:px-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <button
+                  type="button"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--salla-border)] bg-[var(--salla-surface)] text-[var(--foreground)] hover:bg-[var(--salla-soft)] lg:hidden"
+                  onClick={() => setOpen(true)}
+                  aria-label="فتح القائمة"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+                <div className="min-w-0 lg:hidden">
+                  <h1 className="truncate text-base font-semibold text-[var(--foreground)]">{TITLES[active]}</h1>
+                </div>
+                <p className="hidden text-sm font-semibold text-[var(--foreground)] lg:block">{TITLES[active]}</p>
               </div>
-              <NavLinks active={active} variant="top" />
+              <div className="flex flex-wrap items-center gap-2">
+                <ThemeToggle />
+                <RoleSwitcher />
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <ThemeToggle />
-              <RoleSwitcher />
+
+            {/* Always-visible page buttons */}
+            <div className="border-t border-[var(--salla-border)] pt-3">
+              <NavLinks active={active} variant="top" />
             </div>
           </div>
         </header>
