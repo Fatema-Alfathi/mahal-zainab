@@ -22,24 +22,24 @@ export function DressVariants({
   const summary = styleFamilySummary(dresses, dress);
 
   return (
-    <div className="shop-soft rounded-2xl px-3 py-3">
-      <p className="text-xs text-rose-400">نفس هذا التصميم</p>
+    <div className="rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/50 px-3 py-3">
+      <p className="text-xs text-[var(--salla-muted)]">نفس هذا التصميم</p>
       <dl className="mt-2 grid grid-cols-3 gap-2 text-xs">
         <div>
-          <dt className="text-rose-400">العدد</dt>
-          <dd className="mt-0.5 text-rose-900">{summary.countLabel}</dd>
+          <dt className="text-[var(--salla-muted)]">العدد</dt>
+          <dd className="mt-0.5 font-medium text-[var(--foreground)]">{summary.countLabel}</dd>
         </div>
         <div>
-          <dt className="text-rose-400">المقاس</dt>
-          <dd className="mt-0.5 text-rose-900">{summary.sizeLine}</dd>
+          <dt className="text-[var(--salla-muted)]">المقاس</dt>
+          <dd className="mt-0.5 font-medium text-[var(--foreground)]">{summary.sizeLine}</dd>
         </div>
         <div>
-          <dt className="text-rose-400">اللون</dt>
-          <dd className="mt-0.5 text-rose-900">{summary.colorLine}</dd>
+          <dt className="text-[var(--salla-muted)]">اللون</dt>
+          <dd className="mt-0.5 font-medium text-[var(--foreground)]">{summary.colorLine}</dd>
         </div>
       </dl>
       {summary.siblings.length === 0 ? (
-        <p className="mt-2 text-xs leading-6 text-rose-300">ما في نسخة ثانية بلون أو مقاس مختلف.</p>
+        <p className="mt-2 text-xs leading-5 text-[var(--salla-muted)]">ما في نسخة ثانية بلون أو مقاس مختلف.</p>
       ) : (
         <ul className="mt-2 flex flex-wrap gap-1.5">
           {summary.siblings.map((item) => (
@@ -48,12 +48,12 @@ export function DressVariants({
                 <button
                   type="button"
                   onClick={() => onSelect(item)}
-                  className="rounded-full bg-white px-2.5 py-1 text-xs text-rose-700 ring-1 ring-rose-100 hover:bg-rose-50"
+                  className="rounded-lg border border-[var(--salla-border)] bg-[var(--salla-surface)] px-2.5 py-1 text-xs text-[var(--foreground)] hover:bg-[var(--salla-soft)]"
                 >
                   {item.color} · {sizeLabel(item.size)} · {STATUS_LABELS[item.status]}
                 </button>
               ) : (
-                <span className="inline-block rounded-full bg-white px-2.5 py-1 text-xs text-rose-700 ring-1 ring-rose-100">
+                <span className="inline-block rounded-lg border border-[var(--salla-border)] bg-[var(--salla-surface)] px-2.5 py-1 text-xs text-[var(--foreground)]">
                   {item.color} · {sizeLabel(item.size)} · {STATUS_LABELS[item.status]}
                 </span>
               )}

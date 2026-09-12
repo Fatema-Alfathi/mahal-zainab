@@ -64,13 +64,13 @@ export function DressGallery({
           </div>
         ))}
       </div>
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-rose-950/70 via-rose-900/10 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
       {count > 1 ? (
         <>
           <button
             type="button"
             onClick={() => goTo(index - 1)}
-            className="absolute start-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-rose-600 shadow-sm hover:bg-white"
+            className="absolute start-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--salla-border)] bg-[var(--salla-surface)]/95 text-[var(--salla-primary)] shadow-sm hover:bg-[var(--salla-surface)]"
             aria-label="الصورة السابقة"
           >
             <ChevronRight className="h-4 w-4" aria-hidden />
@@ -78,7 +78,7 @@ export function DressGallery({
           <button
             type="button"
             onClick={() => goTo(index + 1)}
-            className="absolute end-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-rose-600 shadow-sm hover:bg-white"
+            className="absolute end-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--salla-border)] bg-[var(--salla-surface)]/95 text-[var(--salla-primary)] shadow-sm hover:bg-[var(--salla-surface)]"
             aria-label="الصورة التالية"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden />

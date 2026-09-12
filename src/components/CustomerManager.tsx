@@ -1,10 +1,19 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { Pencil, Plus, X } from "lucide-react";
+import {
+  CalendarDays,
+  Phone,
+  Pencil,
+  Plus,
+  Search,
+  StickyNote,
+  UserRound,
+  X,
+} from "lucide-react";
 import { useShop } from "@/context/ShopContext";
 import { customerBookings, isCustomerNumberTaken, suggestCustomerNumber } from "@/lib/customers";
-import { formatCurrency, formatDate, formatSignedCurrency } from "@/lib/format";
+import { cn, formatCurrency, formatDate, formatSignedCurrency } from "@/lib/format";
 import type { Customer, CustomerDraft } from "@/types";
 
 export function CustomerManager() {
@@ -29,9 +38,11 @@ export function CustomerManager() {
     <section className="space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm text-rose-400">ملفات العرايس</p>
-          <h1 className="mt-1 font-serif text-3xl text-rose-900">إدارة العميلات</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">
+          <p className="text-sm font-medium text-[var(--salla-primary)]">ملفات العرايس</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-3xl">
+            إدارة العميلات
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--salla-muted)]">
             كل عروس لها رقم وملف: الهاتف، تاريخ المناسبة، الملاحظات، وسجل حجوزاتها مع العربون والتأمين والبروفة.
           </p>
         </div>
@@ -41,27 +52,44 @@ export function CustomerManager() {
             setNotice("");
             setEditor({ mode: "add" });
           }}
-          className="shop-btn inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm"
+          className="shop-btn inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
         >
           <Plus className="h-4 w-4" aria-hidden />
           عميلة جديدة
         </button>
       </div>
 
-      {notice ? <p className="text-sm text-emerald-600">{notice}</p> : null}
+      {notice ? (
+        <p className="rounded-xl border border-[color-mix(in_srgb,var(--salla-success)_30%,var(--salla-border))] bg-[color-mix(in_srgb,var(--salla-success)_10%,transparent)] px-4 py-2.5 text-sm text-[var(--salla-success)]">
+          {notice}
+        </p>
+      ) : null}
 
-      <div className="grid gap-5 xl:grid-cols-[20rem_1fr]">
-        <div className="dash-panel rounded-2xl p-4">
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="ابحثي بالاسم أو الرقم أو الهاتف"
-            className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 text-sm outline-none ring-rose-200 focus:ring-2"
-          />
-          <ul className="mt-3 max-h-[32rem] space-y-1 overflow-y-auto">
+      <div className="grid gap-4 xl:grid-cols-[22rem_minmax(0,1fr)]">
+        {/* List */}
+        <aside className="dash-panel flex max-h-[40rem] flex-col overflow-hidden rounded-2xl xl:max-h-[calc(100vh-14rem)]">
+          <div className="border-b border-[var(--salla-border)] p-4">
+            <div className="relative">
+              <Search
+                className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--salla-muted)]"
+                aria-hidden
+              />
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="ابحثي بالاسم أو الرقم أو الهاتف"
+                className="w-full rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/70 py-2.5 pe-3 ps-10 text-sm outline-none focus:border-[var(--salla-primary)] focus:bg-[var(--salla-surface)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--salla-primary)_20%,transparent)]"
+              />
+            </div>
+            <p className="mt-2 text-xs text-[var(--salla-muted)]">
+              {visible.length} من {customers.length} عميلة
+            </p>
+          </div>
+
+          <ul className="flex-1 space-y-1 overflow-y-auto p-2">
             {visible.length === 0 ? (
-              <li className="px-2 py-6 text-center text-sm text-rose-300">ما في عميلة بهالبحث.</li>
+              <li className="px-3 py-10 text-center text-sm text-[var(--salla-muted)]">ما في عميلة بهالبحث.</li>
             ) : null}
             {visible.map((customer) => {
               const count = customerBookings(bookings, customer.id).length;
@@ -71,103 +99,183 @@ export function CustomerManager() {
                   <button
                     type="button"
                     onClick={() => setOpenId(customer.id)}
-                    className={`w-full rounded-2xl px-3 py-2.5 text-right ${active ? "shop-btn" : "hover:bg-rose-50"}`}
+                    className={cn(
+                      "w-full rounded-xl px-3 py-3 text-right transition",
+                      active
+                        ? "bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#1d1e20]"
+                        : "hover:bg-[var(--salla-soft)]",
+                    )}
                   >
-                    <p className="text-sm">{customer.name}</p>
-                    <p className={`mt-0.5 text-xs ${active ? "text-white/80" : "text-rose-400"}`}>
-                      {customer.number} · {customer.phone} · {count} حجز
-                    </p>
+                    <div className="flex items-start gap-3">
+                      <span
+                        className={cn(
+                          "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+                          active
+                            ? "bg-white/20 text-white dark:bg-black/10 dark:text-[#1d1e20]"
+                            : "bg-[var(--salla-soft)] text-[var(--salla-primary)]",
+                        )}
+                      >
+                        {initials(customer.name)}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{customer.name}</p>
+                        <p
+                          className={cn(
+                            "mt-0.5 truncate text-xs",
+                            active ? "text-white/80 dark:text-[#1d1e20]/70" : "text-[var(--salla-muted)]",
+                          )}
+                        >
+                          {customer.number} · {customer.phone}
+                        </p>
+                        <p
+                          className={cn(
+                            "mt-1 text-[11px]",
+                            active ? "text-white/70 dark:text-[#1d1e20]/60" : "text-[var(--salla-muted)]",
+                          )}
+                        >
+                          {count} حجز
+                        </p>
+                      </span>
+                    </div>
                   </button>
                 </li>
               );
             })}
           </ul>
-        </div>
+        </aside>
 
+        {/* Detail */}
         {selected ? (
-          <article className="dash-panel rounded-2xl p-5 sm:p-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="text-xs text-rose-400">رقم العميلة {selected.number}</p>
-                <h2 className="mt-1 text-2xl text-rose-900">{selected.name}</h2>
-                <p className="mt-2 text-sm leading-7 text-rose-600">
-                  الهاتف: {selected.phone}
-                  {selected.eventDate ? ` · المناسبة: ${formatDate(selected.eventDate)}` : ""}
-                </p>
-                {selected.notes ? <p className="mt-2 text-sm leading-7 text-rose-500">{selected.notes}</p> : null}
+          <article className="dash-panel overflow-hidden rounded-2xl">
+            <div className="border-b border-[var(--salla-border)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--salla-primary)_7%,var(--salla-surface)),var(--salla-surface)_60%)] px-5 py-5 sm:px-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-start gap-4">
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--salla-primary)_12%,transparent)] text-lg font-semibold text-[var(--salla-primary)]">
+                    {initials(selected.name)}
+                  </span>
+                  <div>
+                    <p className="text-xs font-medium text-[var(--salla-muted)]">رقم العميلة {selected.number}</p>
+                    <h2 className="mt-1 text-2xl font-semibold text-[var(--foreground)]">{selected.name}</h2>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      <InfoPill icon={Phone}>{selected.phone}</InfoPill>
+                      {selected.eventDate ? (
+                        <InfoPill icon={CalendarDays}>{formatDate(selected.eventDate)}</InfoPill>
+                      ) : null}
+                      <InfoPill icon={UserRound}>{history.length} حجز</InfoPill>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNotice("");
+                    setEditor({ mode: "edit", customer: selected });
+                  }}
+                  className="inline-flex items-center gap-1.5 self-start rounded-xl border border-[var(--salla-border)] bg-[var(--salla-surface)] px-3 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--salla-soft)]"
+                >
+                  <Pencil className="h-3.5 w-3.5 text-[var(--salla-primary)]" aria-hidden />
+                  تعديل الملف
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setNotice("");
-                  setEditor({ mode: "edit", customer: selected });
-                }}
-                className="shop-soft inline-flex items-center gap-1.5 rounded-2xl px-3 py-2 text-sm text-rose-700"
-              >
-                <Pencil className="h-3.5 w-3.5" aria-hidden />
-                تعديل الملف
-              </button>
+
+              {selected.notes ? (
+                <div className="mt-4 flex gap-2 rounded-xl border border-[var(--salla-border)] bg-[var(--salla-surface)]/80 px-3 py-2.5 text-sm text-[var(--foreground)]">
+                  <StickyNote className="mt-0.5 h-4 w-4 shrink-0 text-[var(--salla-muted)]" aria-hidden />
+                  <p className="leading-6">{selected.notes}</p>
+                </div>
+              ) : null}
             </div>
 
-            <h3 className="mt-6 text-sm text-rose-400">سجل الحجوزات</h3>
-            {history.length === 0 ? (
-              <p className="mt-3 text-sm text-rose-300">ما في حجوزات بهالملف بعد.</p>
-            ) : (
-              <div className="mt-3 overflow-x-auto">
-                <table className="w-full min-w-[48rem] text-sm">
-                  <thead>
-                    <tr className="text-right text-rose-400">
-                      <th className="pb-2 font-medium">الفستان</th>
-                      <th className="pb-2 font-medium">تاريخ الحجز</th>
-                      <th className="pb-2 font-medium">السعر</th>
-                      <th className="pb-2 font-medium">العربون</th>
-                      <th className="pb-2 font-medium">التأمين</th>
-                      <th className="pb-2 font-medium">المتبقي</th>
-                      <th className="pb-2 font-medium">الاستلام</th>
-                      <th className="pb-2 font-medium">الإرجاع</th>
-                      <th className="pb-2 font-medium">بروفة / تعديل</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {history.map((booking) => {
-                      const dress = dresses.find((item) => item.id === booking.dressId);
-                      return (
-                        <tr key={booking.id} className="border-t border-rose-50 align-top">
-                          <td className="py-3 text-rose-900">{dress?.name ?? booking.dressId}</td>
-                          <td className="py-3 tabular-nums text-rose-700">{formatDate(booking.bookedAt)}</td>
-                          <td className="py-3 tabular-nums text-rose-900">{formatCurrency(booking.totalRevenueGenerated)}</td>
-                          <td className="py-3 tabular-nums text-rose-700">{formatCurrency(booking.depositPaid)}</td>
-                          <td className="py-3 tabular-nums text-rose-700">
-                            {formatCurrency(booking.insurancePaid)}
-                            <span className="mt-0.5 block text-xs text-rose-400">
-                              {booking.insuranceReturned ? "رُجِع للعميلة" : "عند المحل"}
-                            </span>
-                          </td>
-                          <td className="py-3 tabular-nums text-rose-700">{formatSignedCurrency(booking.remainingAmount)}</td>
-                          <td className="py-3 tabular-nums text-rose-700">{formatDate(booking.pickupDate)}</td>
-                          <td className="py-3 tabular-nums text-rose-700">{formatDate(booking.returnDate)}</td>
-                          <td className="py-3 text-rose-700">
-                            {booking.needsAlterations ? (
-                              <p>تعديلات + بروفة</p>
-                            ) : booking.needsFitting ? (
-                              <p>بروفة فقط</p>
-                            ) : (
-                              <p>بدون بروفة</p>
-                            )}
-                            {booking.fittingDate ? (
-                              <p className="mt-0.5 text-xs text-rose-400">موعد البروفة {formatDate(booking.fittingDate)}</p>
-                            ) : null}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+            <div className="p-5 sm:p-6">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-semibold text-[var(--foreground)]">سجل الحجوزات</h3>
+                  <p className="mt-0.5 text-xs text-[var(--salla-muted)]">العربون والتأمين والمواعيد</p>
+                </div>
               </div>
-            )}
+
+              {history.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-[var(--salla-border)] px-4 py-10 text-center text-sm text-[var(--salla-muted)]">
+                  ما في حجوزات بهالملف بعد.
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-[var(--salla-border)]">
+                  <table className="w-full min-w-[52rem] text-sm">
+                    <thead>
+                      <tr className="bg-[var(--salla-soft)]/80 text-right text-xs text-[var(--salla-muted)]">
+                        <th className="px-3 py-3 font-medium">الفستان</th>
+                        <th className="px-3 py-3 font-medium">تاريخ الحجز</th>
+                        <th className="px-3 py-3 font-medium">السعر</th>
+                        <th className="px-3 py-3 font-medium">العربون</th>
+                        <th className="px-3 py-3 font-medium">التأمين</th>
+                        <th className="px-3 py-3 font-medium">المتبقي</th>
+                        <th className="px-3 py-3 font-medium">الاستلام</th>
+                        <th className="px-3 py-3 font-medium">الإرجاع</th>
+                        <th className="px-3 py-3 font-medium">بروفة / تعديل</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {history.map((booking) => {
+                        const dress = dresses.find((item) => item.id === booking.dressId);
+                        return (
+                          <tr
+                            key={booking.id}
+                            className="border-t border-[var(--salla-border)] align-top transition hover:bg-[var(--salla-soft)]/40"
+                          >
+                            <td className="px-3 py-3 font-medium text-[var(--foreground)]">
+                              {dress?.name ?? booking.dressId}
+                            </td>
+                            <td className="px-3 py-3 tabular-nums text-[var(--salla-muted)]">
+                              {formatDate(booking.bookedAt)}
+                            </td>
+                            <td className="px-3 py-3 tabular-nums font-semibold text-[var(--salla-primary)]">
+                              {formatCurrency(booking.totalRevenueGenerated)}
+                            </td>
+                            <td className="px-3 py-3 tabular-nums text-[var(--foreground)]">
+                              {formatCurrency(booking.depositPaid)}
+                            </td>
+                            <td className="px-3 py-3 tabular-nums text-[var(--foreground)]">
+                              {formatCurrency(booking.insurancePaid)}
+                              <span className="mt-0.5 block text-[11px] text-[var(--salla-muted)]">
+                                {booking.insuranceReturned ? "رُجِع للعميلة" : "عند المحل"}
+                              </span>
+                            </td>
+                            <td className="px-3 py-3 tabular-nums text-[var(--foreground)]">
+                              {formatSignedCurrency(booking.remainingAmount)}
+                            </td>
+                            <td className="px-3 py-3 tabular-nums text-[var(--salla-muted)]">
+                              {formatDate(booking.pickupDate)}
+                            </td>
+                            <td className="px-3 py-3 tabular-nums text-[var(--salla-muted)]">
+                              {formatDate(booking.returnDate)}
+                            </td>
+                            <td className="px-3 py-3 text-[var(--foreground)]">
+                              {booking.needsAlterations ? (
+                                <p>تعديلات + بروفة</p>
+                              ) : booking.needsFitting ? (
+                                <p>بروفة فقط</p>
+                              ) : (
+                                <p className="text-[var(--salla-muted)]">بدون بروفة</p>
+                              )}
+                              {booking.fittingDate ? (
+                                <p className="mt-0.5 text-[11px] text-[var(--salla-muted)]">
+                                  موعد البروفة {formatDate(booking.fittingDate)}
+                                </p>
+                              ) : null}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </article>
         ) : (
-          <p className="dash-panel rounded-2xl px-4 py-10 text-center text-sm text-rose-300">اختاري عميلة من القائمة.</p>
+          <div className="dash-panel flex items-center justify-center rounded-2xl px-4 py-16 text-sm text-[var(--salla-muted)]">
+            اختاري عميلة من القائمة.
+          </div>
         )}
       </div>
 
@@ -199,6 +307,40 @@ export function CustomerManager() {
     </section>
   );
 }
+
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "؟";
+  if (parts.length === 1) return parts[0].slice(0, 1);
+  return `${parts[0].slice(0, 1)}${parts[1].slice(0, 1)}`;
+}
+
+function InfoPill({ icon: Icon, children }: { icon: typeof Phone; children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--salla-border)] bg-[var(--salla-surface)] px-2.5 py-1 text-[var(--foreground)]">
+      <Icon className="h-3.5 w-3.5 text-[var(--salla-primary)]" aria-hidden />
+      {children}
+    </span>
+  );
+}
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block text-sm">
+      <span className="mb-1.5 block font-medium text-[var(--foreground)]">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+const fieldClass =
+  "w-full rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/70 px-3 py-2.5 outline-none transition focus:border-[var(--salla-primary)] focus:bg-[var(--salla-surface)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--salla-primary)_20%,transparent)]";
 
 function CustomerFormDialog({
   title,
@@ -243,61 +385,64 @@ function CustomerFormDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
       <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق النموذج" onClick={onClose} />
-      <div className="shop-card relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-2xl p-6">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <h3 className="text-2xl text-rose-900">{title}</h3>
-          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label="إغلاق">
+      <div className="dash-panel relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-2xl p-6">
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium text-[var(--salla-primary)]">ملف العميلة</p>
+            <h3 className="mt-1 text-xl font-semibold text-[var(--foreground)]">{title}</h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-[var(--salla-muted)] hover:bg-[var(--salla-soft)]"
+            aria-label="إغلاق"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">رقم العميلة</span>
+        <form onSubmit={handleSubmit} className="space-y-3.5">
+          <Field label="رقم العميلة">
             <input
               value={draft.number}
               onChange={(event) => setDraft((current) => ({ ...current, number: event.target.value }))}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+              className={fieldClass}
             />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">الاسم</span>
+          </Field>
+          <Field label="الاسم">
             <input
               value={draft.name}
               onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+              className={fieldClass}
             />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">رقم الهاتف</span>
+          </Field>
+          <Field label="رقم الهاتف">
             <input
               value={draft.phone}
               onChange={(event) => setDraft((current) => ({ ...current, phone: event.target.value }))}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+              className={fieldClass}
               placeholder="9xxxxxxx"
             />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">تاريخ المناسبة</span>
+          </Field>
+          <Field label="تاريخ المناسبة">
             <input
               type="date"
               value={draft.eventDate}
               onChange={(event) => setDraft((current) => ({ ...current, eventDate: event.target.value }))}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+              className={fieldClass}
             />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">ملاحظات</span>
+          </Field>
+          <Field label="ملاحظات">
             <textarea
               value={draft.notes}
               onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
               rows={3}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+              className={fieldClass}
             />
-          </label>
-          {error ? <p className="text-sm text-rose-700">{error}</p> : null}
-          <button type="submit" className="shop-btn w-full rounded-2xl py-2.5 text-sm">
+          </Field>
+          {error ? <p className="text-sm text-[var(--salla-danger)]">{error}</p> : null}
+          <button type="submit" className="shop-btn w-full rounded-xl py-2.5 text-sm font-medium">
             حفظ الملف
           </button>
         </form>

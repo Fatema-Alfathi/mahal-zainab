@@ -11,7 +11,6 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import { BrandLogo } from "@/components/BrandLogo";
 import { useShop } from "@/context/ShopContext";
 import { ownerHistory, ownerSnapshot } from "@/lib/ownerSnapshot";
 import { comparisonLabel } from "@/lib/labels";
@@ -40,32 +39,32 @@ export function OwnerSnapshot() {
 
   return (
     <section className="space-y-5">
-      <div className="dash-hero dash-panel rounded-2xl px-5 py-6 sm:px-7">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="flex items-start gap-4">
-            <BrandLogo size="md" />
-            <div>
-              <p className="text-sm font-medium text-[var(--salla-primary)]">لوحة تحكم المالك</p>
-              <h2 className="mt-2 font-serif text-3xl text-slate-900 sm:text-4xl">محل زينب</h2>
-              <p className="mt-2 text-sm text-slate-500" suppressHydrationWarning>
-                {formatDateLong(todayIso())}
-              </p>
-              <p className="mt-3 max-w-xl text-sm leading-7 text-slate-600">
-                {snap.monthProfit >= 0
-                  ? `دخل ${snap.thisMonthLabel} حتى اليوم يغطي المصروفات، والمحل رابح.`
-                  : `مصروفات ${snap.thisMonthLabel} حتى اليوم أعلى من دخل التأجير.`}
-              </p>
-            </div>
+      {/* Welcome strip */}
+      <div className="dash-panel overflow-hidden rounded-2xl">
+        <div className="flex flex-col gap-5 border-b border-[var(--salla-border)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--salla-primary)_8%,var(--salla-surface)),var(--salla-surface)_55%)] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div>
+            <p className="text-sm font-medium text-[var(--salla-primary)]">مرحباً بك</p>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-3xl">
+              نظرة عامة على محل زينب
+            </h2>
+            <p className="mt-2 text-sm text-[var(--salla-muted)]" suppressHydrationWarning>
+              {formatDateLong(todayIso())}
+              {" · "}
+              {snap.monthProfit >= 0
+                ? `دخل ${snap.thisMonthLabel} يغطي المصروفات حتى اليوم`
+                : `مصروفات ${snap.thisMonthLabel} أعلى من الدخل حتى اليوم`}
+            </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-            <MiniChip label="متاح" value={snap.availableDresses} tone="mint" />
-            <MiniChip label="محجوز" value={snap.reservedDresses} tone="sky" />
-            <MiniChip label="عند العميلة" value={snap.rentedDresses} tone="gold" />
-          <MiniChip label="يحتاج تنظيف" value={snap.maintenanceDresses} tone="red" />
+          <div className="flex flex-wrap gap-2">
+            <StatusPill label="متاح" value={snap.availableDresses} tone="success" />
+            <StatusPill label="محجوز" value={snap.reservedDresses} tone="info" />
+            <StatusPill label="عند العميلة" value={snap.rentedDresses} tone="warn" />
+            <StatusPill label="تنظيف" value={snap.maintenanceDresses} tone="danger" />
           </div>
         </div>
       </div>
 
+      {/* KPI row */}
       <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi
           label={`دخل ${snap.thisMonthLabel}`}
@@ -73,7 +72,7 @@ export function OwnerSnapshot() {
           hint="حتى اليوم"
           icon={CircleDollarSign}
           change={snap.comparison.income.change}
-          color="green"
+          accent="success"
         />
         <Kpi
           label="المصروفات"
@@ -82,7 +81,7 @@ export function OwnerSnapshot() {
           icon={Wallet}
           change={snap.comparison.expenses.change}
           invert
-          color="red"
+          accent="danger"
         />
         <Kpi
           label="صافي الربح"
@@ -90,8 +89,8 @@ export function OwnerSnapshot() {
           hint={snap.monthProfit >= 0 ? "بعد المصروفات" : "المصروفات أعلى حالياً"}
           icon={TrendingUp}
           change={snap.comparison.profit.change}
+          accent={snap.monthProfit >= 0 ? "success" : "danger"}
           emphasize={snap.monthProfit >= 0 ? "good" : "bad"}
-          color={snap.monthProfit >= 0 ? "green" : "red"}
         />
         <Kpi
           label="الحجوزات"
@@ -99,105 +98,129 @@ export function OwnerSnapshot() {
           hint={`${snap.yearBookings} حجز هذه السنة`}
           icon={CalendarDays}
           change={snap.comparison.bookings.change}
-          color="yellow"
+          accent="primary"
         />
       </dl>
 
+      {/* Periods + inventory */}
       <div className="grid gap-4 xl:grid-cols-3">
         <div className="dash-panel rounded-2xl p-5 xl:col-span-2">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <h3 className="text-lg text-rose-900">الدخل عبر الفترات</h3>
-              <p className="mt-1 text-xs text-rose-400">اليوم، الأسبوع، الشهر، والسنة</p>
-            </div>
-            <CalendarRange className="h-4 w-4 text-rose-300" aria-hidden />
-          </div>
-          <dl className="grid gap-3 sm:grid-cols-2">
-            <PeriodCard label="اليوم" value={snap.todayIncome} tone="yellow" />
-            <PeriodCard label="هذا الأسبوع" value={snap.weekIncome} tone="mint" />
-            <PeriodCard label={`شهر ${snap.thisMonthLabel}`} value={snap.monthIncome} tone="rose" />
-            <PeriodCard label="هذه السنة" value={snap.yearIncome} tone="blue" />
+          <PanelHeader
+            title="الدخل عبر الفترات"
+            subtitle="اليوم، الأسبوع، الشهر، والسنة"
+            icon={CalendarRange}
+          />
+          <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <MetricTile label="اليوم" value={formatCurrency(snap.todayIncome)} />
+            <MetricTile label="هذا الأسبوع" value={formatCurrency(snap.weekIncome)} />
+            <MetricTile label={`شهر ${snap.thisMonthLabel}`} value={formatCurrency(snap.monthIncome)} highlight />
+            <MetricTile label="هذه السنة" value={formatCurrency(snap.yearIncome)} />
           </dl>
         </div>
 
         <div className="dash-panel rounded-2xl p-5">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <h3 className="text-lg text-rose-900">مخزون الفساتين</h3>
-              <p className="mt-1 text-xs text-rose-400">{snap.totalDresses} فستان في المحل</p>
-            </div>
-            <Shirt className="h-4 w-4 text-rose-300" aria-hidden />
-          </div>
-          <div className="flex h-3 overflow-hidden rounded-full bg-rose-50">
-            <span className="bg-emerald-500" style={{ width: `${(snap.availableDresses / dressTotal) * 100}%` }} />
+          <PanelHeader title="مخزون الفساتين" subtitle={`${snap.totalDresses} فستان في المحل`} icon={Shirt} />
+          <div className="mt-4 flex h-2.5 overflow-hidden rounded-full bg-[var(--salla-soft)]">
+            <span className="bg-[var(--salla-success)]" style={{ width: `${(snap.availableDresses / dressTotal) * 100}%` }} />
             <span className="bg-sky-500" style={{ width: `${(snap.reservedDresses / dressTotal) * 100}%` }} />
-            <span className="bg-yellow-400" style={{ width: `${(snap.rentedDresses / dressTotal) * 100}%` }} />
-            <span className="bg-red-500" style={{ width: `${(snap.maintenanceDresses / dressTotal) * 100}%` }} />
+            <span className="bg-amber-400" style={{ width: `${(snap.rentedDresses / dressTotal) * 100}%` }} />
+            <span className="bg-[var(--salla-danger)]" style={{ width: `${(snap.maintenanceDresses / dressTotal) * 100}%` }} />
           </div>
-          <ul className="mt-4 space-y-2 text-sm">
-            <DressRow label="متاحة" value={snap.availableDresses} color="bg-emerald-500" />
+          <ul className="mt-4 space-y-2.5 text-sm">
+            <DressRow label="متاحة" value={snap.availableDresses} color="bg-[var(--salla-success)]" />
             <DressRow label="محجوزة في المحل" value={snap.reservedDresses} color="bg-sky-500" />
-            <DressRow label="عند العميلات" value={snap.rentedDresses} color="bg-yellow-400" />
-            <DressRow label="يحتاج تنظيف" value={snap.maintenanceDresses} color="bg-red-500" />
+            <DressRow label="عند العميلات" value={snap.rentedDresses} color="bg-amber-400" />
+            <DressRow label="يحتاج تنظيف" value={snap.maintenanceDresses} color="bg-[var(--salla-danger)]" />
           </ul>
         </div>
       </div>
 
+      {/* Deposits + comparison */}
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="dash-panel rounded-2xl p-5">
-          <h3 className="text-lg text-rose-900">عربون وتأمين ومتبقي</h3>
-          <p className="mt-1 text-xs text-rose-400">العربون من الإيجار، والتأمين عند المحل لين يرجع الفستان سليم</p>
-          <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-            <PeriodCard label="عربون مدفوع" value={snap.depositsPaid} tone="mint" />
-            <PeriodCard label="تأمين عند المحل" value={snap.insuranceHeld} tone="yellow" />
-            <PeriodCard label="متبقي على العميلات" value={snap.remainingDue} tone="red" />
+          <PanelHeader title="عربون وتأمين ومتبقي" subtitle="العربون من الإيجار، والتأمين عند المحل حتى يرجع الفستان" />
+          <dl className="mt-4 grid gap-3 sm:grid-cols-3">
+            <MetricTile label="عربون مدفوع" value={formatCurrency(snap.depositsPaid)} />
+            <MetricTile label="تأمين عند المحل" value={formatCurrency(snap.insuranceHeld)} />
+            <MetricTile label="متبقي على العميلات" value={formatCurrency(snap.remainingDue)} danger />
           </dl>
         </div>
         <div className="dash-panel rounded-2xl p-5">
-          <h3 className="text-lg text-rose-900">مقارنة {snap.thisMonthLabel} بـ {snap.lastMonthLabel}</h3>
-          <p className="mt-1 text-xs text-rose-400">نفس عدد الأيام من أول الشهر حتى اليوم</p>
+          <PanelHeader
+            title={`مقارنة ${snap.thisMonthLabel} بـ ${snap.lastMonthLabel}`}
+            subtitle="نفس عدد الأيام من أول الشهر حتى اليوم"
+          />
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-            <CompareCard label="الدخل" current={snap.comparison.income.current} previous={snap.comparison.income.previous} change={snap.comparison.income.change} money color="green" />
-            <CompareCard label="المصروفات" current={snap.comparison.expenses.current} previous={snap.comparison.expenses.previous} change={snap.comparison.expenses.change} money invert color="red" />
-            <CompareCard label="صافي الربح" current={snap.comparison.profit.current} previous={snap.comparison.profit.previous} change={snap.comparison.profit.change} money color={snap.comparison.profit.current >= 0 ? "green" : "red"} />
-            <CompareCard label="الحجوزات" current={snap.comparison.bookings.current} previous={snap.comparison.bookings.previous} change={snap.comparison.bookings.change} color="yellow" />
+            <CompareCard
+              label="الدخل"
+              current={snap.comparison.income.current}
+              previous={snap.comparison.income.previous}
+              change={snap.comparison.income.change}
+              money
+            />
+            <CompareCard
+              label="المصروفات"
+              current={snap.comparison.expenses.current}
+              previous={snap.comparison.expenses.previous}
+              change={snap.comparison.expenses.change}
+              money
+              invert
+            />
+            <CompareCard
+              label="صافي الربح"
+              current={snap.comparison.profit.current}
+              previous={snap.comparison.profit.previous}
+              change={snap.comparison.profit.change}
+              money
+            />
+            <CompareCard
+              label="الحجوزات"
+              current={snap.comparison.bookings.current}
+              previous={snap.comparison.bookings.previous}
+              change={snap.comparison.bookings.change}
+            />
           </dl>
         </div>
       </div>
 
-      <div className="dash-panel rounded-2xl p-5">
+      {/* Chart */}
+      <div className="dash-panel rounded-2xl p-5 sm:p-6">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h3 className="text-lg text-rose-900">حركة الدخل الشهرية</h3>
-            <p className="mt-1 text-xs text-rose-400">آخر {recentMonths.length} شهر · الأعلى والأقل مميزين</p>
+            <h3 className="text-base font-semibold text-[var(--foreground)]">حركة الدخل الشهرية</h3>
+            <p className="mt-1 text-xs text-[var(--salla-muted)]">
+              آخر {recentMonths.length} شهر · الأعلى والأقل مميزين
+            </p>
           </div>
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-white">
+            <span className="rounded-full bg-[color-mix(in_srgb,var(--salla-success)_15%,transparent)] px-2.5 py-1 font-medium text-[var(--salla-success)]">
               أعلى: {history.highestIncomeMonth?.label ?? "—"}
             </span>
-            <span className="rounded-full bg-red-600 px-2.5 py-1 text-white">
+            <span className="rounded-full bg-[color-mix(in_srgb,var(--salla-danger)_15%,transparent)] px-2.5 py-1 font-medium text-[var(--salla-danger)]">
               أقل: {history.lowestIncomeMonth?.label ?? "—"}
             </span>
           </div>
         </div>
-        <div className="flex h-44 items-end gap-1.5 sm:gap-2.5">
+        <div className="flex h-48 items-end gap-1.5 sm:gap-2">
           {recentMonths.map((row) => {
             const high = history.highestIncomeMonth?.key === row.key;
             const low = history.lowestIncomeMonth?.key === row.key;
-            const height = Math.max(8, (row.income / maxMonthIncome) * 100);
+            const height = Math.max(10, (row.income / maxMonthIncome) * 100);
             return (
               <div key={row.key} className="flex min-w-0 flex-1 flex-col items-center gap-2">
-                <div className="flex h-32 w-full items-end justify-center">
+                <div className="flex h-36 w-full items-end justify-center">
                   <div
                     title={`${row.label}: ${formatCurrency(row.income)}`}
                     className={cn(
-                      "w-full max-w-8 rounded-t-lg sm:max-w-10",
-                      high ? "bg-emerald-500" : low ? "bg-red-500" : "bg-gradient-to-t from-[#8b1530] to-[#d4a017]",
+                      "w-full max-w-9 rounded-t-md transition-all sm:max-w-11",
+                      high && "bg-[var(--salla-success)]",
+                      low && "bg-[var(--salla-danger)]",
+                      !high && !low && "bg-[linear-gradient(180deg,var(--salla-secondary),var(--salla-primary))]",
                     )}
                     style={{ height: `${height}%` }}
                   />
                 </div>
-                <span className="text-[10px] text-rose-400">{monthNameShortAr(`${row.key}-01`)}</span>
+                <span className="text-[10px] text-[var(--salla-muted)]">{monthNameShortAr(`${row.key}-01`)}</span>
               </div>
             );
           })}
@@ -207,19 +230,47 @@ export function OwnerSnapshot() {
   );
 }
 
-function MiniChip({ label, value, tone }: { label: string; value: number; tone: "mint" | "sky" | "gold" | "red" }) {
+function PanelHeader({
+  title,
+  subtitle,
+  icon: Icon,
+}: {
+  title: string;
+  subtitle: string;
+  icon?: typeof Wallet;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <h3 className="text-base font-semibold text-[var(--foreground)]">{title}</h3>
+        <p className="mt-1 text-xs leading-5 text-[var(--salla-muted)]">{subtitle}</p>
+      </div>
+      {Icon ? <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--salla-muted)]" aria-hidden /> : null}
+    </div>
+  );
+}
+
+function StatusPill({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "success" | "info" | "warn" | "danger";
+}) {
   return (
     <div
       className={cn(
-        "rounded-2xl px-3 py-2",
-        tone === "mint" && "bg-emerald-500 text-white",
-        tone === "sky" && "bg-sky-500 text-white",
-        tone === "gold" && "bg-yellow-400 text-[#1c1400]",
-        tone === "red" && "bg-red-600 text-white",
+        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm",
+        tone === "success" && "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300",
+        tone === "info" && "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300",
+        tone === "warn" && "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300",
+        tone === "danger" && "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300",
       )}
     >
-      <p className="text-[11px] font-medium opacity-95">{label}</p>
-      <p className="mt-0.5 text-lg font-semibold tabular-nums">{value}</p>
+      <span className="font-medium">{label}</span>
+      <span className="tabular-nums font-semibold">{value}</span>
     </div>
   );
 }
@@ -232,7 +283,7 @@ function Kpi({
   change,
   invert = false,
   emphasize,
-  color = "wine",
+  accent = "primary",
 }: {
   label: string;
   value: string;
@@ -241,43 +292,22 @@ function Kpi({
   change: number;
   invert?: boolean;
   emphasize?: "good" | "bad";
-  color?: "green" | "red" | "yellow" | "wine";
+  accent?: "success" | "danger" | "primary";
 }) {
   const up = change > 0.05;
   const down = change < -0.05;
   const good = invert ? down : up;
+
   return (
-    <div
-      className={cn(
-        "rounded-2xl p-4 sm:p-5",
-        color === "green" && "shop-tint-green",
-        color === "red" && "shop-tint-red",
-        color === "yellow" && "shop-tint-yellow",
-        color === "wine" && "dash-panel",
-      )}
-    >
+    <div className="dash-panel rounded-2xl p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-[var(--salla-muted)]">{label}</p>
           <p
             className={cn(
-              "text-xs font-medium",
-              color === "green" && "text-emerald-800",
-              color === "red" && "text-red-800",
-              color === "yellow" && "text-yellow-800",
-              color === "wine" && "text-rose-400",
-            )}
-          >
-            {label}
-          </p>
-          <p
-            className={cn(
-              "mt-2 text-2xl font-semibold tabular-nums tracking-tight",
-              emphasize === "good" && "text-emerald-700",
-              emphasize === "bad" && "text-red-700",
-              !emphasize && color === "green" && "text-emerald-800",
-              !emphasize && color === "red" && "text-red-800",
-              !emphasize && color === "yellow" && "text-yellow-900",
-              !emphasize && color === "wine" && "text-rose-900",
+              "mt-2 text-2xl font-semibold tabular-nums tracking-tight text-[var(--foreground)]",
+              emphasize === "good" && "text-[var(--salla-success)]",
+              emphasize === "bad" && "text-[var(--salla-danger)]",
             )}
           >
             {value}
@@ -285,18 +315,26 @@ function Kpi({
         </div>
         <div
           className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-2xl",
-            color === "green" && "bg-emerald-600 text-white",
-            color === "red" && "bg-red-600 text-white",
-            color === "yellow" && "bg-yellow-400 text-yellow-950",
-            color === "wine" && "bg-rose-50 text-rose-400",
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+            accent === "success" && "bg-[color-mix(in_srgb,var(--salla-success)_15%,transparent)] text-[var(--salla-success)]",
+            accent === "danger" && "bg-[color-mix(in_srgb,var(--salla-danger)_15%,transparent)] text-[var(--salla-danger)]",
+            accent === "primary" && "bg-[color-mix(in_srgb,var(--salla-primary)_12%,transparent)] text-[var(--salla-primary)]",
           )}
         >
           <Icon className="h-5 w-5" aria-hidden />
         </div>
       </div>
-      <p className="mt-2 text-xs text-rose-700/80">{hint}</p>
-      <p className={cn("mt-2 inline-flex items-center gap-1 text-xs font-medium", good ? "text-emerald-700" : down || up ? "text-red-600" : "text-rose-500")}>
+      <p className="mt-3 text-xs text-[var(--salla-muted)]">{hint}</p>
+      <p
+        className={cn(
+          "mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+          good
+            ? "bg-[color-mix(in_srgb,var(--salla-success)_12%,transparent)] text-[var(--salla-success)]"
+            : down || up
+              ? "bg-[color-mix(in_srgb,var(--salla-danger)_12%,transparent)] text-[var(--salla-danger)]"
+              : "bg-[var(--salla-soft)] text-[var(--salla-muted)]",
+        )}
+      >
         {up ? <ArrowUpRight className="h-3.5 w-3.5" aria-hidden /> : null}
         {down ? <ArrowDownRight className="h-3.5 w-3.5" aria-hidden /> : null}
         {comparisonLabel(change)}
@@ -305,40 +343,34 @@ function Kpi({
   );
 }
 
-function PeriodCard({
+function MetricTile({
   label,
   value,
-  tone = "rose",
+  highlight = false,
+  danger = false,
 }: {
   label: string;
-  value: number;
-  tone?: "rose" | "gold" | "mint" | "yellow" | "red" | "blue";
+  value: string;
+  highlight?: boolean;
+  danger?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "rounded-2xl px-4 py-3",
-        tone === "rose" && "bg-rose-50",
-        tone === "gold" && "bg-amber-50",
-        tone === "mint" && "bg-emerald-100",
-        tone === "yellow" && "bg-yellow-100",
-        tone === "red" && "bg-red-100",
-        tone === "blue" && "bg-sky-100",
+        "rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/60 px-4 py-3",
+        highlight && "border-[color-mix(in_srgb,var(--salla-primary)_35%,var(--salla-border))] bg-[color-mix(in_srgb,var(--salla-primary)_6%,var(--salla-surface))]",
       )}
     >
-      <dt
+      <dt className="text-xs font-medium text-[var(--salla-muted)]">{label}</dt>
+      <dd
         className={cn(
-          "text-xs font-medium",
-          tone === "mint" && "text-emerald-800",
-          tone === "yellow" && "text-yellow-800",
-          tone === "red" && "text-red-800",
-          tone === "blue" && "text-sky-800",
-          (tone === "rose" || tone === "gold") && "text-rose-400",
+          "mt-1.5 text-lg font-semibold tabular-nums text-[var(--foreground)]",
+          danger && "text-[var(--salla-danger)]",
+          highlight && "text-[var(--salla-primary)]",
         )}
       >
-        {label}
-      </dt>
-      <dd className="mt-1 text-xl font-semibold tabular-nums text-rose-900">{formatCurrency(value)}</dd>
+        {value}
+      </dd>
     </div>
   );
 }
@@ -346,11 +378,11 @@ function PeriodCard({
 function DressRow({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <li className="flex items-center justify-between gap-3">
-      <span className="inline-flex items-center gap-2 text-rose-700">
+      <span className="inline-flex items-center gap-2 text-[var(--foreground)]">
         <span className={cn("h-2.5 w-2.5 rounded-full", color)} />
         {label}
       </span>
-      <span className="tabular-nums text-rose-900">{value}</span>
+      <span className="tabular-nums font-semibold text-[var(--foreground)]">{value}</span>
     </li>
   );
 }
@@ -362,7 +394,6 @@ function CompareCard({
   change,
   money = false,
   invert = false,
-  color = "wine",
 }: {
   label: string;
   current: number;
@@ -370,26 +401,23 @@ function CompareCard({
   change: number;
   money?: boolean;
   invert?: boolean;
-  color?: "green" | "red" | "yellow" | "wine";
 }) {
   const up = change > 0.05;
   const down = change < -0.05;
   const good = invert ? down : up;
   const format = (value: number) => (money ? formatSignedCurrency(value) : String(value));
+
   return (
-    <div
-      className={cn(
-        "rounded-2xl px-3 py-3",
-        color === "green" && "bg-emerald-100",
-        color === "red" && "bg-red-100",
-        color === "yellow" && "bg-yellow-100",
-        color === "wine" && "bg-rose-50",
-      )}
-    >
-      <dt className="text-xs font-medium text-rose-800">{label}</dt>
-      <dd className="mt-1 text-lg font-semibold tabular-nums text-rose-900">{format(current)}</dd>
-      <p className="mt-1 text-[11px] text-rose-700">الشهر الماضي {format(previous)}</p>
-      <p className={cn("mt-1 text-xs font-medium", good ? "text-emerald-700" : down || up ? "text-red-600" : "text-rose-500")}>
+    <div className="rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/50 px-3.5 py-3">
+      <dt className="text-xs font-medium text-[var(--salla-muted)]">{label}</dt>
+      <dd className="mt-1 text-lg font-semibold tabular-nums text-[var(--foreground)]">{format(current)}</dd>
+      <p className="mt-1 text-[11px] text-[var(--salla-muted)]">الشهر الماضي {format(previous)}</p>
+      <p
+        className={cn(
+          "mt-1.5 text-xs font-medium",
+          good ? "text-[var(--salla-success)]" : down || up ? "text-[var(--salla-danger)]" : "text-[var(--salla-muted)]",
+        )}
+      >
         {comparisonLabel(change)}
       </p>
     </div>

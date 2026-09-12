@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --salla-primary: #004d5b;
   --salla-primary-hover: #003d48;

@@ -14,33 +14,60 @@ export function CategoryFilter({
   onChange: (value: CategoryFilterValue) => void;
 }) {
   return (
-    <div role="group" aria-label="تصفية حسب التصنيف">
-      <p className="mb-2 text-xs font-medium text-rose-700">التصنيف</p>
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => onChange("all")}
-          className={cn(
-            "rounded-full px-3 py-1.5 text-sm",
-            value === "all" ? "shop-btn" : "bg-white font-medium text-rose-800 ring-1 ring-rose-200 hover:bg-rose-50",
-          )}
-        >
-          كل التصنيفات
-        </button>
-        {DRESS_CATEGORIES.map((category) => (
-          <button
-            key={category}
-            type="button"
-            onClick={() => onChange(category)}
-            className={cn(
-              "rounded-full px-3 py-1.5 text-sm",
-              value === category ? "shop-btn" : "bg-white font-medium text-rose-800 ring-1 ring-rose-200 hover:bg-rose-50",
-            )}
-          >
-            {DRESS_CATEGORY_LABELS[category]}
-          </button>
-        ))}
-      </div>
+    <FilterGroup label="التصنيف" ariaLabel="تصفية حسب التصنيف">
+      <Chip active={value === "all"} onClick={() => onChange("all")}>
+        الكل
+      </Chip>
+      {DRESS_CATEGORIES.map((category) => (
+        <Chip key={category} active={value === category} onClick={() => onChange(category)}>
+          {DRESS_CATEGORY_LABELS[category]}
+        </Chip>
+      ))}
+    </FilterGroup>
+  );
+}
+
+export function FilterGroup({
+  label,
+  ariaLabel,
+  children,
+}: {
+  label: string;
+  ariaLabel: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div role="group" aria-label={ariaLabel}>
+      <p className="mb-2 text-xs font-medium text-[var(--salla-muted)]">{label}</p>
+      <div className="flex flex-wrap gap-1.5">{children}</div>
     </div>
+  );
+}
+
+export function Chip({
+  active,
+  onClick,
+  children,
+  className,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "rounded-lg px-2.5 py-1.5 text-xs font-medium transition",
+        active
+          ? "bg-[var(--salla-primary)] text-white dark:text-[#1d1e20]"
+          : "bg-[var(--salla-soft)] text-[var(--foreground)] hover:bg-[color-mix(in_srgb,var(--salla-primary)_10%,var(--salla-soft))]",
+        className,
+      )}
+    >
+      {children}
+    </button>
   );
 }
