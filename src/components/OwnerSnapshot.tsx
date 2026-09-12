@@ -40,17 +40,17 @@ export function OwnerSnapshot() {
 
   return (
     <section className="space-y-5">
-      <div className="dash-hero dash-panel rounded-3xl px-5 py-6 sm:px-7">
+      <div className="dash-hero dash-panel rounded-2xl px-5 py-6 sm:px-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex items-start gap-4">
             <BrandLogo size="md" />
             <div>
-              <p className="text-sm font-medium text-[#ffd76a]">لوحة تحكم المالك</p>
-              <h2 className="mt-2 font-serif text-3xl text-white sm:text-4xl">محل زينب</h2>
-              <p className="mt-2 text-sm text-white" suppressHydrationWarning>
+              <p className="text-sm font-medium text-[var(--salla-primary)]">لوحة تحكم المالك</p>
+              <h2 className="mt-2 font-serif text-3xl text-slate-900 sm:text-4xl">محل زينب</h2>
+              <p className="mt-2 text-sm text-slate-500" suppressHydrationWarning>
                 {formatDateLong(todayIso())}
               </p>
-              <p className="mt-3 max-w-xl text-sm leading-7 text-white">
+              <p className="mt-3 max-w-xl text-sm leading-7 text-slate-600">
                 {snap.monthProfit >= 0
                   ? `دخل ${snap.thisMonthLabel} حتى اليوم يغطي المصروفات، والمحل رابح.`
                   : `مصروفات ${snap.thisMonthLabel} حتى اليوم أعلى من دخل التأجير.`}
@@ -104,7 +104,7 @@ export function OwnerSnapshot() {
       </dl>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <div className="dash-panel rounded-3xl p-5 xl:col-span-2">
+        <div className="dash-panel rounded-2xl p-5 xl:col-span-2">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <h3 className="text-lg text-rose-900">الدخل عبر الفترات</h3>
@@ -120,7 +120,7 @@ export function OwnerSnapshot() {
           </dl>
         </div>
 
-        <div className="dash-panel rounded-3xl p-5">
+        <div className="dash-panel rounded-2xl p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <h3 className="text-lg text-rose-900">مخزون الفساتين</h3>
@@ -144,7 +144,7 @@ export function OwnerSnapshot() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="dash-panel rounded-3xl p-5">
+        <div className="dash-panel rounded-2xl p-5">
           <h3 className="text-lg text-rose-900">عربون وتأمين ومتبقي</h3>
           <p className="mt-1 text-xs text-rose-400">العربون من الإيجار، والتأمين عند المحل لين يرجع الفستان سليم</p>
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -153,7 +153,7 @@ export function OwnerSnapshot() {
             <PeriodCard label="متبقي على العميلات" value={snap.remainingDue} tone="red" />
           </dl>
         </div>
-        <div className="dash-panel rounded-3xl p-5">
+        <div className="dash-panel rounded-2xl p-5">
           <h3 className="text-lg text-rose-900">مقارنة {snap.thisMonthLabel} بـ {snap.lastMonthLabel}</h3>
           <p className="mt-1 text-xs text-rose-400">نفس عدد الأيام من أول الشهر حتى اليوم</p>
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -165,7 +165,7 @@ export function OwnerSnapshot() {
         </div>
       </div>
 
-      <div className="dash-panel rounded-3xl p-5">
+      <div className="dash-panel rounded-2xl p-5">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h3 className="text-lg text-rose-900">حركة الدخل الشهرية</h3>
@@ -249,7 +249,7 @@ function Kpi({
   return (
     <div
       className={cn(
-        "rounded-3xl p-4 sm:p-5",
+        "rounded-2xl p-4 sm:p-5",
         color === "green" && "shop-tint-green",
         color === "red" && "shop-tint-red",
         color === "yellow" && "shop-tint-yellow",

@@ -18,10 +18,10 @@ import { cn, formatCurrency } from "@/lib/format";
 import type { Dress, DressStatus } from "@/types";
 
 const STATUS_STYLES: Record<DressStatus, string> = {
-  available: "bg-emerald-600 text-white",
+  available: "bg-[var(--salla-success)] text-white",
   reserved: "bg-sky-600 text-white",
   rented: "bg-yellow-400 text-yellow-950",
-  maintenance: "bg-red-600 text-white",
+  maintenance: "bg-[var(--salla-danger)] text-white",
 };
 
 const STATUS_LABELS: Record<DressStatus, string> = {
@@ -152,7 +152,7 @@ export function DressGrid() {
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {visibleDresses.length === 0 ? (
-          <p className="shop-card rounded-3xl px-4 py-8 text-center text-sm text-rose-400 sm:col-span-2 xl:col-span-3">
+          <p className="shop-card rounded-2xl px-4 py-8 text-center text-sm text-rose-400 sm:col-span-2 xl:col-span-3">
             ما في فساتين بهالبحث أو بهذي الحالة أو التصنيف أو اللون أو المقاس حالياً.
           </p>
         ) : null}
@@ -162,7 +162,7 @@ export function DressGrid() {
           const windows = dressActiveBookings(bookings, dress.id);
           const needsAlteration = dressNeedsAlteration(dress, bookings);
           return (
-            <article key={dress.id} className="shop-card overflow-hidden rounded-3xl transition hover:-translate-y-0.5">
+            <article key={dress.id} className="shop-card overflow-hidden rounded-2xl transition hover:-translate-y-0.5">
               <div className="relative">
                 <DressGallery
                   images={presentation.images}
@@ -337,7 +337,7 @@ function BarcodeDialog({ dress, onClose }: { dress: Dress; onClose: () => void }
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
       <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق الباركود" onClick={onClose} />
-      <div role="dialog" aria-modal="true" aria-labelledby="barcode-title" className="shop-card relative w-full max-w-sm rounded-3xl p-6">
+      <div role="dialog" aria-modal="true" aria-labelledby="barcode-title" className="shop-card relative w-full max-w-sm rounded-2xl p-6">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="text-xs text-rose-400">باركود الفستان</p>

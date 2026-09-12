@@ -14,7 +14,11 @@ export function RoleSwitcher() {
   const { role, setRole } = useShop();
 
   return (
-    <div className="inline-flex rounded-2xl bg-white/10 p-1 ring-1 ring-white/25" role="tablist" aria-label="تبديل دور المستخدم">
+    <div
+      className="inline-flex rounded-xl bg-slate-100 p-1 ring-1 ring-slate-200"
+      role="tablist"
+      aria-label="تبديل دور المستخدم"
+    >
       {ROLES.map((item) => {
         const Icon = item.icon;
         const active = role === item.id;
@@ -26,13 +30,17 @@ export function RoleSwitcher() {
             aria-selected={active}
             onClick={() => setRole(item.id)}
             className={cn(
-              "flex items-center gap-2 rounded-xl px-4 py-2 text-sm transition-colors",
-              active ? "shop-btn-gold shadow-sm" : "text-white hover:bg-white/10",
+              "flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors",
+              active
+                ? "bg-[var(--salla-primary)] text-white shadow-sm"
+                : "text-slate-600 hover:bg-white hover:text-[var(--salla-primary)]",
             )}
           >
             <Icon className="h-3.5 w-3.5" aria-hidden />
             <span>{item.label}</span>
-            <span className="hidden text-xs text-[#ffd76a] sm:inline">{item.hint}</span>
+            <span className={cn("hidden text-xs sm:inline", active ? "text-white/80" : "text-slate-400")}>
+              {item.hint}
+            </span>
           </button>
         );
       })}

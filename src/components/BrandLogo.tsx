@@ -17,8 +17,8 @@ export function BrandLogo({
       height={px}
       priority={size === "sm"}
       className={cn(
-        "rounded-xl object-cover ring-2 ring-[#d4a017]",
-        size === "md" ? "h-[5.5rem] w-[5.5rem]" : "h-14 w-14",
+        "rounded-xl object-cover ring-1 ring-slate-200",
+        size === "md" ? "h-[5.5rem] w-[5.5rem]" : "h-11 w-11",
         className,
       )}
     />

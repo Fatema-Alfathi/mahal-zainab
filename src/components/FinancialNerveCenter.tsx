@@ -62,7 +62,7 @@ export function FinancialNerveCenter() {
           tone={profitable ? "profit" : "loss"}
         />
       </div>
-      <div className="rounded-3xl bg-white/80 p-6">
+      <div className="rounded-2xl bg-white/80 p-6">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm font-medium text-stone-700">
             <Landmark className="h-4 w-4 text-stone-400" aria-hidden />

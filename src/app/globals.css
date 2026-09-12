@@ -1,12 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --yal-burgundy: #8b1530;
-  --yal-burgundy-deep: #6e1024;
-  --yal-gold: #d4a017;
-  --yal-ivory: #fff8ee;
-  --background: #fff4e8;
-  --foreground: #2a0c12;
+  --salla-primary: #004d5b;
+  --salla-primary-hover: #003d48;
+  --salla-secondary: #73fcd7;
+  --salla-secondary-text: #004d5b;
+  --salla-success: #00b259;
+  --salla-danger: #f5434a;
+  --salla-bg: #f8f8f8;
+  --salla-surface: #ffffff;
+  --salla-border: #e5e7eb;
+  --salla-muted: #6b7280;
+  --background: #f8f8f8;
+  --foreground: #1a1a1a;
 }
 
 @theme inline {
@@ -14,22 +20,22 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-thmanyah);
   --font-serif: var(--font-thmanyah);
-  --color-rose-50: #fff6ef;
-  --color-rose-100: #fde7d6;
-  --color-rose-200: #f0c48a;
-  --color-rose-300: #c45a5a;
-  --color-rose-400: #9b2a3c;
-  --color-rose-500: #8b1530;
-  --color-rose-600: #7a122a;
-  --color-rose-700: #6e1024;
-  --color-rose-800: #540d1c;
-  --color-rose-900: #2a0c12;
-  --color-rose-950: #1a070c;
-  --color-pink-50: #fff6ef;
-  --color-pink-100: #fde7d6;
-  --color-pink-200: #f0c48a;
-  --color-pink-300: #d4a017;
-  --color-pink-800: #6e1024;
+  --color-rose-50: #f8fafc;
+  --color-rose-100: #f1f5f9;
+  --color-rose-200: #e2e8f0;
+  --color-rose-300: #94a3b8;
+  --color-rose-400: #64748b;
+  --color-rose-500: #004d5b;
+  --color-rose-600: #003d48;
+  --color-rose-700: #0f172a;
+  --color-rose-800: #1e293b;
+  --color-rose-900: #0f172a;
+  --color-rose-950: #020617;
+  --color-pink-50: #f0fdfa;
+  --color-pink-100: #ccfbf1;
+  --color-pink-200: #99f6e4;
+  --color-pink-300: #73fcd7;
+  --color-pink-800: #004d5b;
 }
 
 html {
@@ -39,14 +45,7 @@ html {
 body {
   color: var(--foreground);
   font-family: var(--font-thmanyah), ui-sans-serif, system-ui, sans-serif;
-  background-color: #fff4e8;
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' viewBox='0 0 88 88'%3E%3Cpath fill='none' stroke='%238b1530' stroke-opacity='0.08' stroke-width='1.1' d='M44 10 L66 44 L44 78 L22 44 Z'/%3E%3C/svg%3E"),
-    radial-gradient(ellipse 55% 36% at 100% 0%, rgba(139, 21, 48, 0.14) 0%, transparent 58%),
-    radial-gradient(ellipse 45% 32% at 0% 8%, rgba(22, 163, 74, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse 40% 30% at 100% 100%, rgba(220, 38, 38, 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 34% at 0% 100%, rgba(234, 179, 8, 0.18) 0%, transparent 52%);
-  background-attachment: fixed;
+  background-color: var(--salla-bg);
 }
 
 .font-serif {
@@ -54,117 +53,136 @@ body {
 }
 
 .shop-header {
-  background: #6e1024;
-  border-bottom: 4px solid #d4a017;
+  background: var(--salla-surface);
+  border-bottom: 1px solid var(--salla-border);
 }
 
 .shop-card {
-  background: #ffffff;
-  border: 2px solid #8b1530;
-  box-shadow: 0 10px 0 #d4a017;
+  background: var(--salla-surface);
+  border: 1px solid var(--salla-border);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .shop-soft {
-  background: #fff0d6;
+  background: #f1f5f9;
 }
 
 .shop-btn {
-  background: #8b1530;
-  color: #fff8ee;
+  background: var(--salla-primary);
+  color: #ffffff;
 }
 
 .shop-btn:hover {
-  background: #a31839;
+  background: var(--salla-primary-hover);
 }
 
 .shop-btn-gold {
-  background: #d4a017;
-  color: #2a0c12;
+  background: var(--salla-secondary);
+  color: var(--salla-secondary-text);
 }
 
 .shop-btn-gold:hover {
-  background: #e0b122;
+  background: #5ef0c8;
 }
 
 .shop-btn-violet {
-  background: #540d1c;
-  color: #fff8ee;
+  background: #0f766e;
+  color: #ffffff;
 }
 
 .shop-btn-violet:hover {
-  background: #6e1024;
+  background: #115e59;
 }
 
 .shop-btn-green {
-  background: #15803d;
+  background: var(--salla-success);
   color: #fff;
 }
 
 .shop-btn-green:hover {
-  background: #16a34a;
+  background: #009a4d;
 }
 
 .shop-btn-red {
-  background: #dc2626;
+  background: var(--salla-danger);
   color: #fff;
 }
 
 .shop-btn-red:hover {
-  background: #ef4444;
+  background: #e03a41;
 }
 
 .shop-btn-yellow {
-  background: #eab308;
+  background: #f59e0b;
   color: #1c1400;
 }
 
 .shop-btn-yellow:hover {
-  background: #facc15;
+  background: #fbbf24;
 }
 
 .shop-btn-blue {
-  background: #2563eb;
+  background: #0284c7;
   color: #fff;
 }
 
 .shop-btn-blue:hover {
-  background: #3b82f6;
+  background: #0ea5e9;
 }
 
 .shop-tint-green {
   background: #ecfdf5;
-  border: 2px solid #16a34a;
-  box-shadow: 0 8px 0 #86efac;
+  border: 1px solid #a7f3d0;
+  box-shadow: none;
 }
 
 .shop-tint-red {
   background: #fef2f2;
-  border: 2px solid #dc2626;
-  box-shadow: 0 8px 0 #fca5a5;
+  border: 1px solid #fecaca;
+  box-shadow: none;
 }
 
 .shop-tint-yellow {
-  background: #fefce8;
-  border: 2px solid #ca8a04;
-  box-shadow: 0 8px 0 #fde047;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  box-shadow: none;
 }
 
 .shop-tint-blue {
-  background: #eff6ff;
-  border: 2px solid #2563eb;
-  box-shadow: 0 8px 0 #93c5fd;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  box-shadow: none;
 }
 
 .dash-panel {
-  background: #ffffff;
-  border: 2px solid #8b1530;
-  box-shadow: 0 10px 0 #d4a017;
+  background: var(--salla-surface);
+  border: 1px solid var(--salla-border);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .dash-hero,
 .dash-panel.dash-hero {
-  background: #6e1024;
-  border: 2px solid #d4a017;
-  box-shadow: 0 10px 0 #d4a017;
-  color: #fff8ee;
+  background: var(--salla-surface);
+  border: 1px solid var(--salla-border);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  color: var(--foreground);
+}
+
+.shell-sidebar {
+  background: var(--salla-surface);
+  border-inline-end: 1px solid var(--salla-border);
+}
+
+.shell-nav-active {
+  background: color-mix(in srgb, var(--salla-secondary) 35%, white);
+  color: var(--salla-primary);
+}
+
+.shell-nav-idle {
+  color: #475569;
+}
+
+.shell-nav-idle:hover {
+  background: #f1f5f9;
+  color: var(--salla-primary);
 }

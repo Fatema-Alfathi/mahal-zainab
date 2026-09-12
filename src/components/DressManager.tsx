@@ -39,10 +39,10 @@ import { cn, formatCurrency, formatDate } from "@/lib/format";
 import type { Dress, DressCatalogDraft, DressStatus } from "@/types";
 
 const STATUS_STYLES: Record<DressStatus, string> = {
-  available: "bg-emerald-600 text-white",
+  available: "bg-[var(--salla-success)] text-white",
   reserved: "bg-sky-600 text-white",
   rented: "bg-yellow-400 text-yellow-950",
-  maintenance: "bg-red-600 text-white",
+  maintenance: "bg-[var(--salla-danger)] text-white",
 };
 
 const STATUS_LABELS: Record<DressStatus, string> = {
@@ -162,7 +162,7 @@ export function DressManager() {
 
       <div className="space-y-3">
         {visibleDresses.length === 0 ? (
-          <p className="shop-card rounded-3xl px-4 py-8 text-center text-sm text-rose-400">
+          <p className="shop-card rounded-2xl px-4 py-8 text-center text-sm text-rose-400">
             ما في فساتين بهالبحث أو بهالتصنيف أو اللون أو المقاس حالياً.
           </p>
         ) : null}
@@ -175,7 +175,7 @@ export function DressManager() {
           const repair = dressRepairCost(dress.id, variableExpenses);
           const landed = dressAcquisitionCost(dress);
           return (
-            <article key={dress.id} className="shop-card overflow-hidden rounded-3xl">
+            <article key={dress.id} className="shop-card overflow-hidden rounded-2xl">
               <div className="grid gap-0 lg:grid-cols-[220px_minmax(0,1fr)]">
                 <DressGallery
                   images={display.images}
@@ -411,7 +411,7 @@ function DressFormDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="dress-form-title"
-        className="shop-card relative max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl p-6"
+        className="shop-card relative max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl p-6"
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -738,7 +738,7 @@ function ConfirmDeleteDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
       <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق تأكيد الحذف" onClick={onClose} />
-      <div role="dialog" aria-modal="true" aria-labelledby="delete-dress-title" className="shop-card relative w-full max-w-md rounded-3xl p-6">
+      <div role="dialog" aria-modal="true" aria-labelledby="delete-dress-title" className="shop-card relative w-full max-w-md rounded-2xl p-6">
         <h3 id="delete-dress-title" className="text-xl text-rose-900">
           حذف {dress.name}؟
         </h3>

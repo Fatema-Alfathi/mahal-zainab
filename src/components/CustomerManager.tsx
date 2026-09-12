@@ -51,7 +51,7 @@ export function CustomerManager() {
       {notice ? <p className="text-sm text-emerald-600">{notice}</p> : null}
 
       <div className="grid gap-5 xl:grid-cols-[20rem_1fr]">
-        <div className="dash-panel rounded-3xl p-4">
+        <div className="dash-panel rounded-2xl p-4">
           <input
             type="search"
             value={query}
@@ -85,7 +85,7 @@ export function CustomerManager() {
         </div>
 
         {selected ? (
-          <article className="dash-panel rounded-3xl p-5 sm:p-6">
+          <article className="dash-panel rounded-2xl p-5 sm:p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-xs text-rose-400">رقم العميلة {selected.number}</p>
@@ -167,7 +167,7 @@ export function CustomerManager() {
             )}
           </article>
         ) : (
-          <p className="dash-panel rounded-3xl px-4 py-10 text-center text-sm text-rose-300">اختاري عميلة من القائمة.</p>
+          <p className="dash-panel rounded-2xl px-4 py-10 text-center text-sm text-rose-300">اختاري عميلة من القائمة.</p>
         )}
       </div>
 
@@ -245,7 +245,7 @@ function CustomerFormDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
       <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق النموذج" onClick={onClose} />
-      <div className="shop-card relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl p-6">
+      <div className="shop-card relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-2xl p-6">
         <div className="mb-4 flex items-start justify-between gap-3">
           <h3 className="text-2xl text-rose-900">{title}</h3>
           <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label="إغلاق">

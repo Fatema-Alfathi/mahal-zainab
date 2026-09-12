@@ -18,7 +18,7 @@ export function VariableExpenseLog() {
   const visible = showAll ? rows : rows.slice(0, 5);
 
   return (
-    <section className="shop-card rounded-3xl p-6">
+    <section className="shop-card rounded-2xl p-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm text-rose-400">بتاريخ اليوم</p>

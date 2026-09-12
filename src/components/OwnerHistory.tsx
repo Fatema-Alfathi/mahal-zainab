@@ -37,7 +37,7 @@ export function OwnerHistory() {
         <Highlight label="أقل سنة دخل" row={history.lowestIncomeYear} field="income" tone="red" />
       </dl>
 
-      <div className="dash-panel rounded-3xl p-5 sm:p-6">
+      <div className="dash-panel rounded-2xl p-5 sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h3 className="text-xl text-rose-900">دخل كل شهر</h3>
@@ -73,7 +73,7 @@ export function OwnerHistory() {
                     title={`${row.label}: ${formatCurrency(row.income)}`}
                     className={cn(
                       "w-full max-w-12 rounded-t-xl",
-                      high ? "bg-emerald-500" : low ? "bg-red-500" : "bg-gradient-to-t from-[#8b1530] to-[#d4a017]",
+                      high ? "bg-emerald-500" : low ? "bg-red-500" : "bg-gradient-to-t from-[#004d5b] to-[#73fcd7]",
                     )}
                     style={{ height: `${height}%` }}
                   />
@@ -108,7 +108,7 @@ export function OwnerHistory() {
         </ul>
       </div>
 
-      <div className="dash-panel rounded-3xl p-5 sm:p-6">
+      <div className="dash-panel rounded-2xl p-5 sm:p-6">
         <h3 className="text-xl text-rose-900">كل السنوات</h3>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[32rem] text-sm">
@@ -164,7 +164,7 @@ function Highlight({
   return (
     <div
       className={cn(
-        "rounded-3xl px-4 py-4",
+        "rounded-2xl px-4 py-4",
         tone === "rose" && "shop-card",
         tone === "gold" && "shop-tint-yellow",
         tone === "mint" && "shop-tint-green",

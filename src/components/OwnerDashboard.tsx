@@ -30,7 +30,7 @@ export function OwnerDashboard() {
     <div className="space-y-6">
       <div className="-mx-1 overflow-x-auto px-1">
         <div
-          className="inline-flex min-w-full rounded-2xl bg-white p-1 shadow-sm ring-2 ring-[#8b1530] sm:min-w-0"
+          className="inline-flex min-w-full rounded-2xl bg-white p-1 shadow-sm ring-1 ring-slate-200 sm:min-w-0"
           role="tablist"
           aria-label="أقسام لوحة المالك"
         >

@@ -119,7 +119,7 @@ export function BookingModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
       <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق نافذة الحجز" onClick={onClose} />
-      <div role="dialog" aria-modal="true" aria-labelledby="booking-title" className="shop-card relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl p-6">
+      <div role="dialog" aria-modal="true" aria-labelledby="booking-title" className="shop-card relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-2xl p-6">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="text-xs text-rose-400">

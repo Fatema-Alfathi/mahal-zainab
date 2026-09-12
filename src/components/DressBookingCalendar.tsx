@@ -76,7 +76,7 @@ export function DressBookingCalendar() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)]">
-        <aside className="shop-card rounded-3xl p-4">
+        <aside className="shop-card rounded-2xl p-4">
           <label className="block text-sm">
             <span className="mb-1 block text-rose-700">اختاري فستان</span>
             <input
@@ -108,7 +108,7 @@ export function DressBookingCalendar() {
                       onClick={() => selectDress(dress)}
                       className={cn(
                         "flex w-full items-center gap-3 rounded-2xl p-2 text-start",
-                        active ? "bg-[#8b1530] text-white" : "bg-rose-50 text-rose-900 hover:bg-rose-100",
+                        active ? "bg-[#004d5b] text-white" : "bg-rose-50 text-rose-900 hover:bg-rose-100",
                       )}
                     >
                       <div className="h-14 w-11 shrink-0 overflow-hidden rounded-xl">
@@ -138,7 +138,7 @@ export function DressBookingCalendar() {
         {selected ? (
           <DressCalendarPanel key={selected.id} dress={selected} bookings={bookings} />
         ) : (
-          <p className="shop-card rounded-3xl px-4 py-10 text-center text-sm text-rose-400">أضيفي فستان أولاً عشان يظهر التقويم.</p>
+          <p className="shop-card rounded-2xl px-4 py-10 text-center text-sm text-rose-400">أضيفي فستان أولاً عشان يظهر التقويم.</p>
         )}
       </div>
     </section>
@@ -156,7 +156,7 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
 
   return (
     <div className="space-y-4">
-      <div className="shop-card rounded-3xl p-4 sm:p-5">
+      <div className="shop-card rounded-2xl p-4 sm:p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs text-rose-400" dir="ltr">
@@ -226,8 +226,8 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
                   mark === "none" && "bg-rose-50/80 text-rose-900 hover:bg-rose-100",
                   mark === "upcoming" && "bg-sky-600 text-white",
                   mark === "out" && "bg-yellow-400 text-yellow-950",
-                  mark === "past" && "bg-[#8b1530] text-white",
-                  isToday && "ring-2 ring-[#d4a017] ring-offset-1",
+                  mark === "past" && "bg-[#004d5b] text-white",
+                  isToday && "ring-2 ring-[#73fcd7] ring-offset-1",
                   isPicked && "outline outline-2 outline-offset-1 outline-rose-900",
                 )}
                 aria-label={
@@ -243,7 +243,7 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
         </div>
       </div>
 
-      <div className="shop-card rounded-3xl p-4 sm:p-5">
+      <div className="shop-card rounded-2xl p-4 sm:p-5">
         <div className="flex items-center gap-2 text-rose-900">
           <CalendarDays className="h-5 w-5 text-rose-400" aria-hidden />
           <h3 className="text-lg">{formatDate(pickedDate)}</h3>
@@ -261,7 +261,7 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
         )}
       </div>
 
-      <div className="shop-card rounded-3xl p-4 sm:p-5">
+      <div className="shop-card rounded-2xl p-4 sm:p-5">
         <h3 className="text-lg text-rose-900">كل حجوزات {dress.name}</h3>
         {history.length === 0 ? (
           <p className="mt-3 text-sm text-rose-400">ما انحجز هالفستان إلى الآن.</p>
@@ -296,7 +296,7 @@ function Legend({ tone, label }: { tone: "upcoming" | "out" | "past"; label: str
           "h-3 w-3 rounded-full",
           tone === "upcoming" && "bg-sky-600",
           tone === "out" && "bg-yellow-400",
-          tone === "past" && "bg-[#8b1530]",
+          tone === "past" && "bg-[#004d5b]",
         )}
       />
       {label}

@@ -45,7 +45,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#6e1024",
+  themeColor: "#004d5b",
 };
 
 export default function RootLayout({
@@ -55,7 +55,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl" className={`${thmanyah.variable} h-full antialiased`}>
-      <body className="min-h-full font-sans text-[#2a0c12]">
+      <body className="min-h-full font-sans text-slate-900">
         <Providers>{children}</Providers>
       </body>
     </html>

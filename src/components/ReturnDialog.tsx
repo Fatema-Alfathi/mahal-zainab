@@ -18,7 +18,7 @@ export function ReturnDialog({ dress, onClose }: { dress: Dress; onClose: () => 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
       <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق نافذة الإرجاع" onClick={onClose} />
-      <div role="dialog" aria-modal="true" aria-labelledby="return-title" className="shop-card relative w-full max-w-md rounded-3xl p-6">
+      <div role="dialog" aria-modal="true" aria-labelledby="return-title" className="shop-card relative w-full max-w-md rounded-2xl p-6">
         <div className="mb-4 flex items-start justify-between">
           <div>
             <p className="text-xs text-rose-400">الإرجاع إلى المحل</p>

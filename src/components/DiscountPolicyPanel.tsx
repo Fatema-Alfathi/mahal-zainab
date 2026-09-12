@@ -15,7 +15,7 @@ export function DiscountPolicyPanel() {
   }
 
   return (
-    <section className="shop-card rounded-3xl p-6">
+    <section className="shop-card rounded-2xl p-6">
       <div className="mb-5">
         <p className="text-sm text-rose-400">قرارك أنتِ</p>
         <h3 className="mt-1 text-2xl font-medium text-rose-900">خصم الموظفات</h3>

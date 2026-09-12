@@ -37,7 +37,7 @@ export function DressRoiTable() {
           const brokenEven = hasBrokenEven(dress, bookings, variableExpenses);
           const barWidth = Math.max(0, Math.min(100, recovered));
           return (
-            <article key={dress.id} className="shop-card rounded-3xl p-5">
+            <article key={dress.id} className="shop-card rounded-2xl p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h4 className="text-lg text-rose-900">{dress.name}</h4>
