@@ -196,6 +196,9 @@ export interface Booking {
 
 export interface ShopState {
   role: UserRole;
+  signedIn: boolean;
+  sessionName: string;
+  employeeId: string;
   dresses: Dress[];
   customers: Customer[];
   employees: Employee[];

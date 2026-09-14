@@ -4,10 +4,13 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
+  useState,
   type ReactNode,
 } from "react";
+import { clearSession, readSession, verifyLogin, writeSession, type AuthSession } from "@/lib/auth";
 import {
   INITIAL_BOOKINGS,
   INITIAL_CUSTOMERS,
@@ -71,7 +74,8 @@ function resolveBookingDiscount(
 }
 
 type Action =
-  | { type: "set-role"; role: UserRole }
+  | { type: "sign-in"; session: AuthSession }
+  | { type: "sign-out" }
   | {
       type: "create-booking";
       dressId: string;
@@ -112,8 +116,16 @@ type Action =
 
 function shopReducer(state: ShopState, action: Action): ShopState {
   switch (action.type) {
-    case "set-role":
-      return { ...state, role: action.role };
+    case "sign-in":
+      return {
+        ...state,
+        signedIn: true,
+        role: action.session.role,
+        sessionName: action.session.name,
+        employeeId: action.session.employeeId,
+      };
+    case "sign-out":
+      return { ...state, signedIn: false, role: "employee", sessionName: "", employeeId: "" };
 
     case "create-booking": {
       const dress = state.dresses.find((item) => item.id === action.dressId);
@@ -537,7 +549,10 @@ function shopReducer(state: ShopState, action: Action): ShopState {
 }
 
 const initialState: ShopState = {
-  role: "owner",
+  role: "employee",
+  signedIn: false,
+  sessionName: "",
+  employeeId: "",
   dresses: INITIAL_DRESSES,
   customers: INITIAL_CUSTOMERS,
   employees: INITIAL_EMPLOYEES,
@@ -549,8 +564,10 @@ const initialState: ShopState = {
 };
 
 interface ShopContextValue extends ShopState {
+  authReady: boolean;
   isOwner: boolean;
-  setRole: (role: UserRole) => void;
+  signIn: (username: string, password: string) => boolean;
+  signOut: () => void;
   createBooking: (input: {
     dressId: string;
     customerId?: string;
@@ -593,9 +610,34 @@ const ShopContext = createContext<ShopContextValue | null>(null);
 
 export function ShopProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(shopReducer, initialState);
+  const [authReady, setAuthReady] = useState(false);
 
-  const setRole = useCallback((role: UserRole) => {
-    dispatch({ type: "set-role", role });
+  useEffect(() => {
+    const saved = readSession();
+    if (saved?.role === "owner") {
+      dispatch({ type: "sign-in", session: saved });
+    } else if (saved?.role === "employee") {
+      const employee = initialState.employees.find((item) => item.id === saved.employeeId && item.active);
+      if (employee) {
+        dispatch({ type: "sign-in", session: { role: "employee", name: employee.name, employeeId: employee.id } });
+      } else {
+        clearSession();
+      }
+    }
+    setAuthReady(true);
+  }, []);
+
+  const signIn = useCallback((username: string, password: string) => {
+    const session = verifyLogin(state.employees, username, password);
+    if (!session) return false;
+    writeSession(session);
+    dispatch({ type: "sign-in", session });
+    return true;
+  }, [state.employees]);
+
+  const signOut = useCallback(() => {
+    clearSession();
+    dispatch({ type: "sign-out" });
   }, []);
 
   const createBooking = useCallback(
@@ -791,8 +833,10 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ShopContextValue>(
     () => ({
       ...state,
-      isOwner: state.role === "owner",
-      setRole,
+      authReady,
+      isOwner: state.role === "owner" && state.signedIn,
+      signIn,
+      signOut,
       createBooking,
       addCustomer,
       updateCustomer,
@@ -816,7 +860,9 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     }),
     [
       state,
-      setRole,
+      authReady,
+      signIn,
+      signOut,
       createBooking,
       addCustomer,
       updateCustomer,

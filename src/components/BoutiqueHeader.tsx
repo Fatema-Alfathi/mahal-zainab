@@ -31,7 +31,7 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
               onHome ? "shop-btn-gold shadow-sm" : "text-white hover:bg-white/15",
             )}
           >
-            لوحة البوتيك
+            {isOwner ? "لوحة التحكم" : "البوتيك"}
           </Link>
           <Link
             href="/customers"
@@ -61,12 +61,7 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
             إدارة الفساتين
           </Link>
         </nav>
-        <div className="flex flex-col items-start gap-2 sm:items-end">
-          <RoleSwitcher />
-          <p className="text-sm font-medium text-[#ffd76a]">
-            {isOwner ? "لوحة التحكم، العميلات، والحجوزات" : "الحجوزات وملفات العميلات"}
-          </p>
-        </div>
+        <RoleSwitcher />
       </div>
     </header>
   );
