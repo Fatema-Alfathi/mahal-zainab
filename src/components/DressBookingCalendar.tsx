@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { DressPhoto } from "@/components/DressPhoto";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import {
   bookingRecordLabel,
   bookingRecordLine,
@@ -15,18 +16,19 @@ import {
 } from "@/lib/dressCalendar";
 import { categoryLabel, dressDisplay, matchesDressQuery, sizeLabel } from "@/lib/dressCatalog";
 import {
-  WEEKDAYS_SAT_AR,
   cn,
   formatDate,
   monthYearLabel,
   shiftMonthsIso,
   startOfMonthIso,
   todayIso,
+  weekdaysSat,
 } from "@/lib/format";
 import type { Booking, Dress } from "@/types";
 
 export function DressBookingCalendar() {
   const { dresses, bookings } = useShop();
+  const { t } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -68,35 +70,33 @@ export function DressBookingCalendar() {
   return (
     <section>
       <div className="mb-6" id="dress-calendar">
-        <p className="text-sm text-rose-400">فستان واحد</p>
-        <h2 className="mt-1 text-2xl font-medium text-rose-900">تقويم الفستان</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">
-          ابحثي بالاسم أو الكود إذا تبينين حجوزات فستان معيّن.
-        </p>
+        <p className="text-sm text-rose-400">{t("cal.oneDress")}</p>
+        <h2 className="mt-1 text-2xl font-medium text-rose-900">{t("cal.dressTitle")}</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">{t("cal.dressLead")}</p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)]">
         <aside className="shop-card rounded-3xl p-4">
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">اختاري فستان</span>
+            <span className="mb-1 block text-rose-700">{t("cal.pickDress")}</span>
             <input
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="ابحثي بالاسم أو الكود"
+              placeholder={t("cal.searchPh")}
               className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 text-sm outline-none ring-rose-200 focus:ring-2"
-              aria-label="البحث عن فستان لعرض تقويمه"
+              aria-label={t("cal.searchAria")}
             />
           </label>
           {query.trim() && visibleDresses.length > 0 ? (
             <p className="mt-2 text-xs leading-6 text-rose-500">
-              تقويم {visibleDresses[0].name}
-              {visibleDresses.length > 1 ? ` · ${visibleDresses.length} نتائج` : ""}
+              {t("cal.calendarOf", { name: visibleDresses[0].name })}
+              {visibleDresses.length > 1 ? ` · ${t("cal.results", { n: visibleDresses.length })}` : ""}
             </p>
           ) : null}
           <ul className="mt-3 max-h-[28rem] space-y-2 overflow-y-auto">
             {visibleDresses.length === 0 ? (
-              <li className="px-2 py-6 text-center text-sm text-rose-400">ما في فستان بهالبحث.</li>
+              <li className="px-2 py-6 text-center text-sm text-rose-400">{t("cal.noDress")}</li>
             ) : (
               visibleDresses.map((dress) => {
                 const display = dressDisplay(dress);
@@ -138,7 +138,7 @@ export function DressBookingCalendar() {
         {selected ? (
           <DressCalendarPanel key={selected.id} dress={selected} bookings={bookings} />
         ) : (
-          <p className="shop-card rounded-3xl px-4 py-10 text-center text-sm text-rose-400">أضيفي فستان أولاً عشان يظهر التقويم.</p>
+          <p className="shop-card rounded-3xl px-4 py-10 text-center text-sm text-rose-400">{t("cal.addFirst")}</p>
         )}
       </div>
     </section>
@@ -146,13 +146,17 @@ export function DressBookingCalendar() {
 }
 
 export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings: Booking[] }) {
+  const { t, dir, locale } = useLanguage();
   const today = todayIso();
   const focus = nearestBookingDate(bookings, dress.id, today);
   const [monthIso, setMonthIso] = useState(() => startOfMonthIso(focus));
   const [pickedDate, setPickedDate] = useState(focus);
-  const history = useMemo(() => dressBookingHistory(bookings, dress.id), [bookings, dress.id]);
+  const history = useMemo(() => dressBookingHistory(bookings, dress.id), [bookings, dress.id, locale]);
   const cells = useMemo(() => monthCells(monthIso), [monthIso]);
+  const weekdayLabels = useMemo(() => weekdaysSat(), [locale]);
   const pickedMark = markDressDay(dress, bookings, pickedDate);
+  const PrevIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
+  const NextIcon = dir === "rtl" ? ChevronLeft : ChevronRight;
 
   return (
     <div className="space-y-4">
@@ -169,18 +173,18 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
               type="button"
               onClick={() => setMonthIso((current) => shiftMonthsIso(current, -1))}
               className="rounded-full p-2 text-rose-700 hover:bg-rose-50"
-              aria-label="الشهر السابق"
+              aria-label={t("previousMonth")}
             >
-              <ChevronRight className="h-5 w-5" aria-hidden />
+              <PrevIcon className="h-5 w-5" aria-hidden />
             </button>
             <p className="min-w-36 text-center text-sm font-medium text-rose-900">{monthYearLabel(monthIso)}</p>
             <button
               type="button"
               onClick={() => setMonthIso((current) => shiftMonthsIso(current, 1))}
               className="rounded-full p-2 text-rose-700 hover:bg-rose-50"
-              aria-label="الشهر التالي"
+              aria-label={t("nextMonth")}
             >
-              <ChevronLeft className="h-5 w-5" aria-hidden />
+              <NextIcon className="h-5 w-5" aria-hidden />
             </button>
             <button
               type="button"
@@ -190,19 +194,19 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
               }}
               className="rounded-2xl bg-rose-50 px-3 py-1.5 text-xs text-rose-800 hover:bg-rose-100"
             >
-              اليوم
+              {t("today")}
             </button>
           </div>
         </div>
 
         <div className="mb-3 flex flex-wrap gap-2 text-xs">
-          <Legend tone="upcoming" label="محجوز قادم" />
-          <Legend tone="out" label="عند العميلة" />
-          <Legend tone="past" label="حجز سابق" />
+          <Legend tone="upcoming" label={t("booking.upcoming")} />
+          <Legend tone="out" label={t("status.rented")} />
+          <Legend tone="past" label={t("booking.past")} />
         </div>
 
         <div className="grid grid-cols-7 gap-1 text-center text-xs text-rose-400">
-          {WEEKDAYS_SAT_AR.map((day) => (
+          {weekdayLabels.map((day) => (
             <div key={day} className="py-1 font-medium">
               {day}
             </div>
@@ -232,8 +236,8 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
                 )}
                 aria-label={
                   guest
-                    ? `${formatDate(date)}، ${bookingRecordLabel(dayItems[0], dress)} لـ ${guest}`
-                    : `${formatDate(date)}، ما في حجز`
+                    ? `${formatDate(date)}${t("list.comma")}${bookingRecordLabel(dayItems[0], dress)} ${t("cal.forGuest", { guest })}`
+                    : `${formatDate(date)}${t("list.comma")}${t("cal.noBookingAria")}`
                 }
               >
                 <span className="block tabular-nums">{dayNumber}</span>
@@ -249,7 +253,7 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
           <h3 className="text-lg">{formatDate(pickedDate)}</h3>
         </div>
         {pickedMark.bookings.length === 0 ? (
-          <p className="mt-3 text-sm leading-7 text-rose-500">ما في حجز على هالفستان بهاليوم. تقدرين تحجزينه.</p>
+          <p className="mt-3 text-sm leading-7 text-rose-500">{t("cal.noBookingDay")}</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {pickedMark.bookings.map((booking) => (
@@ -262,9 +266,9 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
       </div>
 
       <div className="shop-card rounded-3xl p-4 sm:p-5">
-        <h3 className="text-lg text-rose-900">كل حجوزات {dress.name}</h3>
+        <h3 className="text-lg text-rose-900">{t("cal.allBookings", { name: dress.name })}</h3>
         {history.length === 0 ? (
-          <p className="mt-3 text-sm text-rose-400">ما انحجز هالفستان إلى الآن.</p>
+          <p className="mt-3 text-sm text-rose-400">{t("cal.neverBooked")}</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {history.map((booking) => (

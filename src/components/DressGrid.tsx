@@ -14,8 +14,10 @@ import { ColorFilter, type ColorFilterValue } from "@/components/ColorFilter";
 import { DressVariants } from "@/components/DressVariants";
 import { SizeFilter, type SizeFilterValue } from "@/components/SizeFilter";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { categoryLabel, bookingDateLine, dressActiveBookings, dressDisplay, dressNeedsAlteration, matchesDressQuery, measurementLine, sizeLabel } from "@/lib/dressCatalog";
 import { cn, formatCurrency } from "@/lib/format";
+import { colorLabel, dressStatusLabel } from "@/lib/labels";
 import type { Dress, DressStatus } from "@/types";
 
 const STATUS_STYLES: Record<DressStatus, string> = {
@@ -23,13 +25,6 @@ const STATUS_STYLES: Record<DressStatus, string> = {
   reserved: "bg-sky-600 text-white",
   rented: "bg-yellow-400 text-yellow-950",
   maintenance: "bg-red-600 text-white",
-};
-
-const STATUS_LABELS: Record<DressStatus, string> = {
-  available: "متاح",
-  reserved: "محجوز",
-  rented: "عند العميلة",
-  maintenance: "يحتاج تنظيف",
 };
 
 type StatusFilter = "all" | DressStatus;
@@ -51,16 +46,11 @@ const CATEGORY_CHIP: Record<string, string> = {
   graduation: "bg-violet-600 text-white",
 };
 
-const FILTERS: Array<{ id: StatusFilter; label: string }> = [
-  { id: "all", label: "الكل" },
-  { id: "available", label: "متاح" },
-  { id: "reserved", label: "محجوز" },
-  { id: "rented", label: "عند العميلة" },
-  { id: "maintenance", label: "يحتاج تنظيف" },
-];
+const FILTER_IDS: StatusFilter[] = ["all", "available", "reserved", "rented", "maintenance"];
 
 export function DressGrid() {
   const { dresses, bookings, isOwner, pickupDress, completeMaintenance, cancelBooking } = useShop();
+  const { t } = useLanguage();
   const [bookingDress, setBookingDress] = useState<Dress | null>(null);
   const [returningDress, setReturningDress] = useState<Dress | null>(null);
   const [barcodeDress, setBarcodeDress] = useState<Dress | null>(null);
@@ -91,22 +81,31 @@ export function DressGrid() {
     visibleDresses.find((dress) => dress.id === calendarDressId) ??
     (query.trim() ? visibleDresses[0] : null);
 
+  function staffStatusCopy(dress: Dress, guest?: string) {
+    if (dress.status === "available") return t("floor.ready");
+    if (dress.status === "reserved") {
+      return guest ? t("floor.reservedFor", { guest }) : t("floor.reservedInShop");
+    }
+    if (dress.status === "rented") {
+      return guest ? t("floor.withNamedNow", { guest }) : t("floor.withGuest");
+    }
+    return t("floor.inCare");
+  }
+
   return (
     <section>
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm text-rose-400">بوتيك</p>
-          <h2 className="mt-1 text-3xl font-medium text-rose-900">فساتين البوتيك</h2>
-          <p className="mt-2 text-sm leading-7 text-rose-600/80">
-            ابحثي بالاسم أو الباركود، بعدين احجزي أو رجّعي أو أرجعي الفستان للبوتيك.
-          </p>
+          <p className="text-sm text-rose-400">{t("floor.kicker")}</p>
+          <h2 className="mt-1 text-3xl font-medium text-rose-900">{t("floor.title")}</h2>
+          <p className="mt-2 text-sm leading-7 text-rose-600/80">{t("floor.lead")}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/calendar" className="shop-soft rounded-2xl px-4 py-2 text-sm text-rose-800 hover:bg-rose-50">
-            تقويم الحجوزات
+            {t("floor.calendar")}
           </Link>
           <Link href="/dresses" className="shop-btn-gold rounded-2xl px-4 py-2 text-sm">
-            إدارة الفساتين
+            {t("floor.manage")}
           </Link>
         </div>
       </div>
@@ -121,28 +120,28 @@ export function DressGrid() {
             setQuery(event.target.value);
             setCalendarDressId(null);
           }}
-          placeholder="ابحثي بالاسم أو الباركود"
+          placeholder={t("floor.searchPh")}
           className="w-full rounded-2xl border-0 bg-white/90 px-4 py-2.5 text-sm outline-none ring-rose-200 focus:ring-2"
-          aria-label="البحث عن فستان بالاسم أو الباركود"
+          aria-label={t("floor.searchAria")}
         />
         {calendarDress ? (
           <p className="text-sm text-rose-600">
-            تقويم {calendarDress.name} من البحث
-            {visibleDresses.length > 1 ? ` · ${visibleDresses.length} فساتين` : ""}
+            {t("floor.calendarOf", { name: calendarDress.name })}
+            {visibleDresses.length > 1 ? t("floor.moreDresses", { n: visibleDresses.length }) : ""}
           </p>
         ) : null}
-        <div className="flex flex-wrap gap-2" role="group" aria-label="تصفية حسب الحالة">
-          {FILTERS.map((filter) => (
+        <div className="flex flex-wrap gap-2" role="group" aria-label={t("floor.filterStatus")}>
+          {FILTER_IDS.map((id) => (
             <button
-              key={filter.id}
+              key={id}
               type="button"
-              onClick={() => setStatusFilter(filter.id)}
+              onClick={() => setStatusFilter(id)}
               className={cn(
                 "rounded-full px-3 py-1.5 text-sm",
-                statusFilter === filter.id ? FILTER_ACTIVE[filter.id] : "bg-white font-medium text-rose-800 ring-1 ring-rose-200 hover:bg-rose-50",
+                statusFilter === id ? FILTER_ACTIVE[id] : "bg-white font-medium text-rose-800 ring-1 ring-rose-200 hover:bg-rose-50",
               )}
             >
-              {filter.label}
+              {id === "all" ? t("all") : dressStatusLabel(id)}
             </button>
           ))}
         </div>
@@ -158,7 +157,7 @@ export function DressGrid() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {visibleDresses.length === 0 ? (
           <p className="shop-card rounded-3xl px-4 py-8 text-center text-sm text-rose-400 sm:col-span-2 xl:col-span-3">
-            ما في فساتين بهالبحث أو بهذي الحالة أو التصنيف أو اللون أو المقاس حالياً.
+            {t("floor.emptyFilters")}
           </p>
         ) : null}
         {visibleDresses.map((dress) => {
@@ -185,17 +184,17 @@ export function DressGrid() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className={cn("inline-flex items-center rounded-full px-2.5 py-1 text-xs", STATUS_STYLES[dress.status])}>
-                      {STATUS_LABELS[dress.status]}
+                      {dressStatusLabel(dress.status)}
                     </span>
                     {needsAlteration ? (
-                      <span className="rounded-full bg-yellow-400 px-2.5 py-1 text-xs text-yellow-950">يحتاج تعديل</span>
+                      <span className="rounded-full bg-yellow-400 px-2.5 py-1 text-xs text-yellow-950">{t("floor.needsAlt")}</span>
                     ) : null}
                   </div>
                   <span className="text-xs text-rose-400">{presentation.silhouette}</span>
                 </div>
                 <p className="flex flex-wrap gap-2 text-sm text-rose-800">
                   <span className={cn("rounded-full px-2.5 py-1 text-xs", CATEGORY_CHIP[dress.category] ?? "bg-rose-100 text-rose-800")}>{categoryLabel(dress.category)}</span>
-                  <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs text-sky-800">{dress.color}</span>
+                  <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs text-sky-800">{colorLabel(dress.color)}</span>
                   <span className="rounded-full bg-yellow-100 px-2.5 py-1 text-xs text-yellow-800">{sizeLabel(dress.size)}</span>
                 </p>
                 <DressVariants dress={dress} dresses={dresses} />
@@ -204,53 +203,41 @@ export function DressGrid() {
                 ) : null}
                 {isOwner ? (
                   <p className="text-sm text-rose-700">
-                    إيجار اليوم{" "}
+                    {t("floor.dayRent")}{" "}
                     <span className="tabular-nums text-rose-900">{formatCurrency(dress.rentalPricePerDay)}</span>
                     {" "}
-                    · تأمين{" "}
+                    · {t("floor.insurance")}{" "}
                     <span className="tabular-nums text-rose-900">{formatCurrency(dress.insuranceAmount)}</span>
                   </p>
                 ) : (
-                  <p className="text-sm text-rose-500">
-                    {dress.status === "available"
-                      ? "جاهز لحجز زبونة جديدة."
-                      : dress.status === "reserved"
-                        ? guest
-                          ? `محجوز لـ ${guest} ولسه في المحل.`
-                          : "محجوز ولسه في المحل."
-                        : dress.status === "rented"
-                          ? guest
-                            ? `حالياً مع ${guest}.`
-                            : "عند العميلة حالياً."
-                          : "في العناية بعد التأجير قبل إعادته للصالة."}
-                  </p>
+                  <p className="text-sm text-rose-500">{staffStatusCopy(dress, guest)}</p>
                 )}
                 {!isOwner && dress.insuranceAmount > 0 ? (
                   <p className="text-sm text-rose-700">
-                    تأمين{" "}
+                    {t("floor.insurance")}{" "}
                     <span className="tabular-nums text-rose-900">{formatCurrency(dress.insuranceAmount)}</span>
-                    <span className="text-rose-400"> · يُرجَع إذا الفستان سليم</span>
+                    <span className="text-rose-400"> · {t("floor.insuranceHint")}</span>
                   </p>
                 ) : null}
                 {windows.length > 0 ? (
                   <div className="space-y-1 text-xs text-sky-800">
                     {windows.map((booking) => (
                       <p key={booking.id}>
-                        {dress.status === "rented" ? "عند العميلة" : "محجوز"} {bookingDateLine(booking)}
+                        {dressStatusLabel(dress.status === "rented" ? "rented" : "reserved")} {bookingDateLine(booking)}
                         {booking.customerName ? ` — ${booking.customerName}` : ""}
                       </p>
                     ))}
                   </div>
                 ) : dress.status === "reserved" && guest ? (
-                  <p className="text-xs text-sky-700">محجوز · {guest}</p>
+                  <p className="text-xs text-sky-700">{t("floor.reservedNamed", { guest })}</p>
                 ) : dress.status === "rented" && guest ? (
-                  <p className="text-xs text-amber-700">عند العميلة · {guest}</p>
+                  <p className="text-xs text-amber-700">{t("floor.rentedNamed", { guest })}</p>
                 ) : null}
                 <button
                   type="button"
                   onClick={() => setBarcodeDress(dress)}
                   className="shop-soft w-full rounded-2xl px-3 py-2 hover:bg-rose-50"
-                  aria-label={`عرض باركود ${dress.name}`}
+                  aria-label={t("floor.barcodeAria", { name: dress.name })}
                 >
                   <DressBarcode value={dress.barcode} height={38} moduleWidth={1} />
                 </button>
@@ -262,7 +249,7 @@ export function DressGrid() {
                       className="shop-soft inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs text-rose-800 hover:bg-rose-50"
                     >
                       <CalendarDays className="h-3.5 w-3.5" aria-hidden />
-                      التقويم
+                      {t("floor.calendarShort")}
                     </button>
                   ) : (
                     <Link
@@ -270,7 +257,7 @@ export function DressGrid() {
                       className="shop-soft inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs text-rose-800 hover:bg-rose-50"
                     >
                       <CalendarDays className="h-3.5 w-3.5" aria-hidden />
-                      التقويم
+                      {t("floor.calendarShort")}
                     </Link>
                   )}
                   {dress.status === "available" ? (
@@ -280,7 +267,7 @@ export function DressGrid() {
                       className="shop-btn-green inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
                     >
                       <CalendarPlus className="h-3.5 w-3.5" aria-hidden />
-                      حجز الفستان
+                      {t("floor.bookDress")}
                     </button>
                   ) : null}
                   {dress.status === "reserved" ? (
@@ -290,7 +277,7 @@ export function DressGrid() {
                       className="shop-btn-yellow inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
                     >
                       <HandHeart className="h-3.5 w-3.5" aria-hidden />
-                      تسليم للعميلة
+                      {t("floor.pickupGuest")}
                     </button>
                   ) : null}
                   {dress.status === "rented" ? (
@@ -300,7 +287,7 @@ export function DressGrid() {
                       className="shop-btn-red inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
                     >
                       <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-                      تسجيل الإرجاع
+                      {t("floor.recordReturn")}
                     </button>
                   ) : null}
                   {dress.status === "maintenance" ? (
@@ -310,7 +297,7 @@ export function DressGrid() {
                       className="shop-btn-green inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs"
                     >
                       <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-                      إعادة للصالة
+                      {t("floor.finishCare")}
                     </button>
                   ) : null}
                   {dress.status === "reserved" || dress.status === "rented" ? (
@@ -323,13 +310,13 @@ export function DressGrid() {
                       className="inline-flex items-center gap-1.5 rounded-2xl bg-white px-3 py-1.5 text-xs text-red-600 ring-1 ring-red-200 hover:bg-red-50"
                     >
                       <Ban className="h-3.5 w-3.5" aria-hidden />
-                      إلغاء الحجز
+                      {t("floor.cancelBooking")}
                     </button>
                   ) : null}
                   {dress.status === "maintenance" ? (
                     <span className="inline-flex items-center gap-1 text-xs text-red-600">
                       <Sparkles className="h-3.5 w-3.5" aria-hidden />
-                      {isOwner ? "تم تسجيل التنظيف الجاف" : "العناية جارية"}
+                      {isOwner ? t("floor.doneCleaning") : t("floor.careRunning")}
                     </span>
                   ) : null}
                 </div>
@@ -349,13 +336,13 @@ export function DressGrid() {
       {barcodeDress ? <BarcodeDialog dress={barcodeDress} onClose={() => setBarcodeDress(null)} /> : null}
       {pendingCancelId ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
-          <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق" onClick={() => setPendingCancelId(null)} />
+          <button type="button" className="absolute inset-0 cursor-default" aria-label={t("close")} onClick={() => setPendingCancelId(null)} />
           <div className="shop-card relative w-full max-w-md rounded-3xl p-6">
-            <h3 className="text-xl text-rose-900">إلغاء هذا الحجز؟</h3>
-            <p className="mt-2 text-sm leading-6 text-rose-600">ينتقل لقائمة الحجوزات الملغاة، والفستان يرجع للصالة.</p>
+            <h3 className="text-xl text-rose-900">{t("floor.cancelTitle")}</h3>
+            <p className="mt-2 text-sm leading-6 text-rose-600">{t("floor.cancelBody")}</p>
             <div className="mt-5 flex flex-wrap justify-end gap-2">
               <button type="button" onClick={() => setPendingCancelId(null)} className="rounded-2xl bg-rose-50 px-4 py-2 text-sm text-rose-800">
-                تراجع
+                {t("floor.undo")}
               </button>
               <button
                 type="button"
@@ -365,7 +352,7 @@ export function DressGrid() {
                 }}
                 className="shop-btn-red rounded-2xl px-4 py-2 text-sm"
               >
-                تأكيد الإلغاء
+                {t("floor.confirmCancel")}
               </button>
             </div>
           </div>
@@ -376,25 +363,26 @@ export function DressGrid() {
 }
 
 function BarcodeDialog({ dress, onClose }: { dress: Dress; onClose: () => void }) {
+  const { t } = useLanguage();
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
-      <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق الباركود" onClick={onClose} />
+      <button type="button" className="absolute inset-0 cursor-default" aria-label={t("floor.closeBarcode")} onClick={onClose} />
       <div role="dialog" aria-modal="true" aria-labelledby="barcode-title" className="shop-card relative w-full max-w-sm rounded-3xl p-6">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs text-rose-400">باركود الفستان</p>
+            <p className="text-xs text-rose-400">{t("floor.barcodeTitle")}</p>
             <h3 id="barcode-title" className="mt-1 text-xl text-rose-900">
               {dress.name}
             </h3>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label="إغلاق">
+          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label={t("close")}>
             <X className="h-4 w-4" />
           </button>
         </div>
         <div className="shop-soft rounded-2xl px-4 py-5">
           <DressBarcode value={dress.barcode} height={72} moduleWidth={1.4} />
         </div>
-        <p className="mt-3 text-center text-sm text-rose-400">يُستخدم للتعريف السريع عند الحجز والجرد.</p>
+        <p className="mt-3 text-center text-sm text-rose-400">{t("floor.barcodeHint")}</p>
       </div>
     </div>
   );

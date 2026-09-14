@@ -1,4 +1,5 @@
 import { bookingDateLine } from "@/lib/dressCatalog";
+import { t } from "@/i18n/t";
 import { isIsoInRange, startOfMonthIso, weekdaySatIndex } from "@/lib/format";
 import type { Booking, Dress } from "@/types";
 
@@ -41,10 +42,10 @@ export function markDressDay(
 }
 
 export function bookingRecordLabel(booking: Booking, dress: Dress): string {
-  if (booking.status === "cancelled") return "ملغي";
-  if (booking.status === "completed") return "حجز سابق";
-  if (dress.status === "rented") return "عند العميلة";
-  return "محجوز";
+  if (booking.status === "cancelled") return t("booking.cancelled");
+  if (booking.status === "completed") return t("booking.past");
+  if (dress.status === "rented") return t("status.rented");
+  return t("status.reserved");
 }
 
 export function bookingRecordLine(booking: Booking, dress: Dress): string {

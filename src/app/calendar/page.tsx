@@ -4,6 +4,12 @@ import { Suspense } from "react";
 import { BoutiqueHeader } from "@/components/BoutiqueHeader";
 import { DressBookingCalendar } from "@/components/DressBookingCalendar";
 import { ShopDayBoard } from "@/components/ShopDayBoard";
+import { useLanguage } from "@/i18n/LanguageProvider";
+
+function CalendarFallback() {
+  const { t } = useLanguage();
+  return <p className="text-sm text-rose-400">{t("cal.loading")}</p>;
+}
 
 export default function CalendarPage() {
   return (
@@ -11,7 +17,7 @@ export default function CalendarPage() {
       <BoutiqueHeader active="calendar" />
       <main className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
         <ShopDayBoard />
-        <Suspense fallback={<p className="text-sm text-rose-400">تحميل تقويم الفستان…</p>}>
+        <Suspense fallback={<CalendarFallback />}>
           <DressBookingCalendar />
         </Suspense>
       </main>

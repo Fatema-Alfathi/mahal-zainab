@@ -1,6 +1,7 @@
 "use client";
 
 import { DRESS_CATEGORY_LABELS } from "@/lib/labels";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/format";
 import { DRESS_CATEGORIES, type DressCategory } from "@/types";
 
@@ -13,9 +14,10 @@ export function CategoryFilter({
   value: CategoryFilterValue;
   onChange: (value: CategoryFilterValue) => void;
 }) {
+  const { t } = useLanguage();
   return (
-    <div role="group" aria-label="تصفية حسب التصنيف">
-      <p className="mb-2 text-xs font-medium text-rose-700">التصنيف</p>
+    <div role="group" aria-label={t("filter.categoryAria")}>
+      <p className="mb-2 text-xs font-medium text-rose-700">{t("filter.category")}</p>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
@@ -25,7 +27,7 @@ export function CategoryFilter({
             value === "all" ? "shop-btn" : "bg-white font-medium text-rose-800 ring-1 ring-rose-200 hover:bg-rose-50",
           )}
         >
-          كل التصنيفات
+          {t("filter.allCategories")}
         </button>
         {DRESS_CATEGORIES.map((category) => (
           <button

@@ -3,12 +3,14 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { formatCurrency, formatDate, todayIso } from "@/lib/format";
-import { CATEGORY_LABELS } from "@/lib/labels";
+import { categoryExpenseLabel } from "@/lib/labels";
 import { VARIABLE_EXPENSE_CATEGORIES, type VariableExpenseCategory } from "@/types";
 
 export function VariableExpenseLog() {
   const { variableExpenses, dresses, addVariableExpense } = useShop();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const rows = useMemo(
@@ -21,11 +23,9 @@ export function VariableExpenseLog() {
     <section className="shop-card rounded-3xl p-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm text-rose-400">بتاريخ اليوم</p>
-          <h3 className="mt-1 text-2xl font-medium text-rose-900">مصروف ليوم معيّن</h3>
-          <p className="mt-2 text-sm leading-7 text-rose-600/80">
-            إذا طلع مبلغ يوم معيّن مثل تنظيف فستان بعد التأجير، اكتبيه هنا. المصاريف الشهرية الثابتة في قائمة الشهر.
-          </p>
+          <p className="text-sm text-rose-400">{t("var.kicker")}</p>
+          <h3 className="mt-1 text-2xl font-medium text-rose-900">{t("var.title")}</h3>
+          <p className="mt-2 text-sm leading-7 text-rose-600/80">{t("var.lead")}</p>
         </div>
         <button
           type="button"
@@ -33,7 +33,7 @@ export function VariableExpenseLog() {
           className="shop-btn inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm"
         >
           <Plus className="h-4 w-4" aria-hidden />
-          إضافة مصروف
+          {t("var.add")}
         </button>
       </div>
       {open ? (
@@ -46,32 +46,36 @@ export function VariableExpenseLog() {
           onCancel={() => setOpen(false)}
         />
       ) : null}
-      <ul className="space-y-2">
-        {visible.map((expense) => {
-          const dress = dresses.find((item) => item.id === expense.associatedDressId);
-          return (
-            <li key={expense.id} className="rounded-2xl bg-rose-50/80 px-4 py-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm text-rose-900">{expense.description}</p>
-                  <p className="mt-1 text-xs text-rose-400">
-                    {CATEGORY_LABELS[expense.category]} · {formatDate(expense.date)}
-                    {dress ? ` · ${dress.name}` : ""}
-                  </p>
+      {rows.length === 0 ? (
+        <p className="text-sm text-rose-400">{t("var.empty")}</p>
+      ) : (
+        <ul className="space-y-2">
+          {visible.map((expense) => {
+            const dress = dresses.find((item) => item.id === expense.associatedDressId);
+            return (
+              <li key={expense.id} className="rounded-2xl bg-rose-50/80 px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm text-rose-900">{expense.description}</p>
+                    <p className="mt-1 text-xs text-rose-400">
+                      {categoryExpenseLabel(expense.category)} · {formatDate(expense.date)}
+                      {dress ? ` · ${dress.name}` : ""}
+                    </p>
+                  </div>
+                  <p className="shrink-0 tabular-nums text-sm text-rose-800">{formatCurrency(expense.amount)}</p>
                 </div>
-                <p className="shrink-0 tabular-nums text-sm text-rose-800">{formatCurrency(expense.amount)}</p>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+              </li>
+            );
+          })}
+        </ul>
+      )}
       {rows.length > 5 ? (
         <button
           type="button"
           onClick={() => setShowAll((value) => !value)}
           className="mt-3 text-sm text-rose-400 hover:text-rose-700"
         >
-          {showAll ? "عرض آخر المصروفات فقط" : `عرض الكل (${rows.length})`}
+          {showAll ? t("var.showRecent") : t("var.showAll", { n: rows.length })}
         </button>
       ) : null}
     </section>
@@ -93,6 +97,7 @@ function AddExpenseForm({
   }) => void;
   onCancel: () => void;
 }) {
+  const { t } = useLanguage();
   const [category, setCategory] = useState<VariableExpenseCategory>("Marketing Campaign");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(todayIso());
@@ -105,11 +110,11 @@ function AddExpenseForm({
     event.preventDefault();
     const parsed = Number(amount);
     if (!description.trim()) {
-      setError("اكتبي وصفاً قصيراً.");
+      setError("var.descRequired");
       return;
     }
     if (!Number.isFinite(parsed) || parsed <= 0) {
-      setError("أدخلي مبلغاً أكبر من صفر.");
+      setError("var.amountMin");
       return;
     }
     onSubmit({
@@ -124,7 +129,7 @@ function AddExpenseForm({
   return (
     <form onSubmit={handleSubmit} className="mb-4 grid gap-3 rounded-2xl bg-rose-50/80 p-4">
       <label className="block text-sm">
-        <span className="mb-1 block text-rose-700">النوع</span>
+        <span className="mb-1 block text-rose-700">{t("var.type")}</span>
         <select
           value={category}
           onChange={(event) => setCategory(event.target.value as VariableExpenseCategory)}
@@ -132,13 +137,13 @@ function AddExpenseForm({
         >
           {VARIABLE_EXPENSE_CATEGORIES.map((item) => (
             <option key={item} value={item}>
-              {CATEGORY_LABELS[item]}
+              {categoryExpenseLabel(item)}
             </option>
           ))}
         </select>
       </label>
       <label className="block text-sm">
-        <span className="mb-1 block text-rose-700">المبلغ (ر.ع.)</span>
+        <span className="mb-1 block text-rose-700">{t("var.amount")}</span>
         <input
           type="number"
           min="0"
@@ -150,7 +155,7 @@ function AddExpenseForm({
         />
       </label>
       <label className="block text-sm">
-        <span className="mb-1 block text-rose-700">التاريخ</span>
+        <span className="mb-1 block text-rose-700">{t("var.date")}</span>
         <input
           type="date"
           value={date}
@@ -159,24 +164,24 @@ function AddExpenseForm({
         />
       </label>
       <label className="block text-sm">
-        <span className="mb-1 block text-rose-700">الوصف</span>
+        <span className="mb-1 block text-rose-700">{t("var.desc")}</span>
         <input
           type="text"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-rose-900"
-          placeholder="إعلان إنستغرام"
+          placeholder={t("var.descPh")}
         />
       </label>
       {showDressLink ? (
         <label className="block text-sm">
-          <span className="mb-1 block text-rose-700">مرتبط بأي فستان؟ (اختياري)</span>
+          <span className="mb-1 block text-rose-700">{t("var.dress")}</span>
           <select
             value={associatedDressId}
             onChange={(event) => setAssociatedDressId(event.target.value)}
             className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-rose-900"
           >
-            <option value="">مصروف عام</option>
+            <option value="">{t("var.noDress")}</option>
             {dresses.map((dress) => (
               <option key={dress.id} value={dress.id}>
                 {dress.name}
@@ -185,13 +190,13 @@ function AddExpenseForm({
           </select>
         </label>
       ) : null}
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="text-sm text-rose-700">{t(error)}</p> : null}
       <div className="flex gap-2">
         <button type="submit" className="shop-btn rounded-2xl px-4 py-2 text-sm">
-          حفظ
+          {t("var.save")}
         </button>
         <button type="button" onClick={onCancel} className="rounded-2xl px-4 py-2 text-sm text-rose-400 hover:bg-white">
-          إلغاء
+          {t("cancel")}
         </button>
       </div>
     </form>

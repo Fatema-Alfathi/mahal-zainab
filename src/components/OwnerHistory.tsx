@@ -2,14 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { ownerHistory, type HistoryRow } from "@/lib/ownerSnapshot";
 import { cn, formatCurrency, formatSignedCurrency, monthNameShortAr } from "@/lib/format";
 
 export function OwnerHistory() {
   const { bookings, fixedExpenses, variableExpenses } = useShop();
+  const { t, locale } = useLanguage();
   const history = useMemo(
     () => ownerHistory(bookings, fixedExpenses, variableExpenses),
-    [bookings, fixedExpenses, variableExpenses],
+    [bookings, fixedExpenses, variableExpenses, locale],
   );
   const years = history.years.map((row) => row.key);
   const [year, setYear] = useState(years[years.length - 1] ?? "");
@@ -19,31 +21,29 @@ export function OwnerHistory() {
   return (
     <section className="space-y-5">
       <div>
-        <p className="text-sm text-rose-400">تحليل زمني</p>
-        <h2 className="mt-1 font-serif text-3xl text-rose-900">الأشهر والسنوات</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">
-          أعلى وأقل دخل، وكل شهر وكل سنة بأرقامها: الدخل، المصروفات، الربح، والحجوزات.
-        </p>
+        <p className="text-sm text-rose-400">{t("history.kicker")}</p>
+        <h2 className="mt-1 font-serif text-3xl text-rose-900">{t("history.title")}</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">{t("history.lead")}</p>
       </div>
 
       <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Highlight label="أعلى شهر دخل" row={history.highestIncomeMonth} field="income" tone="mint" />
-        <Highlight label="أقل شهر دخل" row={history.lowestIncomeMonth} field="income" tone="red" />
-        <Highlight label="أضعف شهر فيه حجوزات" row={history.weakestBusyMonth} field="income" tone="yellow" />
-        <Highlight label="أكثر شهر حجوزات" row={history.mostBookingsMonth} field="bookings" tone="blue" />
-        <Highlight label="أعلى شهر ربح" row={history.highestProfitMonth} field="profit" tone="mint" />
-        <Highlight label="أقل شهر ربح" row={history.lowestProfitMonth} field="profit" tone="red" />
-        <Highlight label="أعلى سنة دخل" row={history.highestIncomeYear} field="income" tone="mint" />
-        <Highlight label="أقل سنة دخل" row={history.lowestIncomeYear} field="income" tone="red" />
+        <Highlight label={t("history.highIncome")} row={history.highestIncomeMonth} field="income" tone="mint" />
+        <Highlight label={t("history.lowIncome")} row={history.lowestIncomeMonth} field="income" tone="red" />
+        <Highlight label={t("history.weakBusy")} row={history.weakestBusyMonth} field="income" tone="yellow" />
+        <Highlight label={t("history.mostBookings")} row={history.mostBookingsMonth} field="bookings" tone="blue" />
+        <Highlight label={t("history.highProfit")} row={history.highestProfitMonth} field="profit" tone="mint" />
+        <Highlight label={t("history.lowProfit")} row={history.lowestProfitMonth} field="profit" tone="red" />
+        <Highlight label={t("history.highYear")} row={history.highestIncomeYear} field="income" tone="mint" />
+        <Highlight label={t("history.lowYear")} row={history.lowestIncomeYear} field="income" tone="red" />
       </dl>
 
       <div className="dash-panel rounded-3xl p-5 sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h3 className="text-xl text-rose-900">دخل كل شهر</h3>
-            <p className="mt-1 text-sm text-rose-400">اختاري السنة. العمود الأخضر أعلى دخل، والأحمر أقل دخل.</p>
+            <h3 className="text-xl text-rose-900">{t("history.monthIncome")}</h3>
+            <p className="mt-1 text-sm text-rose-400">{t("history.monthHint")}</p>
           </div>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="اختيار السنة">
+          <div className="flex flex-wrap gap-2" role="group" aria-label={t("history.pickYear")}>
             {years.map((item) => (
               <button
                 key={item}
@@ -60,29 +60,33 @@ export function OwnerHistory() {
           </div>
         </div>
 
-        <div className="mt-6 flex h-52 items-end gap-2 sm:gap-3">
-          {months.map((row) => {
-            const high = history.highestIncomeMonth?.key === row.key;
-            const low = history.lowestIncomeMonth?.key === row.key;
-            const height = Math.max(10, (row.income / maxIncome) * 100);
-            return (
-              <div key={row.key} className="flex min-w-0 flex-1 flex-col items-center gap-2">
-                <p className="text-[10px] tabular-nums text-rose-400">{row.income === 0 ? "—" : Math.round(row.income)}</p>
-                <div className="flex h-36 w-full items-end justify-center">
-                  <div
-                    title={`${row.label}: ${formatCurrency(row.income)}`}
-                    className={cn(
-                      "w-full max-w-12 rounded-t-xl",
-                      high ? "bg-emerald-500" : low ? "bg-red-500" : "bg-gradient-to-t from-[#8b1530] to-[#d4a017]",
-                    )}
-                    style={{ height: `${height}%` }}
-                  />
+        {months.length === 0 ? (
+          <p className="mt-6 text-sm text-rose-400">{t("history.noMonths")}</p>
+        ) : (
+          <div className="mt-6 flex h-52 items-end gap-2 sm:gap-3">
+            {months.map((row) => {
+              const high = history.highestIncomeMonth?.key === row.key;
+              const low = history.lowestIncomeMonth?.key === row.key;
+              const height = Math.max(10, (row.income / maxIncome) * 100);
+              return (
+                <div key={row.key} className="flex min-w-0 flex-1 flex-col items-center gap-2">
+                  <p className="text-[10px] tabular-nums text-rose-400">{row.income === 0 ? "—" : Math.round(row.income)}</p>
+                  <div className="flex h-36 w-full items-end justify-center">
+                    <div
+                      title={`${row.label}: ${formatCurrency(row.income)}`}
+                      className={cn(
+                        "w-full max-w-12 rounded-t-xl",
+                        high ? "bg-emerald-500" : low ? "bg-red-500" : "bg-gradient-to-t from-[#8b1530] to-[#d4a017]",
+                      )}
+                      style={{ height: `${height}%` }}
+                    />
+                  </div>
+                  <span className="text-[11px] text-rose-500">{monthNameShortAr(`${row.key}-01`)}</span>
                 </div>
-                <span className="text-[11px] text-rose-500">{monthNameShortAr(`${row.key}-01`)}</span>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         <ul className="mt-6 divide-y divide-rose-50">
           {months.map((row) => {
@@ -92,15 +96,15 @@ export function OwnerHistory() {
               <li key={row.key} className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
                 <span className="text-rose-800">
                   {row.label}
-                  {high ? <span className="mr-2 text-xs text-emerald-600">أعلى دخل</span> : null}
-                  {low ? <span className="mr-2 text-xs text-amber-700">أقل دخل</span> : null}
+                  {high ? <span className="mr-2 text-xs text-emerald-600">{t("history.highest")}</span> : null}
+                  {low ? <span className="mr-2 text-xs text-amber-700">{t("history.lowest")}</span> : null}
                 </span>
                 <span className="text-rose-400">
-                  دخل <span className="tabular-nums text-rose-900">{formatCurrency(row.income)}</span>
+                  {t("history.incomeShort")} <span className="tabular-nums text-rose-900">{formatCurrency(row.income)}</span>
                   {" · "}
-                  ربح <span className="tabular-nums">{formatSignedCurrency(row.profit)}</span>
+                  {t("history.profitShort")} <span className="tabular-nums">{formatSignedCurrency(row.profit)}</span>
                   {" · "}
-                  {row.bookings} حجز
+                  {t("history.bookingsCount", { n: row.bookings })}
                 </span>
               </li>
             );
@@ -109,16 +113,16 @@ export function OwnerHistory() {
       </div>
 
       <div className="dash-panel rounded-3xl p-5 sm:p-6">
-        <h3 className="text-xl text-rose-900">كل السنوات</h3>
+        <h3 className="text-xl text-rose-900">{t("history.years")}</h3>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[32rem] text-sm">
             <thead>
               <tr className="text-right text-rose-400">
-                <th className="pb-3 font-medium">السنة</th>
-                <th className="pb-3 font-medium">الدخل</th>
-                <th className="pb-3 font-medium">المصروفات</th>
-                <th className="pb-3 font-medium">صافي الربح</th>
-                <th className="pb-3 font-medium">الحجوزات</th>
+                <th className="pb-3 font-medium">{t("history.year")}</th>
+                <th className="pb-3 font-medium">{t("owner.income")}</th>
+                <th className="pb-3 font-medium">{t("owner.expenses")}</th>
+                <th className="pb-3 font-medium">{t("owner.profit")}</th>
+                <th className="pb-3 font-medium">{t("owner.bookings")}</th>
               </tr>
             </thead>
             <tbody>
@@ -129,8 +133,8 @@ export function OwnerHistory() {
                   <tr key={row.key} className="border-t border-rose-50">
                     <td className="py-3.5 text-rose-900">
                       {row.label}
-                      {top ? <span className="mr-2 text-xs text-emerald-600">الأعلى</span> : null}
-                      {bottom ? <span className="mr-2 text-xs text-amber-700">الأقل</span> : null}
+                      {top ? <span className="mr-2 text-xs text-emerald-600">{t("history.top")}</span> : null}
+                      {bottom ? <span className="mr-2 text-xs text-amber-700">{t("history.bottom")}</span> : null}
                     </td>
                     <td className="py-3.5 tabular-nums text-rose-900">{formatCurrency(row.income)}</td>
                     <td className="py-3.5 tabular-nums text-rose-700">{formatCurrency(row.expenses)}</td>
@@ -160,6 +164,7 @@ function Highlight({
   field: "income" | "profit" | "bookings";
   tone: "rose" | "gold" | "mint" | "red" | "yellow" | "blue";
 }) {
+  const { t } = useLanguage();
   const value = row ? row[field] : 0;
   return (
     <div
@@ -176,7 +181,7 @@ function Highlight({
       <p className="text-xs text-rose-400">{label}</p>
       <p className="mt-1 text-lg text-rose-900">{row?.label ?? "—"}</p>
       <p className="mt-1 text-xl tabular-nums text-rose-900">
-        {field === "bookings" ? `${value} حجز` : formatSignedCurrency(value)}
+        {field === "bookings" ? t("history.bookingsCount", { n: value }) : formatSignedCurrency(value)}
       </p>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { formatCurrency } from "@/lib/format";
 import { employeeDiscountPolicySummary } from "@/lib/labels";
 import type { AuthorizedDiscountType } from "@/types";
@@ -9,6 +10,7 @@ const PERCENT_PRESETS = [5, 10, 15, 20];
 
 export function DiscountPolicyPanel() {
   const { discountPolicy, setDiscountPolicy } = useShop();
+  const { t } = useLanguage();
 
   function update(next: Partial<typeof discountPolicy>) {
     setDiscountPolicy({ ...discountPolicy, ...next });
@@ -17,11 +19,9 @@ export function DiscountPolicyPanel() {
   return (
     <section className="shop-card rounded-3xl p-6">
       <div className="mb-5">
-        <p className="text-sm text-rose-400">قرارك أنتِ</p>
-        <h3 className="mt-1 text-2xl font-medium text-rose-900">خصم الموظفات</h3>
-        <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">
-          اختاري يسمحون يعطون خصم ولا لا. إذا سمحتِ، الرقم ثابت وما يقدرون يغيّرونه.
-        </p>
+        <p className="text-sm text-rose-400">{t("disc.kicker")}</p>
+        <h3 className="mt-1 text-2xl font-medium text-rose-900">{t("disc.title")}</h3>
+        <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">{t("disc.lead")}</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -34,8 +34,8 @@ export function DiscountPolicyPanel() {
               : "rounded-2xl bg-rose-50 px-4 py-4 text-start text-sm text-rose-600 hover:bg-rose-100"
           }
         >
-          <span className="block text-base font-medium">مسموح</span>
-          <span className={discountPolicy.enabled ? "text-white/80" : "text-rose-300"}>يعطون الخصم اللي حددتيه فقط</span>
+          <span className="block text-base font-medium">{t("disc.allowed")}</span>
+          <span className={discountPolicy.enabled ? "text-white/80" : "text-rose-300"}>{t("disc.allowedHint")}</span>
         </button>
         <button
           type="button"
@@ -46,15 +46,15 @@ export function DiscountPolicyPanel() {
               : "rounded-2xl bg-rose-50 px-4 py-4 text-start text-sm text-rose-600 hover:bg-rose-100"
           }
         >
-          <span className="block text-base font-medium">ممنوع</span>
-          <span className={!discountPolicy.enabled ? "text-amber-800/70" : "text-rose-300"}>الحجز بالسعر الكامل</span>
+          <span className="block text-base font-medium">{t("disc.forbidden")}</span>
+          <span className={!discountPolicy.enabled ? "text-amber-800/70" : "text-rose-300"}>{t("disc.forbiddenHint")}</span>
         </button>
       </div>
 
       {discountPolicy.enabled ? (
         <div className="mt-5 space-y-4 rounded-2xl bg-rose-50/80 p-4">
           <fieldset>
-            <legend className="mb-2 text-sm text-rose-700">شكل الخصم</legend>
+            <legend className="mb-2 text-sm text-rose-700">{t("disc.shape")}</legend>
             <div className="grid grid-cols-2 gap-2">
               {(["percent", "amount"] as AuthorizedDiscountType[]).map((type) => (
                 <button
@@ -69,7 +69,7 @@ export function DiscountPolicyPanel() {
                       : "rounded-xl bg-white px-3 py-2 text-sm text-rose-500 hover:bg-rose-50"
                   }
                 >
-                  {type === "percent" ? "نسبة ٪" : "مبلغ ر.ع."}
+                  {type === "percent" ? t("disc.percent") : t("disc.amount")}
                 </button>
               ))}
             </div>
@@ -77,7 +77,7 @@ export function DiscountPolicyPanel() {
 
           <label className="block text-sm">
             <span className="mb-2 block text-rose-700">
-              {discountPolicy.type === "percent" ? "كم النسبة؟" : "كم المبلغ؟"}
+              {discountPolicy.type === "percent" ? t("disc.howPercent") : t("disc.howAmount")}
             </span>
             {discountPolicy.type === "percent" ? (
               <div className="mb-2 flex flex-wrap gap-1.5">
@@ -92,7 +92,7 @@ export function DiscountPolicyPanel() {
                         : "rounded-full bg-white px-3 py-1 text-xs text-rose-700 hover:bg-rose-50"
                     }
                   >
-                    {percent}٪
+                    {t("disc.percentValue", { value: percent })}
                   </button>
                 ))}
               </div>
@@ -114,7 +114,7 @@ export function DiscountPolicyPanel() {
       <p className="mt-5 rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-7 text-amber-800">
         {employeeDiscountPolicySummary(discountPolicy)}
         {discountPolicy.enabled && discountPolicy.type === "amount" && discountPolicy.value > 0
-          ? ` القيمة: ${formatCurrency(discountPolicy.value)}.`
+          ? t("disc.valueAmount", { amount: formatCurrency(discountPolicy.value) })
           : null}
       </p>
     </section>

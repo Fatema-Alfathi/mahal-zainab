@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, ChevronLeft, ChevronRight, HandHeart, RotateCcw, Scissors, Shirt, Sparkles } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { monthCells } from "@/lib/dressCalendar";
 import {
   shopDayEvents,
@@ -14,7 +15,6 @@ import {
   type ShopDayTone,
 } from "@/lib/shopDay";
 import {
-  WEEKDAYS_SAT_AR,
   cn,
   formatDate,
   formatDateLong,
@@ -22,6 +22,7 @@ import {
   shiftMonthsIso,
   startOfMonthIso,
   todayIso,
+  weekdaysSat,
 } from "@/lib/format";
 
 const KIND_ICON: Record<ShopDayKind, typeof CalendarDays> = {
@@ -55,25 +56,26 @@ const TONE_ICON: Record<ShopDayTone, string> = {
 
 export function ShopDayBoard() {
   const { dresses, bookings } = useShop();
+  const { t, dir, locale } = useLanguage();
   const today = todayIso();
   const [monthIso, setMonthIso] = useState(() => startOfMonthIso(today));
   const [pickedDate, setPickedDate] = useState(today);
   const cells = useMemo(() => monthCells(monthIso), [monthIso]);
-  const monthEvents = useMemo(() => shopMonthEvents(dresses, bookings, monthIso, today), [bookings, dresses, monthIso, today]);
+  const monthEvents = useMemo(() => shopMonthEvents(dresses, bookings, monthIso, today), [bookings, dresses, locale, monthIso, today]);
   const events = useMemo(
     () => shopDayEvents(dresses, bookings, pickedDate, today),
-    [bookings, dresses, pickedDate, today],
+    [bookings, dresses, locale, pickedDate, today],
   );
-  const heading = pickedDate === today ? "شغل اليوم" : `شغل ${formatDate(pickedDate)}`;
+  const heading = pickedDate === today ? t("cal.todayWork") : t("cal.dayWork", { date: formatDate(pickedDate) });
+  const PrevIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
+  const NextIcon = dir === "rtl" ? ChevronLeft : ChevronRight;
 
   return (
-    <section className="mb-8" aria-label="شغل البوتيك حسب اليوم">
+    <section className="mb-8" aria-label={t("cal.shopAria")}>
       <div className="mb-5">
-        <p className="text-sm text-rose-400">تقويم البوتيك</p>
+        <p className="text-sm text-rose-400">{t("cal.shopKicker")}</p>
         <h1 className="mt-1 text-3xl font-medium text-rose-900">{heading}</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">
-          افتحي التقويم ويظهر تاريخ اليوم: تجهيز، إرجاع، تعديل، والفستان اللي يطلع للعميلة.
-        </p>
+        <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">{t("cal.shopLead")}</p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,22rem)]">
@@ -90,17 +92,17 @@ export function ShopDayBoard() {
                 type="button"
                 onClick={() => setMonthIso((current) => shiftMonthsIso(current, -1))}
                 className="rounded-full p-2 text-rose-700 hover:bg-rose-50"
-                aria-label="الشهر السابق"
+                aria-label={t("previousMonth")}
               >
-                <ChevronRight className="h-5 w-5" aria-hidden />
+                <PrevIcon className="h-5 w-5" aria-hidden />
               </button>
               <button
                 type="button"
                 onClick={() => setMonthIso((current) => shiftMonthsIso(current, 1))}
                 className="rounded-full p-2 text-rose-700 hover:bg-rose-50"
-                aria-label="الشهر التالي"
+                aria-label={t("nextMonth")}
               >
-                <ChevronLeft className="h-5 w-5" aria-hidden />
+                <NextIcon className="h-5 w-5" aria-hidden />
               </button>
               <button
                 type="button"
@@ -110,20 +112,20 @@ export function ShopDayBoard() {
                 }}
                 className="rounded-2xl bg-rose-50 px-3 py-1.5 text-xs text-rose-800 hover:bg-rose-100"
               >
-                اليوم
+                {t("today")}
               </button>
             </div>
           </div>
 
           <div className="mb-3 flex flex-wrap gap-3 text-xs text-rose-600">
-            <Legend tone="red" label="إرجاع / غسيل" />
-            <Legend tone="yellow" label="يطلع للعميلة" />
-            <Legend tone="wine" label="تجهيز" />
-            <Legend tone="blue" label="تعديل" />
+            <Legend tone="red" label={t("cal.legendReturn")} />
+            <Legend tone="yellow" label={t("cal.legendOut")} />
+            <Legend tone="wine" label={t("cal.legendPrep")} />
+            <Legend tone="blue" label={t("cal.legendAlt")} />
           </div>
 
           <div className="grid grid-cols-7 gap-1 text-center text-xs text-rose-400">
-            {WEEKDAYS_SAT_AR.map((day) => (
+            {weekdaysSat().map((day) => (
               <div key={day} className="py-1 font-medium">
                 {day}
               </div>
@@ -150,8 +152,8 @@ export function ShopDayBoard() {
                   )}
                   aria-label={
                     dayEvents.length > 0
-                      ? `${formatDate(date)}، ${dayEvents.length} مهام`
-                      : `${formatDate(date)}، ما في شغل`
+                      ? `${formatDate(date)}, ${t("cal.tasks", { n: dayEvents.length })}`
+                      : `${formatDate(date)}, ${t("cal.noWork")}`
                   }
                 >
                   <span className="block tabular-nums">{dayNumber}</span>
@@ -168,7 +170,7 @@ export function ShopDayBoard() {
           </div>
           {events.length === 0 ? (
             <p className="mt-3 text-sm leading-7 text-rose-500">
-              {pickedDate === today ? "ما في شغل ظاهر لليوم." : "ما في شغل بهاليوم."}
+              {pickedDate === today ? t("cal.emptyToday") : t("cal.emptyDay")}
             </p>
           ) : (
             <ul className="mt-3 space-y-2">

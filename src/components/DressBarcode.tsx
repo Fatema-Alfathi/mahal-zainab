@@ -1,6 +1,7 @@
 "use client";
 
 import { barcodeModules } from "@/lib/barcode";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/format";
 
 export function DressBarcode({
@@ -14,6 +15,7 @@ export function DressBarcode({
   moduleWidth?: number;
   className?: string;
 }) {
+  const { t } = useLanguage();
   const modules = barcodeModules(value);
   const quiet = 10;
   const width = (modules.length + quiet * 2) * moduleWidth;
@@ -22,7 +24,7 @@ export function DressBarcode({
     <figure dir="ltr" className={cn("flex flex-col items-center gap-1", className)}>
       <svg
         role="img"
-        aria-label={`باركود ${value}`}
+        aria-label={t("barcode.aria", { value })}
         width={width}
         height={height}
         viewBox={`0 0 ${width} ${height}`}

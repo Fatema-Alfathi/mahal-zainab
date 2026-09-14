@@ -15,6 +15,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { DailyAlerts } from "@/components/DailyAlerts";
 import { GovernmentRecords } from "@/components/GovernmentRecords";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { ownerHistory, ownerSnapshot } from "@/lib/ownerSnapshot";
 import { comparisonLabel } from "@/lib/labels";
 import {
@@ -28,13 +29,14 @@ import {
 
 export function OwnerSnapshot() {
   const { dresses, bookings, fixedExpenses, variableExpenses } = useShop();
+  const { t, locale } = useLanguage();
   const snap = useMemo(
     () => ownerSnapshot(dresses, bookings, fixedExpenses, variableExpenses),
-    [bookings, dresses, fixedExpenses, variableExpenses],
+    [bookings, dresses, fixedExpenses, variableExpenses, locale],
   );
   const history = useMemo(
     () => ownerHistory(bookings, fixedExpenses, variableExpenses),
-    [bookings, fixedExpenses, variableExpenses],
+    [bookings, fixedExpenses, variableExpenses, locale],
   );
   const recentMonths = history.months.slice(-12);
   const maxMonthIncome = Math.max(...recentMonths.map((row) => row.income), 1);
@@ -47,23 +49,23 @@ export function OwnerSnapshot() {
           <div className="flex items-start gap-4">
             <BrandLogo size="md" />
             <div>
-              <p className="text-sm font-medium text-[#ffd76a]">لوحة تحكم المالك</p>
-              <h2 className="mt-2 font-serif text-3xl text-white sm:text-4xl">بوتيك YAL</h2>
+              <p className="text-sm font-medium text-[#ffd76a]">{t("owner.kicker")}</p>
+              <h2 className="mt-2 font-serif text-3xl text-white sm:text-4xl">{t("brand")}</h2>
               <p className="mt-2 text-sm text-white" suppressHydrationWarning>
                 {formatDateLong(todayIso())}
               </p>
               <p className="mt-3 max-w-xl text-sm leading-7 text-white">
                 {snap.monthProfit >= 0
-                  ? `دخل ${snap.thisMonthLabel} حتى اليوم يغطي المصروفات، والمحل رابح.`
-                  : `مصروفات ${snap.thisMonthLabel} حتى اليوم أعلى من دخل التأجير.`}
+                  ? t("owner.profitCovered", { month: snap.thisMonthLabel })
+                  : t("owner.expensesHigher", { month: snap.thisMonthLabel })}
               </p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-            <MiniChip label="متاح" value={snap.availableDresses} tone="mint" />
-            <MiniChip label="محجوز" value={snap.reservedDresses} tone="sky" />
-            <MiniChip label="عند العميلة" value={snap.rentedDresses} tone="gold" />
-          <MiniChip label="يحتاج تنظيف" value={snap.maintenanceDresses} tone="red" />
+            <MiniChip label={t("owner.availableShort")} value={snap.availableDresses} tone="mint" />
+            <MiniChip label={t("owner.reservedShort")} value={snap.reservedDresses} tone="sky" />
+            <MiniChip label={t("owner.rentedShort")} value={snap.rentedDresses} tone="gold" />
+            <MiniChip label={t("owner.cleaningShort")} value={snap.maintenanceDresses} tone="red" />
           </div>
         </div>
       </div>
@@ -74,35 +76,35 @@ export function OwnerSnapshot() {
 
       <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi
-          label={`دخل ${snap.thisMonthLabel}`}
+          label={t("owner.incomeOf", { month: snap.thisMonthLabel })}
           value={formatCurrency(snap.monthIncome)}
-          hint="حتى اليوم"
+          hint={t("owner.untilToday")}
           icon={CircleDollarSign}
           change={snap.comparison.income.change}
           color="green"
         />
         <Kpi
-          label="المصروفات"
+          label={t("owner.expenses")}
           value={formatCurrency(snap.monthExpenses)}
-          hint="ثابت ومتغير هذا الشهر"
+          hint={t("owner.expensesHint")}
           icon={Wallet}
           change={snap.comparison.expenses.change}
           invert
           color="red"
         />
         <Kpi
-          label="صافي الربح"
+          label={t("owner.profit")}
           value={formatSignedCurrency(snap.monthProfit)}
-          hint={snap.monthProfit >= 0 ? "بعد المصروفات" : "المصروفات أعلى حالياً"}
+          hint={snap.monthProfit >= 0 ? t("owner.afterCosts") : t("owner.costsHigherNow")}
           icon={TrendingUp}
           change={snap.comparison.profit.change}
           emphasize={snap.monthProfit >= 0 ? "good" : "bad"}
           color={snap.monthProfit >= 0 ? "green" : "red"}
         />
         <Kpi
-          label="الحجوزات"
+          label={t("owner.bookings")}
           value={String(snap.monthBookings)}
-          hint={`${snap.yearBookings} حجز هذه السنة`}
+          hint={t("owner.yearBookings", { n: snap.yearBookings })}
           icon={CalendarDays}
           change={snap.comparison.bookings.change}
           color="yellow"
@@ -113,24 +115,24 @@ export function OwnerSnapshot() {
         <div className="dash-panel rounded-3xl p-5 xl:col-span-2">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <h3 className="text-lg text-rose-900">الدخل عبر الفترات</h3>
-              <p className="mt-1 text-xs text-rose-400">اليوم، الأسبوع، الشهر، والسنة</p>
+              <h3 className="text-lg text-rose-900">{t("owner.incomePeriods")}</h3>
+              <p className="mt-1 text-xs text-rose-400">{t("owner.incomePeriodsHint")}</p>
             </div>
             <CalendarRange className="h-4 w-4 text-rose-300" aria-hidden />
           </div>
           <dl className="grid gap-3 sm:grid-cols-2">
-            <PeriodCard label="اليوم" value={snap.todayIncome} tone="yellow" />
-            <PeriodCard label="هذا الأسبوع" value={snap.weekIncome} tone="mint" />
-            <PeriodCard label={`شهر ${snap.thisMonthLabel}`} value={snap.monthIncome} tone="rose" />
-            <PeriodCard label="هذه السنة" value={snap.yearIncome} tone="blue" />
+            <PeriodCard label={t("today")} value={snap.todayIncome} tone="yellow" />
+            <PeriodCard label={t("owner.week")} value={snap.weekIncome} tone="mint" />
+            <PeriodCard label={t("owner.monthOf", { month: snap.thisMonthLabel })} value={snap.monthIncome} tone="rose" />
+            <PeriodCard label={t("owner.year")} value={snap.yearIncome} tone="blue" />
           </dl>
         </div>
 
         <div className="dash-panel rounded-3xl p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <h3 className="text-lg text-rose-900">مخزون الفساتين</h3>
-              <p className="mt-1 text-xs text-rose-400">{snap.totalDresses} فستان في المحل</p>
+              <h3 className="text-lg text-rose-900">{t("owner.stock")}</h3>
+              <p className="mt-1 text-xs text-rose-400">{t("owner.stockCount", { n: snap.totalDresses })}</p>
             </div>
             <Shirt className="h-4 w-4 text-rose-300" aria-hidden />
           </div>
@@ -141,32 +143,34 @@ export function OwnerSnapshot() {
             <span className="bg-red-500" style={{ width: `${(snap.maintenanceDresses / dressTotal) * 100}%` }} />
           </div>
           <ul className="mt-4 space-y-2 text-sm">
-            <DressRow label="متاحة" value={snap.availableDresses} color="bg-emerald-500" />
-            <DressRow label="محجوزة في المحل" value={snap.reservedDresses} color="bg-sky-500" />
-            <DressRow label="عند العميلات" value={snap.rentedDresses} color="bg-yellow-400" />
-            <DressRow label="يحتاج تنظيف" value={snap.maintenanceDresses} color="bg-red-500" />
+            <DressRow label={t("owner.available")} value={snap.availableDresses} color="bg-emerald-500" />
+            <DressRow label={t("owner.reservedInShop")} value={snap.reservedDresses} color="bg-sky-500" />
+            <DressRow label={t("owner.withCustomers")} value={snap.rentedDresses} color="bg-yellow-400" />
+            <DressRow label={t("owner.cleaningShort")} value={snap.maintenanceDresses} color="bg-red-500" />
           </ul>
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="dash-panel rounded-3xl p-5">
-          <h3 className="text-lg text-rose-900">عربون وتأمين ومتبقي</h3>
-          <p className="mt-1 text-xs text-rose-400">العربون من الإيجار، والتأمين عند المحل لين يرجع الفستان سليم</p>
+          <h3 className="text-lg text-rose-900">{t("owner.moneyTitle")}</h3>
+          <p className="mt-1 text-xs text-rose-400">{t("owner.moneyHint")}</p>
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-            <PeriodCard label="عربون مدفوع" value={snap.depositsPaid} tone="mint" />
-            <PeriodCard label="تأمين عند المحل" value={snap.insuranceHeld} tone="yellow" />
-            <PeriodCard label="متبقي على العميلات" value={snap.remainingDue} tone="red" />
+            <PeriodCard label={t("owner.deposit")} value={snap.depositsPaid} tone="mint" />
+            <PeriodCard label={t("owner.insuranceHeld")} value={snap.insuranceHeld} tone="yellow" />
+            <PeriodCard label={t("owner.remaining")} value={snap.remainingDue} tone="red" />
           </dl>
         </div>
         <div className="dash-panel rounded-3xl p-5">
-          <h3 className="text-lg text-rose-900">مقارنة {snap.thisMonthLabel} بـ {snap.lastMonthLabel}</h3>
-          <p className="mt-1 text-xs text-rose-400">نفس عدد الأيام من أول الشهر حتى اليوم</p>
+          <h3 className="text-lg text-rose-900">
+            {t("owner.compare", { thisMonth: snap.thisMonthLabel, lastMonth: snap.lastMonthLabel })}
+          </h3>
+          <p className="mt-1 text-xs text-rose-400">{t("owner.compareHint")}</p>
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-            <CompareCard label="الدخل" current={snap.comparison.income.current} previous={snap.comparison.income.previous} change={snap.comparison.income.change} money color="green" />
-            <CompareCard label="المصروفات" current={snap.comparison.expenses.current} previous={snap.comparison.expenses.previous} change={snap.comparison.expenses.change} money invert color="red" />
-            <CompareCard label="صافي الربح" current={snap.comparison.profit.current} previous={snap.comparison.profit.previous} change={snap.comparison.profit.change} money color={snap.comparison.profit.current >= 0 ? "green" : "red"} />
-            <CompareCard label="الحجوزات" current={snap.comparison.bookings.current} previous={snap.comparison.bookings.previous} change={snap.comparison.bookings.change} color="yellow" />
+            <CompareCard label={t("owner.income")} current={snap.comparison.income.current} previous={snap.comparison.income.previous} change={snap.comparison.income.change} money color="green" />
+            <CompareCard label={t("owner.expenses")} current={snap.comparison.expenses.current} previous={snap.comparison.expenses.previous} change={snap.comparison.expenses.change} money invert color="red" />
+            <CompareCard label={t("owner.profit")} current={snap.comparison.profit.current} previous={snap.comparison.profit.previous} change={snap.comparison.profit.change} money color={snap.comparison.profit.current >= 0 ? "green" : "red"} />
+            <CompareCard label={t("owner.bookings")} current={snap.comparison.bookings.current} previous={snap.comparison.bookings.previous} change={snap.comparison.bookings.change} color="yellow" />
           </dl>
         </div>
       </div>
@@ -174,15 +178,15 @@ export function OwnerSnapshot() {
       <div className="dash-panel rounded-3xl p-5">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h3 className="text-lg text-rose-900">حركة الدخل الشهرية</h3>
-            <p className="mt-1 text-xs text-rose-400">آخر {recentMonths.length} شهر · الأعلى والأقل مميزين</p>
+            <h3 className="text-lg text-rose-900">{t("owner.monthFlow")}</h3>
+            <p className="mt-1 text-xs text-rose-400">{t("owner.monthFlowHint", { n: recentMonths.length })}</p>
           </div>
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-white">
-              أعلى: {history.highestIncomeMonth?.label ?? "—"}
+              {t("owner.highest", { label: history.highestIncomeMonth?.label ?? "—" })}
             </span>
             <span className="rounded-full bg-red-600 px-2.5 py-1 text-white">
-              أقل: {history.lowestIncomeMonth?.label ?? "—"}
+              {t("owner.lowest", { label: history.lowestIncomeMonth?.label ?? "—" })}
             </span>
           </div>
         </div>
@@ -249,6 +253,7 @@ function Kpi({
   emphasize?: "good" | "bad";
   color?: "green" | "red" | "yellow" | "wine";
 }) {
+  useLanguage();
   const up = change > 0.05;
   const down = change < -0.05;
   const good = invert ? down : up;
@@ -320,6 +325,7 @@ function PeriodCard({
   value: number;
   tone?: "rose" | "gold" | "mint" | "yellow" | "red" | "blue";
 }) {
+  useLanguage();
   return (
     <div
       className={cn(
@@ -378,6 +384,7 @@ function CompareCard({
   invert?: boolean;
   color?: "green" | "red" | "yellow" | "wine";
 }) {
+  const { t } = useLanguage();
   const up = change > 0.05;
   const down = change < -0.05;
   const good = invert ? down : up;
@@ -394,7 +401,7 @@ function CompareCard({
     >
       <dt className="text-xs font-medium text-rose-800">{label}</dt>
       <dd className="mt-1 text-lg font-semibold tabular-nums text-rose-900">{format(current)}</dd>
-      <p className="mt-1 text-[11px] text-rose-700">الشهر الماضي {format(previous)}</p>
+      <p className="mt-1 text-[11px] text-rose-700">{t("owner.lastMonth", { value: format(previous) })}</p>
       <p className={cn("mt-1 text-xs font-medium", good ? "text-emerald-700" : down || up ? "text-red-600" : "text-rose-500")}>
         {comparisonLabel(change)}
       </p>

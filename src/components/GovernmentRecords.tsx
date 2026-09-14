@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { FileBadge, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import {
   GOVERNMENT_KIND_LABELS,
   governmentRecordCountdown,
@@ -36,20 +37,19 @@ const EMPTY_DRAFT: GovernmentRecordDraft = {
 
 export function GovernmentRecords() {
   const { governmentRecords, addGovernmentRecord, updateGovernmentRecord, deleteGovernmentRecord } = useShop();
+  const { t } = useLanguage();
   const [editor, setEditor] = useState<{ mode: "add" } | { mode: "edit"; record: GovernmentRecord } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<GovernmentRecord | null>(null);
   const rows = useMemo(() => sortGovernmentRecords(governmentRecords), [governmentRecords]);
   const summary = useMemo(() => governmentRecordSummary(governmentRecords), [governmentRecords]);
 
   return (
-    <section className="dash-panel rounded-3xl p-5" aria-label="العقد والتراخيص">
+    <section className="dash-panel rounded-3xl p-5" aria-label={t("gov.aria")}>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-medium text-rose-400">أوراق المحل</p>
-          <h2 className="mt-1 text-lg text-rose-900">العقد والتراخيص والسجل</h2>
-          <p className="mt-1 text-xs text-rose-400">
-            حطي تاريخ تجديد عقد الإيجار، السجل التجاري، والرخص الحكومية عشان ما يفوت الموعد.
-          </p>
+          <p className="text-xs font-medium text-rose-400">{t("gov.kicker")}</p>
+          <h2 className="mt-1 text-lg text-rose-900">{t("gov.title")}</h2>
+          <p className="mt-1 text-xs text-rose-400">{t("gov.lead")}</p>
         </div>
         <button
           type="button"
@@ -57,18 +57,18 @@ export function GovernmentRecords() {
           className="shop-btn inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm"
         >
           <Plus className="h-4 w-4" aria-hidden />
-          تاريخ تجديد
+          {t("gov.add")}
         </button>
       </div>
 
       <dl className="mb-4 grid gap-2 sm:grid-cols-3">
-        <SummaryChip label="متأخر" value={summary.overdue} tone="red" />
-        <SummaryChip label="قرب التجديد" value={summary.soon + summary.todayCount} tone="yellow" />
-        <SummaryChip label="كل الأوراق" value={summary.total} tone="wine" />
+        <SummaryChip label={t("gov.overdue")} value={summary.overdue} tone="red" />
+        <SummaryChip label={t("gov.soon")} value={summary.soon + summary.todayCount} tone="yellow" />
+        <SummaryChip label={t("gov.all")} value={summary.total} tone="wine" />
       </dl>
 
       {rows.length === 0 ? (
-        <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">ما في تواريخ بعد. أضيفي عقد أو رخصة أو سجل.</p>
+        <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{t("gov.empty")}</p>
       ) : (
         <ul className="space-y-2">
           {rows.map((record) => {
@@ -84,7 +84,7 @@ export function GovernmentRecords() {
                         {GOVERNMENT_KIND_LABELS[record.kind]}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs text-rose-600">التجديد: {formatDate(record.renewalDate)}</p>
+                    <p className="mt-1 text-xs text-rose-600">{t("gov.renewal", { date: formatDate(record.renewalDate) })}</p>
                     {record.notes ? <p className="mt-1 text-xs leading-5 text-rose-500">{record.notes}</p> : null}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -95,7 +95,7 @@ export function GovernmentRecords() {
                       type="button"
                       onClick={() => setEditor({ mode: "edit", record })}
                       className="rounded-full bg-white p-1.5 text-rose-700 hover:bg-rose-50"
-                      aria-label={`تعديل ${record.name}`}
+                      aria-label={t("gov.editTitle", { name: record.name })}
                     >
                       <Pencil className="h-3.5 w-3.5" aria-hidden />
                     </button>
@@ -103,7 +103,7 @@ export function GovernmentRecords() {
                       type="button"
                       onClick={() => setPendingDelete(record)}
                       className="rounded-full bg-white p-1.5 text-red-600 hover:bg-red-50"
-                      aria-label={`حذف ${record.name}`}
+                      aria-label={t("gov.deleteTitle", { name: record.name })}
                     >
                       <Trash2 className="h-3.5 w-3.5" aria-hidden />
                     </button>
@@ -117,7 +117,7 @@ export function GovernmentRecords() {
 
       {editor ? (
         <RecordForm
-          title={editor.mode === "add" ? "تاريخ تجديد جديد" : `تعديل ${editor.record.name}`}
+          title={editor.mode === "add" ? t("gov.addTitle") : t("gov.editTitle", { name: editor.record.name })}
           initial={editor.mode === "add" ? EMPTY_DRAFT : editor.record}
           onClose={() => setEditor(null)}
           onSave={(draft) => {
@@ -130,13 +130,13 @@ export function GovernmentRecords() {
 
       {pendingDelete ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
-          <button type="button" className="absolute inset-0 cursor-default" aria-label="إلغاء الحذف" onClick={() => setPendingDelete(null)} />
+          <button type="button" className="absolute inset-0 cursor-default" aria-label={t("cancel")} onClick={() => setPendingDelete(null)} />
           <div className="shop-card relative w-full max-w-md rounded-3xl p-6">
-            <h3 className="text-xl text-rose-900">حذف {pendingDelete.name}؟</h3>
-            <p className="mt-2 text-sm leading-6 text-rose-600">بيختفي تاريخ التجديد من لوحة المالك.</p>
+            <h3 className="text-xl text-rose-900">{t("gov.deleteTitle", { name: pendingDelete.name })}</h3>
+            <p className="mt-2 text-sm leading-6 text-rose-600">{t("gov.deleteBody")}</p>
             <div className="mt-5 flex flex-wrap justify-end gap-2">
               <button type="button" onClick={() => setPendingDelete(null)} className="rounded-2xl bg-rose-50 px-4 py-2 text-sm text-rose-800">
-                تراجع
+                {t("floor.undo")}
               </button>
               <button
                 type="button"
@@ -146,7 +146,7 @@ export function GovernmentRecords() {
                 }}
                 className="shop-btn-red rounded-2xl px-4 py-2 text-sm"
               >
-                حذف
+                {t("delete")}
               </button>
             </div>
           </div>
@@ -183,6 +183,7 @@ function RecordForm({
   onSave: (draft: GovernmentRecordDraft) => boolean;
   onClose: () => void;
 }) {
+  const { t } = useLanguage();
   const [draft, setDraft] = useState<GovernmentRecordDraft>(initial);
   const [error, setError] = useState("");
 
@@ -200,32 +201,32 @@ function RecordForm({
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!draft.name.trim()) {
-      setError("اكتبي اسم الورقة أو العقد.");
+      setError("gov.nameRequired");
       return;
     }
     if (!draft.renewalDate) {
-      setError("اختاري تاريخ التجديد.");
+      setError("gov.dateRequired");
       return;
     }
     if (!onSave(draft)) {
-      setError("تعذر الحفظ. راجعي الاسم والتاريخ.");
+      setError("gov.saveFail");
       return;
     }
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
-      <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق النموذج" onClick={onClose} />
+      <button type="button" className="absolute inset-0 cursor-default" aria-label={t("dresses.closeForm")} onClick={onClose} />
       <div className="shop-card relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl p-6">
         <div className="mb-4 flex items-start justify-between gap-3">
           <h3 className="text-2xl text-rose-900">{title}</h3>
-          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label="إغلاق">
+          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label={t("close")}>
             <X className="h-4 w-4" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <p className="mb-2 text-sm text-rose-700">النوع</p>
+            <p className="mb-2 text-sm text-rose-700">{t("gov.kind")}</p>
             <div className="flex flex-wrap gap-1.5">
               {GOVERNMENT_RECORD_KINDS.map((kind) => (
                 <button
@@ -242,16 +243,16 @@ function RecordForm({
             </div>
           </div>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">الاسم</span>
+            <span className="mb-1 block text-rose-700">{t("gov.name")}</span>
             <input
               value={draft.name}
               onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
               className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
-              placeholder="مثل السجل التجاري أو عقد الإيجار"
+              placeholder={t("gov.namePh")}
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">تاريخ التجديد</span>
+            <span className="mb-1 block text-rose-700">{t("gov.date")}</span>
             <input
               type="date"
               value={draft.renewalDate}
@@ -260,22 +261,22 @@ function RecordForm({
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">ملاحظة</span>
+            <span className="mb-1 block text-rose-700">{t("gov.note")}</span>
             <textarea
               value={draft.notes}
               onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
               rows={3}
               className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
-              placeholder="رقم الرخصة أو جهة التجديد، إذا تبين"
+              placeholder={t("gov.notePh")}
             />
           </label>
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {error ? <p className="text-sm text-red-600">{t(error)}</p> : null}
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="rounded-2xl bg-rose-50 px-4 py-2 text-sm text-rose-800">
-              تراجع
+              {t("floor.undo")}
             </button>
             <button type="submit" className="shop-btn rounded-2xl px-4 py-2 text-sm">
-              حفظ
+              {t("save")}
             </button>
           </div>
         </form>

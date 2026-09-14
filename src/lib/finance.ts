@@ -1,3 +1,4 @@
+import { t } from "@/i18n/t";
 import {
   DRY_CLEANING_FEE,
   type Booking,
@@ -186,7 +187,7 @@ export function createDryCleaningExpense(
     category: "Dry Cleaning",
     amount: DRY_CLEANING_FEE,
     date,
-    description: `تنظيف جاف إلزامي بعد التأجير — ${dressName}`,
+    description: t("var.dryCleaningDesc", { name: dressName }),
     associatedDressId: dressId,
   };
 }

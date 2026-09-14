@@ -1,6 +1,7 @@
 "use client";
 
 import { DRESS_CATEGORY_LABELS } from "@/lib/labels";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/format";
 import { DRESS_CATEGORIES, type DressCategory } from "@/types";
 
@@ -11,9 +12,10 @@ export function CategoryPicker({
   value: DressCategory;
   onChange: (value: DressCategory) => void;
 }) {
+  const { t } = useLanguage();
   return (
     <fieldset>
-      <legend className="mb-2 text-sm text-rose-700">التصنيف</legend>
+      <legend className="mb-2 text-sm text-rose-700">{t("filter.category")}</legend>
       <div className="flex flex-wrap gap-2">
         {DRESS_CATEGORIES.map((category) => (
           <button

@@ -1,3 +1,4 @@
+import { t } from "@/i18n/t";
 import { dressNeedsAlteration, dressNeedsCleaning } from "@/lib/dressCatalog";
 import { endOfMonthIso, todayIso } from "@/lib/format";
 import type { Booking, Dress } from "@/types";
@@ -37,7 +38,7 @@ export function dressNumber(dress: Dress): number {
 
 export function dressNumberLabel(dress: Dress): string {
   const number = dressNumber(dress);
-  return number > 0 ? `فستان ${number}` : dress.name;
+  return number > 0 ? t("cal.dressNumber", { n: number }) : dress.name;
 }
 
 function byId(dresses: Dress[]): Map<string, Dress> {
@@ -52,7 +53,7 @@ export function shopDayEvents(dresses: Dress[], bookings: Booking[], date: strin
   const dressesById = byId(dresses);
   const events: ShopDayEvent[] = [];
   const seen = new Set<string>();
-  const todayWord = date === today ? " اليوم" : "";
+  const isToday = date === today;
 
   function push(event: ShopDayEvent) {
     if (seen.has(event.id)) return;
@@ -77,7 +78,7 @@ export function shopDayEvents(dresses: Dress[], bookings: Booking[], date: strin
         dressId: dress.id,
         dressName: dress.name,
         number,
-        title: `${label} يسترجع${todayWord}`,
+        title: t(isToday ? "cal.returnsToday" : "cal.returns", { dress: label }),
         detail: `${dress.name}${who}`,
         tone: "red",
       });
@@ -88,7 +89,7 @@ export function shopDayEvents(dresses: Dress[], bookings: Booking[], date: strin
         dressId: dress.id,
         dressName: dress.name,
         number,
-        title: `${label} متأخر عن الإرجاع`,
+        title: t("cal.overdue", { dress: label }),
         detail: `${dress.name}${who}`,
         tone: "red",
       });
@@ -101,7 +102,7 @@ export function shopDayEvents(dresses: Dress[], bookings: Booking[], date: strin
         dressId: dress.id,
         dressName: dress.name,
         number,
-        title: `${label} يطلع للعميلة`,
+        title: t("cal.goesOut", { dress: label }),
         detail: `${dress.name}${who}`,
         tone: "yellow",
       });
@@ -118,8 +119,8 @@ export function shopDayEvents(dresses: Dress[], bookings: Booking[], date: strin
         dressId: dress.id,
         dressName: dress.name,
         number,
-        title: `${label} يحتاج تجهيز`,
-        detail: pickup === date ? `${dress.name} · الاستلام اليوم${who}` : `${dress.name} · قبل الاستلام`,
+        title: t("cal.needsPrep", { dress: label }),
+        detail: pickup === date ? t("cal.pickupToday", { name: dress.name, who }) : t("cal.beforePickup", { name: dress.name }),
         tone: "wine",
       });
     }
@@ -136,7 +137,7 @@ export function shopDayEvents(dresses: Dress[], bookings: Booking[], date: strin
           dressId: dress.id,
           dressName: dress.name,
           number,
-          title: `${label} يحتاج غسيل`,
+          title: t("cal.needsClean", { dress: label }),
           detail: dress.name,
           tone: "red",
         });
@@ -148,7 +149,7 @@ export function shopDayEvents(dresses: Dress[], bookings: Booking[], date: strin
           dressId: dress.id,
           dressName: dress.name,
           number,
-          title: `${label} يحتاج تعديل`,
+          title: t("cal.needsAlt", { dress: label }),
           detail: dress.name,
           tone: "blue",
         });

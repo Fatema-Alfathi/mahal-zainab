@@ -1,3 +1,4 @@
+import { t } from "@/i18n/t";
 import { daysLabel } from "@/lib/labels";
 import { todayIso } from "@/lib/format";
 import {
@@ -8,10 +9,18 @@ import {
 } from "@/types";
 
 export const GOVERNMENT_KIND_LABELS: Record<GovernmentRecordKind, string> = {
-  lease: "عقد الإيجار",
-  register: "السجل التجاري",
-  license: "ترخيص",
-  other: "ورقة حكومية",
+  get lease() {
+    return t("gov.lease");
+  },
+  get register() {
+    return t("gov.register");
+  },
+  get license() {
+    return t("gov.license");
+  },
+  get other() {
+    return t("gov.other");
+  },
 };
 
 export const GOVERNMENT_SOON_DAYS = 30;
@@ -53,9 +62,9 @@ export function governmentRecordStatus(renewalDate: string, today = todayIso()):
 
 export function governmentRecordCountdown(renewalDate: string, today = todayIso()): string {
   const days = signedDayDiff(today, renewalDate);
-  if (days < 0) return `متأخر ${daysLabel(Math.abs(days))}`;
-  if (days === 0) return "التجديد اليوم";
-  return `باقي ${daysLabel(days)}`;
+  if (days < 0) return t("gov.late", { days: daysLabel(Math.abs(days)) });
+  if (days === 0) return t("gov.today");
+  return t("gov.left", { days: daysLabel(days) });
 }
 
 export function sortGovernmentRecords(records: GovernmentRecord[]): GovernmentRecord[] {

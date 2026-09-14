@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { Pencil, Plus, X } from "lucide-react";
 import { DiscountPolicyPanel } from "@/components/DiscountPolicyPanel";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import {
   activeEmployees,
   isEmployeeNumberTaken,
@@ -12,10 +13,12 @@ import {
   suggestEmployeeNumber,
 } from "@/lib/employees";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { jobTitleLabel } from "@/lib/labels";
 import { EMPLOYEE_JOB_TITLES, type Employee, type EmployeeDraft } from "@/types";
 
 export function EmployeeManager() {
   const { employees, addEmployee, updateEmployee } = useShop();
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [editor, setEditor] = useState<{ mode: "add" } | { mode: "edit"; employee: Employee } | null>(null);
   const [openId, setOpenId] = useState<string | null>(employees[0]?.id ?? null);
@@ -37,11 +40,9 @@ export function EmployeeManager() {
     <section className="space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm text-rose-400">فريق المحل</p>
-          <h1 className="mt-1 font-serif text-3xl text-rose-900">الموظفات</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">
-            ملف لكل موظفة: المهمة، الراتب، الهاتف، وتاريخ الالتحاق. مجموع رواتب العاملات يدخل في حسابات الشهر.
-          </p>
+          <p className="text-sm text-rose-400">{t("staff.kicker")}</p>
+          <h1 className="mt-1 font-serif text-3xl text-rose-900">{t("staff.title")}</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">{t("staff.lead")}</p>
         </div>
         <button
           type="button"
@@ -52,26 +53,26 @@ export function EmployeeManager() {
           className="shop-btn inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm"
         >
           <Plus className="h-4 w-4" aria-hidden />
-          موظفة جديدة
+          {t("staff.add")}
         </button>
       </div>
 
       <dl className="grid gap-3 sm:grid-cols-3">
         <div className="dash-panel rounded-3xl p-4">
-          <dt className="text-xs text-rose-400">عاملات الآن</dt>
+          <dt className="text-xs text-rose-400">{t("staff.working")}</dt>
           <dd className="mt-1 text-2xl tabular-nums text-rose-900">{working.length}</dd>
         </div>
         <div className="dash-panel rounded-3xl p-4">
-          <dt className="text-xs text-rose-400">كل الملفات</dt>
+          <dt className="text-xs text-rose-400">{t("staff.files")}</dt>
           <dd className="mt-1 text-2xl tabular-nums text-rose-900">{employees.length}</dd>
         </div>
         <div className="dash-panel rounded-3xl p-4">
-          <dt className="text-xs text-rose-400">رواتب الشهر</dt>
+          <dt className="text-xs text-rose-400">{t("staff.salaries")}</dt>
           <dd className="mt-1 text-2xl tabular-nums text-rose-900">{formatCurrency(salaryTotal)}</dd>
         </div>
       </dl>
 
-      {notice ? <p className="text-sm text-emerald-600">{notice}</p> : null}
+      {notice ? <p className="text-sm text-emerald-600">{t(notice)}</p> : null}
 
       <div className="grid gap-5 xl:grid-cols-[20rem_1fr]">
         <div className="dash-panel rounded-3xl p-4">
@@ -79,12 +80,12 @@ export function EmployeeManager() {
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="ابحثي بالاسم أو المهمة أو الهاتف"
+            placeholder={t("staff.searchPh")}
             className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 text-sm outline-none ring-rose-200 focus:ring-2"
           />
           <ul className="mt-3 max-h-[32rem] space-y-1 overflow-y-auto">
             {visible.length === 0 ? (
-              <li className="px-2 py-6 text-center text-sm text-rose-300">ما في موظفة بهالبحث.</li>
+              <li className="px-2 py-6 text-center text-sm text-rose-300">{t("staff.empty")}</li>
             ) : null}
             {visible.map((employee) => {
               const active = employee.id === selected?.id;
@@ -97,8 +98,8 @@ export function EmployeeManager() {
                   >
                     <p className="text-sm">{employee.name}</p>
                     <p className={`mt-0.5 text-xs ${active ? "text-white/80" : "text-rose-400"}`}>
-                      {employee.jobTitle} · {formatCurrency(employee.salary)}
-                      {employee.active ? "" : " · تركت العمل"}
+                      {jobTitleLabel(employee.jobTitle)} · {formatCurrency(employee.salary)}
+                      {employee.active ? "" : ` · ${t("staff.inactive")}`}
                     </p>
                   </button>
                 </li>
@@ -111,17 +112,17 @@ export function EmployeeManager() {
           <article className="dash-panel rounded-3xl p-5 sm:p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-xs text-rose-400">رقم الموظفة {selected.number}</p>
+                <p className="text-xs text-rose-400">{t("staff.number", { number: selected.number })}</p>
                 <h2 className="mt-1 text-2xl text-rose-900">{selected.name}</h2>
                 <p className="mt-2 text-sm leading-7 text-rose-600">
-                  {selected.jobTitle} · الهاتف: {selected.phone}
-                  {selected.startDate ? ` · التحقت ${formatDate(selected.startDate)}` : ""}
+                  {jobTitleLabel(selected.jobTitle)} · {t("staff.phone")}: {selected.phone}
+                  {selected.startDate ? ` · ${t("staff.joined", { date: formatDate(selected.startDate) })}` : ""}
                 </p>
                 <p className="mt-2 text-sm text-rose-800">
-                  راتب الشهر{" "}
+                  {t("staff.salary")}{" "}
                   <span className="tabular-nums text-rose-900">{formatCurrency(selected.salary)}</span>
                   <span className={`ms-2 text-xs ${selected.active ? "text-emerald-600" : "text-rose-400"}`}>
-                    {selected.active ? "تعمل الآن" : "تركت العمل"}
+                    {selected.active ? t("staff.active") : t("staff.inactive")}
                   </span>
                 </p>
                 {selected.notes ? <p className="mt-2 text-sm leading-7 text-rose-500">{selected.notes}</p> : null}
@@ -135,12 +136,12 @@ export function EmployeeManager() {
                 className="shop-soft inline-flex items-center gap-1.5 rounded-2xl px-3 py-2 text-sm text-rose-700"
               >
                 <Pencil className="h-3.5 w-3.5" aria-hidden />
-                تعديل الملف
+                {t("staff.editFile")}
               </button>
             </div>
           </article>
         ) : (
-          <p className="dash-panel rounded-3xl px-4 py-10 text-center text-sm text-rose-300">اختاري موظفة من القائمة.</p>
+          <p className="dash-panel rounded-3xl px-4 py-10 text-center text-sm text-rose-300">{t("staff.pick")}</p>
         )}
       </div>
 
@@ -148,7 +149,7 @@ export function EmployeeManager() {
 
       {editor ? (
         <EmployeeFormDialog
-          title={editor.mode === "add" ? "موظفة جديدة" : `تعديل ${editor.employee.name}`}
+          title={editor.mode === "add" ? t("staff.addTitle") : t("staff.editTitle", { name: editor.employee.name })}
           initialDraft={
             editor.mode === "add"
               ? {
@@ -178,7 +179,7 @@ export function EmployeeManager() {
             const ok =
               editor.mode === "add" ? addEmployee(draft) : updateEmployee(editor.employee.id, draft);
             if (!ok) return false;
-            setNotice(editor.mode === "add" ? "تم فتح ملف الموظفة." : "تم حفظ ملف الموظفة.");
+            setNotice(editor.mode === "add" ? "staff.added" : "staff.saved");
             return true;
           }}
         />
@@ -201,42 +202,43 @@ function EmployeeFormDialog({
   onSave: (draft: EmployeeDraft) => boolean;
 }) {
   const { employees } = useShop();
+  const { t } = useLanguage();
   const [draft, setDraft] = useState<EmployeeDraft>(initialDraft);
   const [error, setError] = useState("");
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!draft.name.trim()) {
-      setError("اسم الموظفة مطلوب.");
+      setError("staff.nameRequired");
       return;
     }
     if (!draft.number.trim()) {
-      setError("رقم الموظفة مطلوب.");
+      setError("staff.numberRequired");
       return;
     }
     if (isEmployeeNumberTaken(employees, draft.number, excludeId)) {
-      setError("هذا الرقم مستخدم لموظفة ثانية.");
+      setError("staff.numberTaken");
       return;
     }
     if (!draft.phone.trim()) {
-      setError("رقم الهاتف مطلوب.");
+      setError("staff.phoneRequired");
       return;
     }
     if (isEmployeePhoneTaken(employees, draft.phone, excludeId)) {
-      setError("هذا الهاتف مستخدم لموظفة ثانية.");
+      setError("staff.phoneTaken");
       return;
     }
     if (!draft.jobTitle.trim()) {
-      setError("مهمة الموظفة مطلوبة.");
+      setError("staff.jobRequired");
       return;
     }
     const salary = Number(draft.salary);
     if (!Number.isFinite(salary) || salary < 0) {
-      setError("راتب الشهر صفر أو أكثر.");
+      setError("staff.salaryMin");
       return;
     }
     if (!onSave(draft)) {
-      setError("تعذر الحفظ. راجعي الرقم أو الهاتف.");
+      setError("staff.saveFail");
       return;
     }
     onClose();
@@ -244,17 +246,17 @@ function EmployeeFormDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
-      <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق النموذج" onClick={onClose} />
+      <button type="button" className="absolute inset-0 cursor-default" aria-label={t("dresses.closeForm")} onClick={onClose} />
       <div className="shop-card relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl p-6">
         <div className="mb-4 flex items-start justify-between gap-3">
           <h3 className="text-2xl text-rose-900">{title}</h3>
-          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label="إغلاق">
+          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label={t("close")}>
             <X className="h-4 w-4" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">رقم الموظفة</span>
+            <span className="mb-1 block text-rose-700">{t("staff.fieldNumber")}</span>
             <input
               value={draft.number}
               onChange={(event) => setDraft((current) => ({ ...current, number: event.target.value }))}
@@ -262,7 +264,7 @@ function EmployeeFormDialog({
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">الاسم</span>
+            <span className="mb-1 block text-rose-700">{t("staff.fieldName")}</span>
             <input
               value={draft.name}
               onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
@@ -270,7 +272,7 @@ function EmployeeFormDialog({
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">رقم الهاتف</span>
+            <span className="mb-1 block text-rose-700">{t("staff.fieldPhone")}</span>
             <input
               value={draft.phone}
               onChange={(event) => setDraft((current) => ({ ...current, phone: event.target.value }))}
@@ -279,7 +281,7 @@ function EmployeeFormDialog({
             />
           </label>
           <div>
-            <p className="mb-2 text-sm text-rose-700">المهمة</p>
+            <p className="mb-2 text-sm text-rose-700">{t("staff.fieldJob")}</p>
             <div className="mb-2 flex flex-wrap gap-1.5">
               {EMPLOYEE_JOB_TITLES.map((titleOption) => (
                 <button
@@ -292,7 +294,7 @@ function EmployeeFormDialog({
                       : "rounded-full bg-rose-50 px-3 py-1 text-xs text-rose-700 hover:bg-rose-100"
                   }
                 >
-                  {titleOption}
+                  {jobTitleLabel(titleOption)}
                 </button>
               ))}
             </div>
@@ -300,11 +302,11 @@ function EmployeeFormDialog({
               value={draft.jobTitle}
               onChange={(event) => setDraft((current) => ({ ...current, jobTitle: event.target.value }))}
               className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
-              placeholder="أو اكتبي مهمة ثانية"
+              placeholder={t("staff.jobPh")}
             />
           </div>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">راتب الشهر (ر.ع.)</span>
+            <span className="mb-1 block text-rose-700">{t("staff.fieldSalary")}</span>
             <input
               type="number"
               min="0"
@@ -315,7 +317,7 @@ function EmployeeFormDialog({
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">تاريخ الالتحاق</span>
+            <span className="mb-1 block text-rose-700">{t("staff.fieldStart")}</span>
             <input
               type="date"
               value={draft.startDate}
@@ -331,12 +333,12 @@ function EmployeeFormDialog({
               className="mt-1 h-4 w-4 accent-rose-500"
             />
             <span>
-              <span className="block font-medium">تعمل الآن</span>
-              <span className="mt-1 block text-rose-400">إذا تركت العمل، راتبها ما يدخل في مجموع الشهر.</span>
+              <span className="block font-medium">{t("staff.active")}</span>
+              <span className="mt-1 block text-rose-400">{t("staff.activeHint")}</span>
             </span>
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">ملاحظات</span>
+            <span className="mb-1 block text-rose-700">{t("staff.fieldNotes")}</span>
             <textarea
               value={draft.notes}
               onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
@@ -344,9 +346,9 @@ function EmployeeFormDialog({
               className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
             />
           </label>
-          {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+          {error ? <p className="text-sm text-rose-700">{t(error)}</p> : null}
           <button type="submit" className="shop-btn w-full rounded-2xl py-2.5 text-sm">
-            حفظ الملف
+            {t("staff.saveFile")}
           </button>
         </form>
       </div>

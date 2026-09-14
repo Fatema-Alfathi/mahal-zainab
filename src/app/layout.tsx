@@ -36,8 +36,8 @@ const thmanyah = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "بوتيك YAL · تأجير فساتين الزفاف والسهرات",
-  description: "نظام مالي ومخزوني لبوتيك YAL لتأجير فساتين الزفاف والسهرات.",
+  title: "YAL Boutique · بوتيك YAL",
+  description: "Boutique management for YAL wedding and evening dress rentals.",
   icons: {
     icon: "/yal-logo.jpg",
     apple: "/yal-logo.jpg",

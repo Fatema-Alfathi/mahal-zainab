@@ -14,6 +14,7 @@ import { DressVariants } from "@/components/DressVariants";
 import { SizeFilter, type SizeFilterValue } from "@/components/SizeFilter";
 import { SizePicker } from "@/components/SizePicker";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import {
   bookingDateLine,
   categoryLabel,
@@ -36,6 +37,7 @@ import {
   dressRepairCost,
 } from "@/lib/finance";
 import { cn, formatCurrency, formatDate } from "@/lib/format";
+import { colorLabel, dressStatusLabel } from "@/lib/labels";
 import type { Dress, DressCatalogDraft, DressStatus } from "@/types";
 
 const STATUS_STYLES: Record<DressStatus, string> = {
@@ -43,13 +45,6 @@ const STATUS_STYLES: Record<DressStatus, string> = {
   reserved: "bg-sky-600 text-white",
   rented: "bg-yellow-400 text-yellow-950",
   maintenance: "bg-red-600 text-white",
-};
-
-const STATUS_LABELS: Record<DressStatus, string> = {
-  available: "متاح",
-  reserved: "محجوز",
-  rented: "عند العميلة",
-  maintenance: "يحتاج تنظيف",
 };
 
 const EMPTY_DRAFT: DressCatalogDraft = {
@@ -98,6 +93,7 @@ function draftFromDress(dress: Dress): DressCatalogDraft {
 
 export function DressManager() {
   const { dresses, bookings, variableExpenses, isOwner, addDress, updateDress, deleteDress } = useShop();
+  const { t } = useLanguage();
   const [editor, setEditor] = useState<{ mode: "add" } | { mode: "edit"; dress: Dress } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Dress | null>(null);
   const [notice, setNotice] = useState("");
@@ -116,11 +112,9 @@ export function DressManager() {
     <section>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm text-rose-400">المخزون</p>
-          <h1 className="mt-1 text-3xl font-medium text-rose-900">إدارة الفساتين</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">
-            ملف كل فستان: الكود، الاسم، الوصف، الصور، المقاس، تكاليف الشراء، الإيجار، الإيرادات، والتنظيف أو التعديل.
-          </p>
+          <p className="text-sm text-rose-400">{t("dresses.kicker")}</p>
+          <h1 className="mt-1 text-3xl font-medium text-rose-900">{t("dresses.title")}</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">{t("dresses.leadLong")}</p>
         </div>
         <button
           type="button"
@@ -131,23 +125,23 @@ export function DressManager() {
           className="shop-btn inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm"
         >
           <Plus className="h-4 w-4" aria-hidden />
-          إضافة فستان جديد
+          {t("dresses.addNew")}
         </button>
       </div>
 
-      {notice ? <p className="mb-4 text-sm text-emerald-600">{notice}</p> : null}
+      {notice ? <p className="mb-4 text-sm text-emerald-600">{t(notice)}</p> : null}
 
       <div className="mb-5 space-y-3">
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="ابحثي بالاسم أو كود الفستان"
+          placeholder={t("dresses.searchPh")}
           className="w-full rounded-2xl border-0 bg-white/90 px-4 py-2.5 text-sm outline-none ring-rose-200 focus:ring-2"
-          aria-label="البحث عن فستان بالاسم أو الكود"
+          aria-label={t("dresses.searchAria")}
         />
         {query.trim() && visibleDresses[0] ? (
-          <p className="text-sm text-rose-600">تقويم {visibleDresses[0].name} من البحث</p>
+          <p className="text-sm text-rose-600">{t("dresses.calendarFromSearch", { name: visibleDresses[0].name })}</p>
         ) : null}
         <CategoryFilter value={categoryFilter} onChange={setCategoryFilter} />
         <ColorFilter value={colorFilter} onChange={setColorFilter} />
@@ -162,9 +156,7 @@ export function DressManager() {
 
       <div className="space-y-3">
         {visibleDresses.length === 0 ? (
-          <p className="shop-card rounded-3xl px-4 py-8 text-center text-sm text-rose-400">
-            ما في فساتين بهالبحث أو بهالتصنيف أو اللون أو المقاس حالياً.
-          </p>
+          <p className="shop-card rounded-3xl px-4 py-8 text-center text-sm text-rose-400">{t("dresses.empty")}</p>
         ) : null}
         {visibleDresses.map((dress) => {
           const display = dressDisplay(dress);
@@ -193,14 +185,16 @@ export function DressManager() {
                       <div className="mt-1 flex flex-wrap items-center gap-2">
                         <h2 className="text-lg text-rose-900">{dress.name}</h2>
                         <span className={cn("rounded-full px-2.5 py-1 text-xs", STATUS_STYLES[dress.status])}>
-                          {STATUS_LABELS[dress.status]}
+                          {dressStatusLabel(dress.status)}
                         </span>
                         {needsAlteration ? (
-                          <span className="rounded-full bg-yellow-400 px-2.5 py-1 text-xs text-yellow-950">يحتاج تعديل</span>
+                          <span className="rounded-full bg-yellow-400 px-2.5 py-1 text-xs text-yellow-950">
+                            {t("dresses.needsAltShort")}
+                          </span>
                         ) : null}
                       </div>
                       <p className="mt-1 text-sm text-rose-400">
-                        {categoryLabel(dress.category)} · {dress.color} · {sizeLabel(dress.size)}
+                        {categoryLabel(dress.category)} · {colorLabel(dress.color)} · {sizeLabel(dress.size)}
                         {display.silhouette ? ` · ${display.silhouette}` : ""}
                       </p>
                       {dress.description ? (
@@ -219,7 +213,7 @@ export function DressManager() {
                         className="shop-soft inline-flex items-center gap-1.5 rounded-2xl px-3 py-2 text-sm text-rose-700 hover:bg-rose-50"
                       >
                         <CalendarDays className="h-3.5 w-3.5" aria-hidden />
-                        التقويم
+                        {t("dresses.calendar")}
                       </Link>
                       <button
                         type="button"
@@ -230,13 +224,13 @@ export function DressManager() {
                         className="shop-soft inline-flex items-center gap-1.5 rounded-2xl px-3 py-2 text-sm text-rose-700 hover:bg-rose-50"
                       >
                         <Pencil className="h-3.5 w-3.5" aria-hidden />
-                        تعديل
+                        {t("edit")}
                       </button>
                       <button
                         type="button"
                         onClick={() => {
                           if (dress.status === "rented" || dress.status === "reserved") {
-                            setNotice("لا يمكن حذف فستان محجوز أو عند العميلة.");
+                            setNotice("dresses.cantDeleteBusy");
                             return;
                           }
                           setPendingDelete(dress);
@@ -244,7 +238,7 @@ export function DressManager() {
                         className="inline-flex items-center gap-1.5 rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-700 hover:bg-rose-100"
                       >
                         <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                        حذف
+                        {t("delete")}
                       </button>
                     </div>
                   </div>
@@ -253,7 +247,7 @@ export function DressManager() {
                     <div className="space-y-1.5 rounded-2xl bg-sky-50 px-3 py-3 text-sm text-sky-900">
                       {windows.map((booking) => (
                         <p key={booking.id}>
-                          {dress.status === "rented" ? "عند العميلة" : "محجوز"} {bookingDateLine(booking)}
+                          {dressStatusLabel(dress.status === "rented" ? "rented" : "reserved")} {bookingDateLine(booking)}
                           {booking.customerName ? ` — ${booking.customerName}` : ""}
                         </p>
                       ))}
@@ -261,25 +255,25 @@ export function DressManager() {
                   ) : null}
 
                   <dl className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                    <Fact label="سعر التأجير / اليوم" value={formatCurrency(dress.rentalPricePerDay)} tone="wine" />
+                    <Fact label={t("dresses.rentalDay")} value={formatCurrency(dress.rentalPricePerDay)} tone="wine" />
                     {isOwner ? (
                       <>
-                        <Fact label="إجمالي الإيرادات" value={formatCurrency(revenue)} tone="green" />
-                        <Fact label="تكلفة التنظيف" value={formatCurrency(cleaning)} tone="yellow" />
-                        <Fact label="تكلفة التصليح" value={formatCurrency(repair)} tone="red" />
+                        <Fact label={t("dresses.revenue")} value={formatCurrency(revenue)} tone="green" />
+                        <Fact label={t("dresses.cleaningCost")} value={formatCurrency(cleaning)} tone="yellow" />
+                        <Fact label={t("dresses.repairCost")} value={formatCurrency(repair)} tone="red" />
                         <Fact
-                          label="تاريخ الشراء"
-                          value={dress.purchaseDate ? formatDate(dress.purchaseDate) : "غير مسجّل"}
+                          label={t("dresses.purchaseDate")}
+                          value={dress.purchaseDate ? formatDate(dress.purchaseDate) : t("dresses.unrecorded")}
                           tone="wine"
                         />
-                        <Fact label="تكلفة الشراء" value={formatCurrency(dress.purchasePrice)} tone="wine" />
-                        <Fact label="الشحن" value={formatCurrency(dress.shippingCost)} tone="blue" />
-                        <Fact label="الجمارك" value={formatCurrency(dress.customsCost)} tone="blue" />
-                        <Fact label="إجمالي تكلفة الفستان" value={formatCurrency(landed)} tone="wine" />
-                        <Fact label="التأمين" value={formatCurrency(dress.insuranceAmount)} tone="yellow" />
+                        <Fact label={t("dresses.purchaseCost")} value={formatCurrency(dress.purchasePrice)} tone="wine" />
+                        <Fact label={t("dresses.shipping")} value={formatCurrency(dress.shippingCost)} tone="blue" />
+                        <Fact label={t("dresses.customs")} value={formatCurrency(dress.customsCost)} tone="blue" />
+                        <Fact label={t("dresses.landed")} value={formatCurrency(landed)} tone="wine" />
+                        <Fact label={t("dresses.insurance")} value={formatCurrency(dress.insuranceAmount)} tone="yellow" />
                       </>
                     ) : (
-                      <Fact label="التأمين" value={formatCurrency(dress.insuranceAmount)} tone="yellow" />
+                      <Fact label={t("dresses.insurance")} value={formatCurrency(dress.insuranceAmount)} tone="yellow" />
                     )}
                   </dl>
                 </div>
@@ -291,7 +285,7 @@ export function DressManager() {
 
       {editor ? (
         <DressFormDialog
-          title={editor.mode === "add" ? "إضافة فستان جديد" : `تعديل ${editor.dress.name}`}
+          title={editor.mode === "add" ? t("dresses.addTitle") : t("dresses.editTitle", { name: editor.dress.name })}
           initialDraft={
             editor.mode === "add"
               ? { ...EMPTY_DRAFT, barcode: suggestBarcode(dresses), images: padImageSlots([]) }
@@ -303,7 +297,7 @@ export function DressManager() {
             const ok =
               editor.mode === "add" ? addDress(draft) : updateDress(editor.dress.id, draft);
             if (!ok) return false;
-            setNotice(editor.mode === "add" ? "تمت إضافة الفستان إلى المخزون." : "تم حفظ تعديلات الفستان.");
+            setNotice(editor.mode === "add" ? "dresses.added" : "dresses.saved");
             return true;
           }}
         />
@@ -316,7 +310,7 @@ export function DressManager() {
           onConfirm={() => {
             const ok = deleteDress(pendingDelete.id);
             setPendingDelete(null);
-            setNotice(ok ? "تم حذف الفستان من المخزون." : "تعذر حذف الفستان.");
+            setNotice(ok ? "dresses.deleted" : "dresses.deleteFail");
           }}
         />
       ) : null}
@@ -338,6 +332,7 @@ function DressFormDialog({
   onSave: (draft: DressCatalogDraft) => boolean;
 }) {
   const { dresses, isOwner } = useShop();
+  const { t } = useLanguage();
   const [draft, setDraft] = useState<DressCatalogDraft>(initialDraft);
   const [error, setError] = useState("");
   const preview = useMemo(() => draft.images.find((url) => /^https?:\/\//i.test(url.trim())), [draft.images]);
@@ -355,50 +350,50 @@ function DressFormDialog({
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!draft.name.trim()) {
-      setError("اسم الفستان مطلوب.");
+      setError("dresses.nameRequired");
       return;
     }
     if (!draft.barcode.trim()) {
-      setError("كود الفستان مطلوب.");
+      setError("dresses.codeRequired");
       return;
     }
     if (isBarcodeTaken(dresses, draft.barcode, excludeId)) {
-      setError("هذا الكود مستخدم لفستان آخر.");
+      setError("dresses.codeTaken");
       return;
     }
     if (isSameVariantTaken(dresses, draft, excludeId)) {
-      setError("نفس هذا الفستان موجود أصلاً بنفس اللون والمقاس.");
+      setError("dresses.variantTaken");
       return;
     }
     const rental = Number(draft.rentalPricePerDay);
     if (!Number.isFinite(rental) || rental <= 0) {
-      setError("أدخلي إيجار يوم أكبر من صفر.");
+      setError("dresses.rentRequired");
       return;
     }
     const insurance = Number(draft.insuranceAmount);
     if (!Number.isFinite(insurance) || insurance < 0) {
-      setError("تأمين الفستان صفر أو أكثر.");
+      setError("dresses.insMin");
       return;
     }
     if (isOwner) {
       const purchase = Number(draft.purchasePrice);
       if (!Number.isFinite(purchase) || purchase < 0) {
-        setError("تكلفة الشراء صفر أو أكثر.");
+        setError("dresses.buyMin");
         return;
       }
       const shipping = Number(draft.shippingCost);
       if (!Number.isFinite(shipping) || shipping < 0) {
-        setError("تكاليف الشحن صفر أو أكثر.");
+        setError("dresses.shipMin");
         return;
       }
       const customs = Number(draft.customsCost);
       if (!Number.isFinite(customs) || customs < 0) {
-        setError("الجمارك صفر أو أكثر.");
+        setError("dresses.customsMin");
         return;
       }
     }
     if (!onSave(draft)) {
-      setError("تعذر حفظ الفستان. راجعي البيانات وحاولي مرة أخرى.");
+      setError("dresses.saveFail");
       return;
     }
     onClose();
@@ -406,7 +401,7 @@ function DressFormDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
-      <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق النموذج" onClick={onClose} />
+      <button type="button" className="absolute inset-0 cursor-default" aria-label={t("dresses.closeForm")} onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
@@ -415,25 +410,25 @@ function DressFormDialog({
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs text-rose-400">كتالوج المحل</p>
+            <p className="text-xs text-rose-400">{t("dresses.catalog")}</p>
             <h3 id="dress-form-title" className="mt-1 text-2xl text-rose-900">
               {title}
             </h3>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label="إغلاق">
+          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label={t("close")}>
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {preview ? (
           <div className="mb-4 h-40 overflow-hidden rounded-2xl">
-            <DressPhoto src={preview} alt={draft.name || "معاينة الفستان"} fallbackClassName="from-rose-100 to-amber-100" />
+            <DressPhoto src={preview} alt={draft.name || t("dresses.preview")} fallbackClassName="from-rose-100 to-amber-100" />
           </div>
         ) : null}
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">اسم الفستان</span>
+            <span className="mb-1 block text-rose-700">{t("dresses.fieldName")}</span>
             <input
               type="text"
               value={draft.name}
@@ -442,7 +437,7 @@ function DressFormDialog({
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">كود الفستان</span>
+            <span className="mb-1 block text-rose-700">{t("dresses.fieldCode")}</span>
             <input
               type="text"
               value={draft.barcode}
@@ -451,22 +446,22 @@ function DressFormDialog({
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">وصف الفستان</span>
+            <span className="mb-1 block text-rose-700">{t("dresses.fieldDesc")}</span>
             <textarea
               value={draft.description}
               onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
               rows={3}
-              placeholder="القصة، القماش، وملاحظات العناية أو التعديل"
+              placeholder={t("dresses.descPh")}
               className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">القصة أو الشكل</span>
+            <span className="mb-1 block text-rose-700">{t("dresses.fieldSilhouette")}</span>
             <input
               type="text"
               value={draft.silhouette}
               onChange={(event) => setDraft((current) => ({ ...current, silhouette: event.target.value }))}
-              placeholder="مثل: قصة A أو فستان كرة"
+              placeholder={t("dresses.silPh")}
               className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
             />
           </label>
@@ -483,7 +478,7 @@ function DressFormDialog({
             onChange={(size) => setDraft((current) => ({ ...current, size }))}
           />
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">هل هذا نفس فستان موجود بلون أو مقاس ثاني؟</span>
+            <span className="mb-1 block text-rose-700">{t("dresses.sameStyle")}</span>
             <select
               value={draft.styleId}
               onChange={(event) => {
@@ -515,7 +510,7 @@ function DressFormDialog({
               }}
               className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 text-rose-900"
             >
-              <option value="">لا، قطعة جديدة مستقلة</option>
+              <option value="">{t("dresses.newPiece")}</option>
               {dresses
                 .filter((item, index, list) => {
                   if (item.id === excludeId) return false;
@@ -523,38 +518,38 @@ function DressFormDialog({
                 })
                 .map((item) => (
                   <option key={item.styleId} value={item.styleId}>
-                    نعم، نفس {item.name}
+                    {t("dresses.sameAs", { name: item.name })}
                   </option>
                 ))}
             </select>
           </label>
           <div>
-            <p className="mb-2 text-sm text-rose-700">القياسات بالسنتيمتر (اختياري)</p>
+            <p className="mb-2 text-sm text-rose-700">{t("dresses.measures")}</p>
             <div className="grid grid-cols-2 gap-3">
               <MeasureInput
-                label="الصدر"
+                label={t("dresses.bust")}
                 value={draft.measurements.bust}
                 onChange={(bust) => setDraft((current) => ({ ...current, measurements: { ...current.measurements, bust } }))}
               />
               <MeasureInput
-                label="الخصر"
+                label={t("dresses.waist")}
                 value={draft.measurements.waist}
                 onChange={(waist) => setDraft((current) => ({ ...current, measurements: { ...current.measurements, waist } }))}
               />
               <MeasureInput
-                label="الأرداف"
+                label={t("dresses.hips")}
                 value={draft.measurements.hips}
                 onChange={(hips) => setDraft((current) => ({ ...current, measurements: { ...current.measurements, hips } }))}
               />
               <MeasureInput
-                label="الطول"
+                label={t("dresses.length")}
                 value={draft.measurements.length}
                 onChange={(length) => setDraft((current) => ({ ...current, measurements: { ...current.measurements, length } }))}
               />
             </div>
           </div>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">سعر التأجير لليوم (ر.ع.)</span>
+            <span className="mb-1 block text-rose-700">{t("dresses.rentOmr")}</span>
             <input
               type="number"
               min="0"
@@ -567,7 +562,7 @@ function DressFormDialog({
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">تأمين الفستان (ر.ع.)</span>
+            <span className="mb-1 block text-rose-700">{t("dresses.insOmr")}</span>
             <input
               type="number"
               min="0"
@@ -578,14 +573,12 @@ function DressFormDialog({
               }
               className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
             />
-            <span className="mt-1 block text-xs text-rose-400">
-              يُحصَل من العميلة عند الحجز ويُرجَع لها إذا رجّعت الفستان سليم. مو من فلوس الإيجار.
-            </span>
+            <span className="mt-1 block text-xs text-rose-400">{t("dresses.insuranceHint")}</span>
           </label>
           {isOwner ? (
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block text-sm sm:col-span-2">
-                <span className="mb-1 block text-rose-700">تاريخ شراء الفستان</span>
+                <span className="mb-1 block text-rose-700">{t("dresses.buyDate")}</span>
                 <input
                   type="date"
                   value={draft.purchaseDate}
@@ -594,7 +587,7 @@ function DressFormDialog({
                 />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block text-rose-700">تكلفة الشراء (ر.ع.)</span>
+                <span className="mb-1 block text-rose-700">{t("dresses.buyOmr")}</span>
                 <input
                   type="number"
                   min="0"
@@ -607,7 +600,7 @@ function DressFormDialog({
                 />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block text-rose-700">تكاليف الشحن (ر.ع.)</span>
+                <span className="mb-1 block text-rose-700">{t("dresses.shipOmr")}</span>
                 <input
                   type="number"
                   min="0"
@@ -620,7 +613,7 @@ function DressFormDialog({
                 />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block text-rose-700">الجمارك (ر.ع.)</span>
+                <span className="mb-1 block text-rose-700">{t("dresses.customsOmr")}</span>
                 <input
                   type="number"
                   min="0"
@@ -635,7 +628,7 @@ function DressFormDialog({
             </div>
           ) : null}
           <div className="space-y-2 rounded-2xl bg-rose-50/80 px-3 py-3">
-            <p className="text-sm text-rose-700">حالة الفستان</p>
+            <p className="text-sm text-rose-700">{t("dresses.status")}</p>
             <label className="flex items-start gap-2 text-sm text-rose-800">
               <input
                 type="checkbox"
@@ -645,9 +638,9 @@ function DressFormDialog({
                 className="mt-0.5"
               />
               <span>
-                يحتاج تنظيف
+                {t("status.maintenance")}
                 {cleaningLocked ? (
-                  <span className="mt-0.5 block text-xs text-rose-400">التنظيف يُسجَّل بعد إرجاع الفستان.</span>
+                  <span className="mt-0.5 block text-xs text-rose-400">{t("dresses.cleanHint")}</span>
                 ) : null}
               </span>
             </label>
@@ -658,12 +651,12 @@ function DressFormDialog({
                 onChange={(event) => setDraft((current) => ({ ...current, needsAlteration: event.target.checked }))}
                 className="mt-0.5"
               />
-              يحتاج تعديل
+              {t("dresses.needsAlt")}
             </label>
           </div>
           {[0, 1, 2, 3].map((index) => (
             <label key={index} className="block text-sm">
-              <span className="mb-1 block text-rose-700">رابط الصورة {index + 1}</span>
+              <span className="mb-1 block text-rose-700">{t("dresses.photo", { n: index + 1 })}</span>
               <input
                 type="url"
                 value={draft.images[index] ?? ""}
@@ -674,13 +667,13 @@ function DressFormDialog({
               />
             </label>
           ))}
-          {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+          {error ? <p className="text-sm text-rose-700">{t(error)}</p> : null}
           <div className="flex flex-wrap justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="rounded-2xl px-4 py-2 text-sm text-rose-400 hover:bg-rose-50">
-              إلغاء
+              {t("cancel")}
             </button>
             <button type="submit" className="shop-btn rounded-2xl px-4 py-2 text-sm">
-              حفظ الفستان
+              {t("dresses.saveDress")}
             </button>
           </div>
         </form>
@@ -735,22 +728,21 @@ function ConfirmDeleteDialog({
   onClose: () => void;
   onConfirm: () => void;
 }) {
+  const { t } = useLanguage();
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
-      <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق تأكيد الحذف" onClick={onClose} />
+      <button type="button" className="absolute inset-0 cursor-default" aria-label={t("close")} onClick={onClose} />
       <div role="dialog" aria-modal="true" aria-labelledby="delete-dress-title" className="shop-card relative w-full max-w-md rounded-3xl p-6">
         <h3 id="delete-dress-title" className="text-xl text-rose-900">
-          حذف {dress.name}؟
+          {t("dresses.deleteTitle", { name: dress.name })}
         </h3>
-        <p className="mt-2 text-sm leading-7 text-rose-500">
-          سيختفي الفستان من المخزون ولوحة البوتيك. لا يمكن التراجع عن هذا الإجراء في هذه الجلسة.
-        </p>
+        <p className="mt-2 text-sm leading-7 text-rose-500">{t("dresses.deleteBody")}</p>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <button type="button" onClick={onClose} className="rounded-2xl px-4 py-2 text-sm text-rose-400 hover:bg-rose-50">
-            إلغاء
+            {t("cancel")}
           </button>
           <button type="button" onClick={onConfirm} className="shop-btn-red rounded-2xl px-4 py-2 text-sm">
-            نعم، احذفي الفستان
+            {t("dresses.confirmDeleteYes")}
           </button>
         </div>
       </div>

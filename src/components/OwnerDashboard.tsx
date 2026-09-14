@@ -11,22 +11,15 @@ import { OwnerHistory } from "@/components/OwnerHistory";
 import { OwnerSnapshot } from "@/components/OwnerSnapshot";
 import { VariableExpenseLog } from "@/components/VariableExpenseLog";
 import { cn } from "@/lib/format";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
-const TABS = [
-  { id: "overview", label: "لوحة التحكم" },
-  { id: "floor", label: "بوتيك" },
-  { id: "customers", label: "العميلات" },
-  { id: "months", label: "الأشهر والسنوات" },
-  { id: "money", label: "الحسابات" },
-  { id: "roi", label: "أرباح الفساتين" },
-  { id: "staff", label: "الموظفات" },
-  { id: "permits", label: "التراخيص" },
-] as const;
+const TAB_IDS = ["overview", "floor", "customers", "months", "money", "roi", "staff", "permits"] as const;
 
-type OwnerTab = (typeof TABS)[number]["id"];
+type OwnerTab = (typeof TAB_IDS)[number];
 
 export function OwnerDashboard() {
   const [tab, setTab] = useState<OwnerTab>("overview");
+  const { t } = useLanguage();
 
   return (
     <div className="space-y-6">
@@ -34,23 +27,23 @@ export function OwnerDashboard() {
         <div
           className="inline-flex min-w-full rounded-2xl bg-white p-1 shadow-sm ring-2 ring-[#8b1530] sm:min-w-0"
           role="tablist"
-          aria-label="أقسام لوحة المالك"
+          aria-label={t("tab.aria")}
         >
-          {TABS.map((item) => {
-            const selected = tab === item.id;
+          {TAB_IDS.map((id) => {
+            const selected = tab === id;
             return (
               <button
-                key={item.id}
+                key={id}
                 type="button"
                 role="tab"
                 aria-selected={selected}
-                onClick={() => setTab(item.id)}
+                onClick={() => setTab(id)}
                 className={cn(
                   "flex-1 whitespace-nowrap rounded-xl px-3 py-2 text-sm transition sm:px-4",
                   selected ? "shop-btn shadow-sm" : "font-medium text-rose-700 hover:bg-rose-50",
                 )}
               >
-                {item.label}
+                {t(`tab.${id}`)}
               </button>
             );
           })}

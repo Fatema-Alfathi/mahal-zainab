@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BellRing, CalendarDays, HandHeart, RotateCcw, Shirt, Sparkles } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
 import { dailyAlertCountLabel, dailyAlerts, dailyAlertTotal, type DailyAlert, type DailyAlertKind } from "@/lib/dailyAlerts";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/format";
 
 const KIND_ICON: Record<DailyAlertKind, typeof BellRing> = {
@@ -18,18 +19,17 @@ const KIND_ICON: Record<DailyAlertKind, typeof BellRing> = {
 
 export function DailyAlerts({ compact = false }: { compact?: boolean }) {
   const { dresses, bookings } = useShop();
-  const alerts = useMemo(() => dailyAlerts(dresses, bookings), [bookings, dresses]);
+  const { t, locale } = useLanguage();
+  const alerts = useMemo(() => dailyAlerts(dresses, bookings), [bookings, dresses, locale]);
   const total = dailyAlertTotal(alerts);
 
   return (
-    <section className={cn("dash-panel rounded-3xl p-5", compact && "p-4")} aria-label="تنبيهات اليوم">
+    <section className={cn("dash-panel rounded-3xl p-5", compact && "p-4")} aria-label={t("alerts.aria")}>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium text-rose-400">البوتيك اليوم</p>
-          <h2 className="mt-1 text-lg text-rose-900">تنبيهات اليوم</h2>
-          <p className="mt-1 text-xs text-rose-400">
-            الغسيل، الإرجاع، التجهيز، وحجز الغد — عشان البوتيك ما يفوته شيء.
-          </p>
+          <p className="text-xs font-medium text-rose-400">{t("alerts.kicker")}</p>
+          <h2 className="mt-1 text-lg text-rose-900">{t("alerts.title")}</h2>
+          <p className="mt-1 text-xs text-rose-400">{t("alerts.lead")}</p>
         </div>
         <span
           className={cn(
@@ -41,7 +41,7 @@ export function DailyAlerts({ compact = false }: { compact?: boolean }) {
         </span>
       </div>
       {alerts.length === 0 ? (
-        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">ما في تنبيهات لليوم. البوتيك مرتب.</p>
+        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{t("alerts.empty")}</p>
       ) : (
         <ul className="space-y-2">
           {alerts.map((alert) => (

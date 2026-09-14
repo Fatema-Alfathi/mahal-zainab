@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { BrandLogo } from "@/components/BrandLogo";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/format";
 
 export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses" | "customers" | "calendar" }) {
   const { isOwner } = useShop();
+  const { t } = useLanguage();
   const onHome = active === "home";
   const onDresses = active === "dresses";
   const onCustomers = active === "customers";
@@ -19,11 +22,11 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
         <div className="flex items-center gap-3">
           <BrandLogo />
           <div>
-            <p className="font-serif text-2xl text-white">بوتيك YAL</p>
-            <p className="text-sm font-medium text-[#ffd76a]">تأجير فساتين الزفاف والسهرات</p>
+            <p className="font-serif text-2xl text-white">{t("brand")}</p>
+            <p className="text-sm font-medium text-[#ffd76a]">{t("tagline")}</p>
           </div>
         </div>
-        <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label="صفحات البوتيك">
+        <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label={t("nav.pages")}>
           <Link
             href="/"
             className={cn(
@@ -31,7 +34,7 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
               onHome ? "shop-btn-gold shadow-sm" : "text-white hover:bg-white/15",
             )}
           >
-            {isOwner ? "لوحة التحكم" : "البوتيك"}
+            {isOwner ? t("nav.dashboard") : t("nav.floor")}
           </Link>
           <Link
             href="/customers"
@@ -40,7 +43,7 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
               onCustomers ? "shop-btn-gold shadow-sm" : "text-white hover:bg-white/15",
             )}
           >
-            العميلات
+            {t("nav.customers")}
           </Link>
           <Link
             href="/calendar"
@@ -49,7 +52,7 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
               onCalendar ? "shop-btn-gold shadow-sm" : "text-white hover:bg-white/15",
             )}
           >
-            التقويم
+            {t("nav.calendar")}
           </Link>
           <Link
             href="/dresses"
@@ -58,10 +61,13 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
               onDresses ? "shop-btn-gold shadow-sm" : "text-white hover:bg-white/15",
             )}
           >
-            إدارة الفساتين
+            {t("nav.dresses")}
           </Link>
         </nav>
-        <RoleSwitcher />
+        <div className="flex flex-col items-start gap-3 sm:items-end">
+          <LanguageToggle />
+          <RoleSwitcher />
+        </div>
       </div>
     </header>
   );

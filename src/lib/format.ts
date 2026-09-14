@@ -1,3 +1,5 @@
+import { t } from "@/i18n/t";
+
 export function formatSignedCurrency(amount: number): string {
   return amount < 0 ? `−${formatCurrency(Math.abs(amount))}` : formatCurrency(amount);
 }
@@ -9,7 +11,7 @@ export function formatCurrency(amount: number): string {
     minimumFractionDigits: hasBaisa ? 3 : 0,
     maximumFractionDigits: 3,
   }).format(rounded);
-  return `\u202A${formatted}\u202C ر.ع.`;
+  return `\u202A${formatted}\u202C ${t("currency")}`;
 }
 
 export function formatCurrencyPrecise(amount: number): string {
@@ -21,28 +23,10 @@ export function formatPercent(value: number): string {
   return `${sign}${value.toFixed(1)}٪`;
 }
 
-const MONTHS_AR = [
-  "يناير",
-  "فبراير",
-  "مارس",
-  "أبريل",
-  "مايو",
-  "يونيو",
-  "يوليو",
-  "أغسطس",
-  "سبتمبر",
-  "أكتوبر",
-  "نوفمبر",
-  "ديسمبر",
-];
-
-const WEEKDAYS_AR = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-const MONTHS_SHORT_AR = ["ينا", "فبر", "مار", "أبر", "ماي", "يون", "يول", "أغس", "سبت", "أكت", "نوف", "ديس"];
-
 export function formatDate(isoDate: string): string {
   const [year, month, day] = isoDate.split("-").map(Number);
   if (!year || !month || !day) return isoDate;
-  return `${day} ${MONTHS_AR[month - 1]} ${year}`;
+  return `${day} ${t(`month.${month}`)} ${year}`;
 }
 
 export function formatDateOrDash(isoDate: string): string {
@@ -52,12 +36,12 @@ export function formatDateOrDash(isoDate: string): string {
 export function formatDateLong(isoDate: string): string {
   const date = parseIso(isoDate);
   if (Number.isNaN(date.getTime())) return isoDate;
-  return `${WEEKDAYS_AR[date.getDay()]} ${formatDate(isoDate)}`;
+  return `${t(`weekday.${date.getDay()}`)} ${formatDate(isoDate)}`;
 }
 
 export function monthNameShortAr(iso: string): string {
   const month = Number(iso.slice(5, 7));
-  return MONTHS_SHORT_AR[(month || 1) - 1] ?? iso;
+  return t(`monthShort.${month || 1}`);
 }
 
 export function todayIso(): string {
@@ -145,6 +129,10 @@ export function eachIsoDate(start: string, end: string): string[] {
 
 export const WEEKDAYS_SAT_AR = ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"] as const;
 
+export function weekdaysSat(): string[] {
+  return [0, 1, 2, 3, 4, 5, 6].map((index) => t(`weekSat.${index}`));
+}
+
 export function weekdaySatIndex(iso: string): number {
   const [year, month, day] = iso.split("-").map(Number);
   return (new Date(year, (month ?? 1) - 1, day ?? 1).getDay() + 1) % 7;
@@ -152,7 +140,7 @@ export function weekdaySatIndex(iso: string): number {
 
 export function monthNameAr(iso: string): string {
   const month = Number(iso.slice(5, 7));
-  return MONTHS_AR[(month || 1) - 1] ?? iso;
+  return t(`month.${month || 1}`);
 }
 
 export function monthYearLabel(iso: string): string {

@@ -1,4 +1,5 @@
 import { dressNeedsAlteration } from "@/lib/dressCatalog";
+import { t } from "@/i18n/t";
 import { joinArabic } from "@/lib/labels";
 import { formatDate, shiftIso, todayIso } from "@/lib/format";
 import type { Booking, Dress } from "@/types";
@@ -56,28 +57,28 @@ function namedItem(dress: Dress, booking?: Booking, note = ""): DailyAlertItem {
 
 function namesLine(items: DailyAlertItem[]): string {
   return joinArabic(
-    items.map((item) => (item.customerName ? `${item.dressName} لـ ${item.customerName}` : item.dressName)),
+    items.map((item) => (item.customerName ? t("alert.namedFor", { dress: item.dressName, name: item.customerName }) : item.dressName)),
   );
 }
 
 function dressesCountPhrase(
   count: number,
   named: string | undefined,
-  forms: { one: string; two: string; few: string; many: string },
+  kind: "overdue" | "returnToday" | "clean" | "pickup" | "prep" | "tomorrow",
 ): string {
-  if (count === 1 && named) return `${named} ${forms.one}`;
-  if (count === 1) return `فستان ${forms.one}`;
-  if (count === 2) return forms.two;
-  if (count >= 3 && count <= 10) return `${count} ${forms.few}`;
-  return `${count} ${forms.many}`;
+  if (count === 1 && named) return `${named} ${t(`alert.${kind}.one`)}`;
+  if (count === 1) return t("alert.dressWord", { phrase: t(`alert.${kind}.one`) });
+  if (count === 2) return t(`alert.${kind}.two`);
+  if (count >= 3 && count <= 10) return `${count} ${t(`alert.${kind}.few`)}`;
+  return `${count} ${t(`alert.${kind}.many`)}`;
 }
 
 function alertsCountLabel(count: number): string {
-  if (count === 0) return "ما في تنبيهات";
-  if (count === 1) return "تنبيه واحد";
-  if (count === 2) return "تنبيهان";
-  if (count >= 3 && count <= 10) return `${count} تنبيهات`;
-  return `${count} تنبيه`;
+  if (count === 0) return t("alerts.none");
+  if (count === 1) return t("alerts.one");
+  if (count === 2) return t("alerts.two");
+  if (count >= 3 && count <= 10) return t("alerts.few", { n: count });
+  return t("alerts.many", { n: count });
 }
 
 export function dailyAlertCountLabel(count: number): string {
@@ -88,7 +89,7 @@ function buildAlert(
   kind: DailyAlertKind,
   items: DailyAlertItem[],
   tone: DailyAlertTone,
-  forms: { one: string; two: string; few: string; many: string },
+  phraseKind: "overdue" | "returnToday" | "clean" | "pickup" | "prep" | "tomorrow",
   detailForOne?: string,
   title?: string,
 ): DailyAlert | null {
@@ -97,7 +98,7 @@ function buildAlert(
   return {
     id: kind,
     kind,
-    title: title ?? dressesCountPhrase(items.length, named, forms),
+    title: title ?? dressesCountPhrase(items.length, named, phraseKind),
     detail: items.length === 1 ? (detailForOne ?? items[0].note) : namesLine(items),
     tone,
     items,
@@ -125,20 +126,22 @@ export function dailyAlerts(dresses: Dress[], bookings: Booking[], today = today
     const due = returnOf(booking);
 
     if (due < today) {
-      overdueItems.push(namedItem(dress, booking, `كان الإرجاع ${formatDate(due)}`));
+      overdueItems.push(namedItem(dress, booking, t("alert.wasDue", { date: formatDate(due) })));
     } else if (due === today) {
-      returnTodayItems.push(namedItem(dress, booking, booking.customerName ? `من ${booking.customerName}` : "موعد الإرجاع اليوم"));
+      returnTodayItems.push(
+        namedItem(dress, booking, booking.customerName ? t("alert.from", { name: booking.customerName }) : t("alert.returnTodayNote")),
+      );
     }
 
     if (pickup === today && dress.status !== "rented") {
       pickupTodayItems.push(
-        namedItem(dress, booking, booking.customerName ? `تسليم لـ ${booking.customerName}` : "يُسلَّم اليوم"),
+        namedItem(dress, booking, booking.customerName ? t("alert.handoverTo", { name: booking.customerName }) : t("alert.handoverToday")),
       );
     }
 
     if (pickup === tomorrow) {
       tomorrowItems.push(
-        namedItem(dress, booking, booking.customerName ? `حجز ${booking.customerName}` : "الحجز باكر"),
+        namedItem(dress, booking, booking.customerName ? t("alert.bookName", { name: booking.customerName }) : t("alert.bookTomorrow")),
       );
     }
 
@@ -148,7 +151,8 @@ export function dailyAlerts(dresses: Dress[], bookings: Booking[], today = today
       (dressNeedsAlteration(dress, [booking]) || booking.needsFitting);
     if (needsPrepWork && !seenPrep.has(dress.id)) {
       seenPrep.add(dress.id);
-      const when = pickup === today ? "للاستلام اليوم" : pickup === tomorrow ? "قبل حجز الغد" : `قبل الاستلام ${formatDate(pickup)}`;
+      const when =
+        pickup === today ? t("alert.prepToday") : pickup === tomorrow ? t("alert.prepTomorrow") : t("alert.prepBefore", { date: formatDate(pickup) });
       prepItems.push(namedItem(dress, booking, when));
     }
   }
@@ -158,74 +162,20 @@ export function dailyAlerts(dresses: Dress[], bookings: Booking[], today = today
       "return-overdue",
       overdueItems,
       "red",
-      {
-        one: "متأخر عن الإرجاع",
-        two: "فستانان متأخران عن الإرجاع",
-        few: "فساتين متأخرات عن الإرجاع",
-        many: "فستان متأخر عن الإرجاع",
-      },
+      "overdue",
       overdueItems[0] ? `${overdueItems[0].note}${overdueItems[0].customerName ? ` — ${overdueItems[0].customerName}` : ""}` : "",
     ),
-    buildAlert(
-      "return-today",
-      returnTodayItems,
-      "red",
-      {
-        one: "موعد إرجاعه اليوم",
-        two: "فستانان موعد إرجاعهما اليوم",
-        few: "فساتين موعد إرجاعهن اليوم",
-        many: "فستان موعد إرجاعه اليوم",
-      },
-      returnTodayItems[0]?.note,
-    ),
-    buildAlert(
-      "cleaning",
-      cleaningItems,
-      "red",
-      {
-        one: "يحتاج غسيل",
-        two: "فستانان يحتاجان غسيل",
-        few: "فساتين يحتاجن غسيل",
-        many: "فستان يحتاج غسيل",
-      },
-      "رجّعيه للبوتيك بعد الغسيل",
-    ),
-    buildAlert(
-      "pickup-today",
-      pickupTodayItems,
-      "yellow",
-      {
-        one: "يُسلَّم اليوم",
-        two: "فستانان يُسلَّمان اليوم",
-        few: "فساتين تُسلَّم اليوم",
-        many: "فستان يُسلَّم اليوم",
-      },
-      pickupTodayItems[0]?.note,
-    ),
-    buildAlert(
-      "prep",
-      prepItems,
-      "wine",
-      {
-        one: "يحتاج تجهيز",
-        two: "فستانان يحتاجان تجهيز",
-        few: "فساتين يحتاجن تجهيز",
-        many: "فستان يحتاج تجهيز",
-      },
-      prepItems[0]?.note,
-    ),
+    buildAlert("return-today", returnTodayItems, "red", "returnToday", returnTodayItems[0]?.note),
+    buildAlert("cleaning", cleaningItems, "red", "clean", t("alert.clean.detail")),
+    buildAlert("pickup-today", pickupTodayItems, "yellow", "pickup", pickupTodayItems[0]?.note),
+    buildAlert("prep", prepItems, "wine", "prep", prepItems[0]?.note),
     buildAlert(
       "booking-tomorrow",
       tomorrowItems,
       "blue",
-      {
-        one: "حجز الغد",
-        two: "حجزان باكر",
-        few: "حجوزات باكر",
-        many: "حجز باكر",
-      },
-      tomorrowItems[0] ? (tomorrowItems[0].customerName ? `لـ ${tomorrowItems[0].customerName}` : "الاستلام باكر") : "",
-      tomorrowItems.length === 1 ? `حجز الغد: ${tomorrowItems[0].dressName}` : undefined,
+      "tomorrow",
+      tomorrowItems[0] ? (tomorrowItems[0].customerName ? t("alert.forName", { name: tomorrowItems[0].customerName }) : t("alert.pickupTomorrow")) : "",
+      tomorrowItems.length === 1 ? t("alert.tomorrowNamed", { name: tomorrowItems[0].dressName }) : undefined,
     ),
   ];
 
