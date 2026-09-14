@@ -45,6 +45,10 @@ export function formatDate(isoDate: string): string {
   return `${day} ${MONTHS_AR[month - 1]} ${year}`;
 }
 
+export function formatDateOrDash(isoDate: string): string {
+  return isoDate ? formatDate(isoDate) : "—";
+}
+
 export function formatDateLong(isoDate: string): string {
   const date = parseIso(isoDate);
   if (Number.isNaN(date.getTime())) return isoDate;

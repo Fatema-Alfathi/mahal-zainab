@@ -12,6 +12,8 @@ import {
   Wallet,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
+import { DailyAlerts } from "@/components/DailyAlerts";
+import { GovernmentRecords } from "@/components/GovernmentRecords";
 import { useShop } from "@/context/ShopContext";
 import { ownerHistory, ownerSnapshot } from "@/lib/ownerSnapshot";
 import { comparisonLabel } from "@/lib/labels";
@@ -46,7 +48,7 @@ export function OwnerSnapshot() {
             <BrandLogo size="md" />
             <div>
               <p className="text-sm font-medium text-[#ffd76a]">لوحة تحكم المالك</p>
-              <h2 className="mt-2 font-serif text-3xl text-white sm:text-4xl">محل زينب</h2>
+              <h2 className="mt-2 font-serif text-3xl text-white sm:text-4xl">بوتيك YAL</h2>
               <p className="mt-2 text-sm text-white" suppressHydrationWarning>
                 {formatDateLong(todayIso())}
               </p>
@@ -65,6 +67,10 @@ export function OwnerSnapshot() {
           </div>
         </div>
       </div>
+
+      <DailyAlerts />
+
+      <GovernmentRecords />
 
       <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi

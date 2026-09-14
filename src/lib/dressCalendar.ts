@@ -15,6 +15,7 @@ export function dressBookingHistory(bookings: Booking[], dressId: string): Booki
 }
 
 export function bookingCoversDate(booking: Booking, date: string): boolean {
+  if (booking.status === "cancelled") return false;
   return isIsoInRange(date, booking.startDate, booking.endDate);
 }
 
@@ -40,6 +41,7 @@ export function markDressDay(
 }
 
 export function bookingRecordLabel(booking: Booking, dress: Dress): string {
+  if (booking.status === "cancelled") return "ملغي";
   if (booking.status === "completed") return "حجز سابق";
   if (dress.status === "rented") return "عند العميلة";
   return "محجوز";

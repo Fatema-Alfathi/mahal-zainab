@@ -43,7 +43,7 @@ export function ReturnDialog({ dress, onClose }: { dress: Dress; onClose: () => 
             </p>
           ) : (
             <p className="rounded-xl bg-rose-50 px-3 py-2">
-              تُسجَّل العناية القياسية بعد التأجير تلقائياً. يعود الفستان إلى الصالة بعد انتهاء الصيانة.
+              تُسجَّل العناية القياسية بعد التأجير تلقائياً. يعود الفستان إلى البوتيك بعد انتهاء الصيانة.
             </p>
           )}
           {insuranceToReturn > 0 ? (

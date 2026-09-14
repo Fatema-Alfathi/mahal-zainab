@@ -743,7 +743,7 @@ function ConfirmDeleteDialog({
           حذف {dress.name}؟
         </h3>
         <p className="mt-2 text-sm leading-7 text-rose-500">
-          سيختفي الفستان من المخزون ولوحة المحل. لا يمكن التراجع عن هذا الإجراء في هذه الجلسة.
+          سيختفي الفستان من المخزون ولوحة البوتيك. لا يمكن التراجع عن هذا الإجراء في هذه الجلسة.
         </p>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <button type="button" onClick={onClose} className="rounded-2xl px-4 py-2 text-sm text-rose-400 hover:bg-rose-50">

@@ -31,6 +31,7 @@ export function BookingModal({
   const [phone, setPhone] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [startDate, setStartDate] = useState(todayIso());
+  const [handoverDate, setHandoverDate] = useState(todayIso());
   const [endDate, setEndDate] = useState(todayIso());
   const [needsAlterations, setNeedsAlterations] = useState(false);
   const [needsFitting, setNeedsFitting] = useState(false);
@@ -107,6 +108,9 @@ export function BookingModal({
       eventDate,
       startDate,
       endDate,
+      pickupDate: startDate,
+      handoverDate,
+      returnDate: endDate,
       discountType: effectiveType,
       discountValue: effectiveType === "none" ? 0 : effectiveValue,
       depositPaid: parsedDeposit,
@@ -205,7 +209,7 @@ export function BookingModal({
               />
             </label>
             <label className="block text-sm">
-              <span className="mb-1 block text-rose-700">تاريخ المناسبة</span>
+              <span className="mb-1 block text-rose-700">تاريخ الزفاف</span>
               <input
                 type="date"
                 value={eventDate}
@@ -220,7 +224,19 @@ export function BookingModal({
               <input
                 type="date"
                 value={startDate}
-                onChange={(event) => setStartDate(event.target.value)}
+                onChange={(event) => {
+                  setStartDate(event.target.value);
+                  if (!handoverDate || handoverDate === startDate) setHandoverDate(event.target.value);
+                }}
+                className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2 text-rose-900"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block text-rose-700">موعد التسليم</span>
+              <input
+                type="date"
+                value={handoverDate}
+                onChange={(event) => setHandoverDate(event.target.value)}
                 className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2 text-rose-900"
               />
             </label>

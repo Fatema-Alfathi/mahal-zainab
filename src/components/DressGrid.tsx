@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, CalendarPlus, CheckCircle2, HandHeart, RotateCcw, Sparkles, X } from "lucide-react";
+import { CalendarDays, CalendarPlus, CheckCircle2, Ban, HandHeart, RotateCcw, Sparkles, X } from "lucide-react";
 import { BookingModal } from "@/components/BookingModal";
+import { DailyAlerts } from "@/components/DailyAlerts";
 import { DressCalendarPanel } from "@/components/DressBookingCalendar";
 import { DressBarcode } from "@/components/DressBarcode";
 import { DressGallery } from "@/components/DressGallery";
@@ -59,10 +60,11 @@ const FILTERS: Array<{ id: StatusFilter; label: string }> = [
 ];
 
 export function DressGrid() {
-  const { dresses, bookings, isOwner, pickupDress, completeMaintenance } = useShop();
+  const { dresses, bookings, isOwner, pickupDress, completeMaintenance, cancelBooking } = useShop();
   const [bookingDress, setBookingDress] = useState<Dress | null>(null);
   const [returningDress, setReturningDress] = useState<Dress | null>(null);
   const [barcodeDress, setBarcodeDress] = useState<Dress | null>(null);
+  const [pendingCancelId, setPendingCancelId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sizeFilter, setSizeFilter] = useState<SizeFilterValue>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilterValue>("all");
@@ -93,10 +95,10 @@ export function DressGrid() {
     <section>
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm text-rose-400">الصالة</p>
-          <h2 className="mt-1 text-3xl font-medium text-rose-900">فساتين المحل</h2>
+          <p className="text-sm text-rose-400">بوتيك</p>
+          <h2 className="mt-1 text-3xl font-medium text-rose-900">فساتين البوتيك</h2>
           <p className="mt-2 text-sm leading-7 text-rose-600/80">
-            ابحثي بالاسم أو الباركود، بعدين احجزي أو رجّعي أو أرجعي الفستان للصالة.
+            ابحثي بالاسم أو الباركود، بعدين احجزي أو رجّعي أو أرجعي الفستان للبوتيك.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -107,6 +109,9 @@ export function DressGrid() {
             إدارة الفساتين
           </Link>
         </div>
+      </div>
+      <div className="mb-5">
+        <DailyAlerts compact />
       </div>
       <div className="mb-4 space-y-3">
         <input
@@ -308,6 +313,19 @@ export function DressGrid() {
                       إعادة للصالة
                     </button>
                   ) : null}
+                  {dress.status === "reserved" || dress.status === "rented" ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const booking = bookings.find((item) => item.dressId === dress.id && item.status === "active");
+                        if (booking) setPendingCancelId(booking.id);
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-2xl bg-white px-3 py-1.5 text-xs text-red-600 ring-1 ring-red-200 hover:bg-red-50"
+                    >
+                      <Ban className="h-3.5 w-3.5" aria-hidden />
+                      إلغاء الحجز
+                    </button>
+                  ) : null}
                   {dress.status === "maintenance" ? (
                     <span className="inline-flex items-center gap-1 text-xs text-red-600">
                       <Sparkles className="h-3.5 w-3.5" aria-hidden />
@@ -329,6 +347,30 @@ export function DressGrid() {
       ) : null}
       {returningDress ? <ReturnDialog dress={returningDress} onClose={() => setReturningDress(null)} /> : null}
       {barcodeDress ? <BarcodeDialog dress={barcodeDress} onClose={() => setBarcodeDress(null)} /> : null}
+      {pendingCancelId ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
+          <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق" onClick={() => setPendingCancelId(null)} />
+          <div className="shop-card relative w-full max-w-md rounded-3xl p-6">
+            <h3 className="text-xl text-rose-900">إلغاء هذا الحجز؟</h3>
+            <p className="mt-2 text-sm leading-6 text-rose-600">ينتقل لقائمة الحجوزات الملغاة، والفستان يرجع للصالة.</p>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button type="button" onClick={() => setPendingCancelId(null)} className="rounded-2xl bg-rose-50 px-4 py-2 text-sm text-rose-800">
+                تراجع
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  cancelBooking(pendingCancelId);
+                  setPendingCancelId(null);
+                }}
+                className="shop-btn-red rounded-2xl px-4 py-2 text-sm"
+              >
+                تأكيد الإلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { DressGrid } from "@/components/DressGrid";
 import { EmployeeManager } from "@/components/EmployeeManager";
+import { GovernmentRecords } from "@/components/GovernmentRecords";
 import { DressRoiTable } from "@/components/DressRoiTable";
 import { FixedCostBreakdown } from "@/components/FixedCostBreakdown";
 import { CustomerManager } from "@/components/CustomerManager";
@@ -13,12 +14,13 @@ import { cn } from "@/lib/format";
 
 const TABS = [
   { id: "overview", label: "لوحة التحكم" },
-  { id: "floor", label: "الصالة" },
+  { id: "floor", label: "بوتيك" },
   { id: "customers", label: "العميلات" },
   { id: "months", label: "الأشهر والسنوات" },
   { id: "money", label: "الحسابات" },
   { id: "roi", label: "أرباح الفساتين" },
   { id: "staff", label: "الموظفات" },
+  { id: "permits", label: "التراخيص" },
 ] as const;
 
 type OwnerTab = (typeof TABS)[number]["id"];
@@ -67,6 +69,7 @@ export function OwnerDashboard() {
       ) : null}
       {tab === "roi" ? <DressRoiTable /> : null}
       {tab === "staff" ? <EmployeeManager /> : null}
+      {tab === "permits" ? <GovernmentRecords /> : null}
     </div>
   );
 }

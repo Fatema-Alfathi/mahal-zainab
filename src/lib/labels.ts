@@ -1,5 +1,6 @@
 import type {
   AuthorizedDiscountType,
+  BookingStatus,
   DiscountType,
   DressCategory,
   EmployeeDiscountPolicy,
@@ -32,6 +33,12 @@ export const DISCOUNT_TYPE_LABELS: Record<DiscountType, string> = {
   none: "بدون خصم",
   percent: "نسبة مئوية",
   amount: "مبلغ ثابت",
+};
+
+export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
+  active: "ساري",
+  completed: "مكتمل",
+  cancelled: "ملغي",
 };
 
 export function daysLabel(days: number): string {

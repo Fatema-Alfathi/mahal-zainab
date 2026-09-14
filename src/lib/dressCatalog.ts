@@ -122,7 +122,7 @@ export function measurementLine(measurements: DressMeasurements): string {
 export function dressDisplay(dress: Dress) {
   const extra = DRESS_PRESENTATION[dress.id];
   return {
-    designer: extra?.designer ?? "محل زينب",
+    designer: extra?.designer ?? "بوتيك YAL",
     silhouette: dress.silhouette || extra?.silhouette || "",
     palette: extra?.palette ?? "from-rose-100 via-amber-50 to-rose-200",
     images: dress.images.length > 0 ? dress.images : extra?.images ?? [],

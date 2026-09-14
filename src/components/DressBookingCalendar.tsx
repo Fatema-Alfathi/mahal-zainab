@@ -67,11 +67,11 @@ export function DressBookingCalendar() {
 
   return (
     <section>
-      <div className="mb-6">
-        <p className="text-sm text-rose-400">سجل الحجوزات</p>
-        <h1 className="mt-1 text-3xl font-medium text-rose-900">تقويم الفساتين</h1>
+      <div className="mb-6" id="dress-calendar">
+        <p className="text-sm text-rose-400">فستان واحد</p>
+        <h2 className="mt-1 text-2xl font-medium text-rose-900">تقويم الفستان</h2>
         <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">
-          ابحثي بالاسم أو الكود، وتقويم هالفستان يظهر مباشرة مع تواريخ حجوزاته.
+          ابحثي بالاسم أو الكود إذا تبينين حجوزات فستان معيّن.
         </p>
       </div>
 

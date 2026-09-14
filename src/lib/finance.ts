@@ -65,7 +65,9 @@ export function calculateBookingRevenue(
 }
 
 export function grossRevenue(bookings: Booking[]): number {
-  return bookings.reduce((sum, booking) => sum + booking.totalRevenueGenerated, 0);
+  return bookings
+    .filter((booking) => booking.status !== "cancelled")
+    .reduce((sum, booking) => sum + booking.totalRevenueGenerated, 0);
 }
 
 export function totalFixedExpenses(fixedExpenses: FixedExpense[]): number {
@@ -102,7 +104,7 @@ export function sumByCategory(
 
 export function dressRentalRevenue(dressId: string, bookings: Booking[]): number {
   return bookings
-    .filter((booking) => booking.dressId === dressId)
+    .filter((booking) => booking.dressId === dressId && booking.status !== "cancelled")
     .reduce((sum, booking) => sum + booking.totalRevenueGenerated, 0);
 }
 

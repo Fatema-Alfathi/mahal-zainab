@@ -19,11 +19,11 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
         <div className="flex items-center gap-3">
           <BrandLogo />
           <div>
-            <p className="font-serif text-2xl text-white">محل زينب</p>
+            <p className="font-serif text-2xl text-white">بوتيك YAL</p>
             <p className="text-sm font-medium text-[#ffd76a]">تأجير فساتين الزفاف والسهرات</p>
           </div>
         </div>
-        <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label="صفحات المحل">
+        <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label="صفحات البوتيك">
           <Link
             href="/"
             className={cn(
@@ -31,7 +31,7 @@ export function BoutiqueHeader({ active = "home" }: { active?: "home" | "dresses
               onHome ? "shop-btn-gold shadow-sm" : "text-white hover:bg-white/15",
             )}
           >
-            لوحة المحل
+            لوحة البوتيك
           </Link>
           <Link
             href="/customers"
