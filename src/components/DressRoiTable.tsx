@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { BadgeCheck, CircleDollarSign, Shirt, TrendingUp } from "lucide-react";
 import { DressVariants } from "@/components/DressVariants";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import {
   capitalRecoveryPercent,
   dressAcquisitionCost,
@@ -17,6 +18,7 @@ import { cn, formatCurrency } from "@/lib/format";
 
 export function DressRoiTable() {
   const { dresses, bookings, variableExpenses } = useShop();
+  const { t } = useLanguage();
 
   const rows = useMemo(
     () =>
@@ -38,15 +40,11 @@ export function DressRoiTable() {
   const totalRevenue = rows.reduce((sum, row) => sum + row.revenue, 0);
 
   return (
-    <section className="space-y-5">
-      <div>
-        <p className="text-sm font-medium text-[var(--salla-primary)]">كل فستان لحاله</p>
-        <h3 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-3xl">
-          هل رجّع سعره؟
-        </h3>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--salla-muted)]">
-          سعر الشراء رأس مال. الربح يظهر بعد ما يغطي التأجير سعر الفستان والتنظيف والإصلاح.
-        </p>
+    <section>
+      <div className="mb-5">
+        <p className="text-sm text-[var(--salla-muted)]">{t("roi.kicker")}</p>
+        <h3 className="mt-1 text-2xl font-medium text-[var(--foreground)] sm:text-3xl">{t("roi.title")}</h3>
+        <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">{t("roi.lead")}</p>
       </div>
 
       <dl className="grid gap-3 sm:grid-cols-3">
@@ -111,22 +109,28 @@ export function DressRoiTable() {
 
               <div className="flex flex-1 flex-col gap-4 p-5">
                 <DressVariants dress={dress} dresses={dresses} />
-
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <Stat label="تكلفة الفستان" value={formatCurrency(landed)} />
-                  <Stat label="دخل منه" value={formatCurrency(revenue)} accent="primary" />
-                  <Stat label="تنظيف" value={formatCurrency(cleaning)} />
-                  <Stat
-                    label="تصليح"
-                    value={formatCurrency(repair)}
-                    accent={repair > 0 ? "danger" : "default"}
-                  />
+                <dl className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
+                  <div className="rounded-xl bg-[var(--salla-soft)] px-3 py-2">
+                    <dt className="text-[11px] text-[var(--salla-muted)]">{t("roi.cost")}</dt>
+                    <dd className="mt-0.5 tabular-nums text-[var(--foreground)]">{formatCurrency(landed)}</dd>
+                  </div>
+                  <div className="rounded-xl bg-amber-50 px-3 py-2 dark:bg-amber-950/40">
+                    <dt className="text-[11px] text-amber-700 dark:text-amber-300">{t("roi.earned")}</dt>
+                    <dd className="mt-0.5 tabular-nums text-amber-900 dark:text-amber-200">{formatCurrency(revenue)}</dd>
+                  </div>
+                  <div className="rounded-xl bg-yellow-50 px-3 py-2 dark:bg-yellow-950/40">
+                    <dt className="text-[11px] text-yellow-700 dark:text-yellow-300">{t("roi.cleaning")}</dt>
+                    <dd className="mt-0.5 tabular-nums text-yellow-900 dark:text-yellow-200">{formatCurrency(cleaning)}</dd>
+                  </div>
+                  <div className="rounded-xl bg-red-50 px-3 py-2 dark:bg-red-950/40">
+                    <dt className="text-[11px] text-red-700 dark:text-red-300">{t("roi.repair")}</dt>
+                    <dd className="mt-0.5 tabular-nums text-red-900 dark:text-red-200">{formatCurrency(repair)}</dd>
+                  </div>
                 </dl>
-
                 <div>
                   <div className="mb-1.5 flex justify-between text-xs">
                     <span className="text-[var(--salla-muted)]">
-                      {brokenEven ? "رجع رأس المال" : "كم رجّع من سعره"}
+                      {brokenEven ? t("roi.brokeEven") : t("roi.recovered")}
                     </span>
                     <span
                       className={cn(
@@ -134,7 +138,7 @@ export function DressRoiTable() {
                         brokenEven ? "text-[var(--salla-success)]" : "text-[var(--salla-primary)]",
                       )}
                     >
-                      {Math.round(barWidth)}٪
+                      {t("disc.percentValue", { value: Math.round(barWidth) })}
                     </span>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-[var(--salla-soft)]">

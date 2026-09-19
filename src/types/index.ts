@@ -32,7 +32,7 @@ export type VariableExpenseCategory =
   | "Dress Repair"
   | "Utility Bills"
   | "Other";
-export type BookingStatus = "active" | "completed";
+export type BookingStatus = "active" | "completed" | "cancelled";
 export type DiscountType = "none" | "percent" | "amount";
 export type AuthorizedDiscountType = Exclude<DiscountType, "none">;
 export type UserRole = "owner" | "employee";
@@ -121,6 +121,24 @@ export type CustomerDraft = {
   notes: string;
 };
 
+export const GOVERNMENT_RECORD_KINDS = ["lease", "register", "license", "other"] as const;
+export type GovernmentRecordKind = (typeof GOVERNMENT_RECORD_KINDS)[number];
+
+export interface GovernmentRecord {
+  id: string;
+  kind: GovernmentRecordKind;
+  name: string;
+  renewalDate: string;
+  notes: string;
+}
+
+export type GovernmentRecordDraft = {
+  kind: GovernmentRecordKind;
+  name: string;
+  renewalDate: string;
+  notes: string;
+};
+
 export const EMPLOYEE_JOB_TITLES = ["بائعة", "مساعدة", "تعديلات", "استقبال"] as const;
 export type EmployeeJobTitle = (typeof EMPLOYEE_JOB_TITLES)[number];
 
@@ -156,6 +174,8 @@ export interface Booking {
   startDate: string;
   endDate: string;
   pickupDate: string;
+  handoverDate: string;
+  eventDate: string;
   returnDate: string;
   needsFitting: boolean;
   needsAlterations: boolean;
@@ -171,13 +191,18 @@ export interface Booking {
   insurancePaid: number;
   insuranceReturned: boolean;
   status: BookingStatus;
+  cancelledAt: string;
 }
 
 export interface ShopState {
   role: UserRole;
+  signedIn: boolean;
+  sessionName: string;
+  employeeId: string;
   dresses: Dress[];
   customers: Customer[];
   employees: Employee[];
+  governmentRecords: GovernmentRecord[];
   fixedExpenses: FixedExpense[];
   variableExpenses: VariableExpense[];
   bookings: Booking[];

@@ -36,8 +36,8 @@ const thmanyah = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "YAL · محل زينب · تأجير فساتين الزفاف والسهرات",
-  description: "نظام مالي ومخزوني لمحل زينب لتأجير فساتين الزفاف والسهرات.",
+  title: "YAL Boutique · بوتيك YAL",
+  description: "Boutique management for YAL wedding and evening dress rentals.",
   icons: {
     icon: "/yal-logo.jpg",
     apple: "/yal-logo.jpg",
@@ -54,7 +54,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className={`${thmanyah.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="ar" dir="rtl" className={`${thmanyah.variable} ${thmanyah.className} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full bg-[var(--salla-bg)] font-sans text-[var(--foreground)]">
         <Providers>{children}</Providers>
       </body>

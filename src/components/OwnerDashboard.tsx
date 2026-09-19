@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   CalendarRange,
+  FileText,
   LayoutDashboard,
   Shirt,
   Users,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 import { DressGrid } from "@/components/DressGrid";
 import { EmployeeManager } from "@/components/EmployeeManager";
+import { GovernmentRecords } from "@/components/GovernmentRecords";
 import { DressRoiTable } from "@/components/DressRoiTable";
 import { FixedCostBreakdown } from "@/components/FixedCostBreakdown";
 import { CustomerManager } from "@/components/CustomerManager";
@@ -19,21 +21,24 @@ import { OwnerHistory } from "@/components/OwnerHistory";
 import { OwnerSnapshot } from "@/components/OwnerSnapshot";
 import { VariableExpenseLog } from "@/components/VariableExpenseLog";
 import { cn } from "@/lib/format";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 const TABS = [
-  { id: "overview", label: "لوحة التحكم", icon: LayoutDashboard },
-  { id: "floor", label: "الصالة", icon: Shirt },
-  { id: "customers", label: "العميلات", icon: Users },
-  { id: "months", label: "الأشهر والسنوات", icon: CalendarRange },
-  { id: "money", label: "الحسابات", icon: Wallet },
-  { id: "roi", label: "أرباح الفساتين", icon: TrendingUp },
-  { id: "staff", label: "الموظفات", icon: UserRound },
+  { id: "overview", icon: LayoutDashboard },
+  { id: "floor", icon: Shirt },
+  { id: "customers", icon: Users },
+  { id: "months", icon: CalendarRange },
+  { id: "money", icon: Wallet },
+  { id: "roi", icon: TrendingUp },
+  { id: "staff", icon: UserRound },
+  { id: "permits", icon: FileText },
 ] as const;
 
 type OwnerTab = (typeof TABS)[number]["id"];
 
 export function OwnerDashboard() {
   const [tab, setTab] = useState<OwnerTab>("overview");
+  const { t } = useLanguage();
 
   return (
     <div className="space-y-6">
@@ -41,7 +46,7 @@ export function OwnerDashboard() {
         <div
           className="inline-flex min-w-full gap-1 rounded-2xl border border-[var(--salla-border)] bg-[var(--salla-surface)] p-1.5 sm:min-w-0"
           role="tablist"
-          aria-label="أقسام لوحة المالك"
+          aria-label={t("tab.aria")}
         >
           {TABS.map((item) => {
             const Icon = item.icon;
@@ -61,7 +66,7 @@ export function OwnerDashboard() {
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                <span>{item.label}</span>
+                <span>{t(`tab.${item.id}`)}</span>
               </button>
             );
           })}
@@ -75,11 +80,10 @@ export function OwnerDashboard() {
       {tab === "money" ? (
         <div className="space-y-5">
           <div>
-            <p className="text-sm font-medium text-[var(--salla-primary)]">المالية</p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-3xl">الحسابات</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--salla-muted)]">
-              المصاريف الشهرية الثابتة والمصروفات اليومية في مكان واحد.
-            </p>
+            <p className="text-sm font-medium text-[var(--salla-primary)]">{t("tab.money")}</p>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-3xl">
+              {t("tab.money")}
+            </h2>
           </div>
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
             <FixedCostBreakdown />
@@ -89,6 +93,7 @@ export function OwnerDashboard() {
       ) : null}
       {tab === "roi" ? <DressRoiTable /> : null}
       {tab === "staff" ? <EmployeeManager /> : null}
+      {tab === "permits" ? <GovernmentRecords /> : null}
     </div>
   );
 }

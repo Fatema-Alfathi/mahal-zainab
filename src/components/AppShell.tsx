@@ -13,26 +13,21 @@ import {
   X,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { useTheme } from "@/context/ThemeContext";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/format";
 
 export type ShellPage = "home" | "dresses" | "customers" | "calendar";
 
-const NAV: Array<{ id: ShellPage; href: string; label: string; icon: typeof LayoutDashboard }> = [
-  { id: "home", href: "/", label: "لوحة المحل", icon: LayoutDashboard },
-  { id: "customers", href: "/customers", label: "العميلات", icon: Users },
-  { id: "calendar", href: "/calendar", label: "التقويم", icon: CalendarDays },
-  { id: "dresses", href: "/dresses", label: "إدارة الفساتين", icon: Shirt },
+const NAV: Array<{ id: ShellPage; href: string; labelKey: string; icon: typeof LayoutDashboard }> = [
+  { id: "home", href: "/", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { id: "customers", href: "/customers", labelKey: "nav.customers", icon: Users },
+  { id: "calendar", href: "/calendar", labelKey: "nav.calendar", icon: CalendarDays },
+  { id: "dresses", href: "/dresses", labelKey: "nav.dresses", icon: Shirt },
 ];
-
-const TITLES: Record<ShellPage, string> = {
-  home: "لوحة المحل",
-  customers: "العميلات",
-  calendar: "التقويم",
-  dresses: "إدارة الفساتين",
-};
 
 function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
@@ -59,16 +54,21 @@ function NavLinks({
   onNavigate?: () => void;
   variant: "sidebar" | "top";
 }) {
+  const { t } = useLanguage();
+  const { isOwner } = useShop();
+
   return (
     <nav
       className={cn(
         variant === "sidebar" ? "flex flex-col gap-1.5 px-3" : "flex flex-wrap items-center gap-1.5",
       )}
-      aria-label="صفحات المحل"
+      aria-label={t("nav.pages")}
     >
       {NAV.map((item) => {
         const Icon = item.icon;
         const on = active === item.id;
+        const label =
+          item.id === "home" ? (isOwner ? t("nav.dashboard") : t("nav.floor")) : t(item.labelKey);
         return (
           <Link
             key={item.id}
@@ -83,7 +83,7 @@ function NavLinks({
             )}
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden />
-            <span>{item.label}</span>
+            <span>{label}</span>
           </Link>
         );
       })}
@@ -99,7 +99,21 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const { isOwner } = useShop();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
+
+  const title =
+    active === "home"
+      ? isOwner
+        ? t("nav.dashboard")
+        : t("nav.floor")
+      : t(
+          active === "customers"
+            ? "nav.customers"
+            : active === "calendar"
+              ? "nav.calendar"
+              : "nav.dresses",
+        );
 
   return (
     <div className="flex min-h-full bg-[var(--salla-bg)] text-[var(--foreground)]">
@@ -107,14 +121,14 @@ export function AppShell({
         <div className="mb-6 flex items-center gap-3 px-5">
           <BrandLogo />
           <div className="min-w-0">
-            <p className="truncate text-base font-semibold text-[var(--salla-primary)]">محل زينب</p>
-            <p className="truncate text-xs text-[var(--salla-muted)]">تأجير فساتين</p>
+            <p className="truncate text-base font-semibold text-[var(--salla-primary)]">{t("brand")}</p>
+            <p className="truncate text-xs text-[var(--salla-muted)]">{t("tagline")}</p>
           </div>
         </div>
         <NavLinks active={active} variant="sidebar" />
         <div className="mt-auto px-5 pt-6">
           <p className="text-xs leading-5 text-[var(--salla-muted)]">
-            {isOwner ? "لوحة التحكم، العميلات، والحجوزات" : "الحجوزات وملفات العميلات"}
+            {isOwner ? t("role.ownerHint") : t("role.staffHint")}
           </p>
         </div>
       </aside>
@@ -124,20 +138,20 @@ export function AppShell({
           <button
             type="button"
             className="absolute inset-0 bg-black/40"
-            aria-label="إغلاق القائمة"
+            aria-label={t("close")}
             onClick={() => setOpen(false)}
           />
           <aside className="shell-sidebar absolute inset-y-0 start-0 flex w-72 flex-col py-5 shadow-xl">
             <div className="mb-4 flex items-center justify-between px-5">
               <div className="flex items-center gap-3">
                 <BrandLogo />
-                <p className="font-semibold text-[var(--salla-primary)]">محل زينب</p>
+                <p className="font-semibold text-[var(--salla-primary)]">{t("brand")}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 className="rounded-lg p-2 text-[var(--salla-muted)] hover:bg-[var(--salla-soft)]"
-                aria-label="إغلاق"
+                aria-label={t("close")}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -156,22 +170,22 @@ export function AppShell({
                   type="button"
                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--salla-border)] bg-[var(--salla-surface)] text-[var(--foreground)] hover:bg-[var(--salla-soft)] lg:hidden"
                   onClick={() => setOpen(true)}
-                  aria-label="فتح القائمة"
+                  aria-label={t("nav.pages")}
                 >
                   <Menu className="h-5 w-5" />
                 </button>
                 <div className="min-w-0 lg:hidden">
-                  <h1 className="truncate text-base font-semibold text-[var(--foreground)]">{TITLES[active]}</h1>
+                  <h1 className="truncate text-base font-semibold text-[var(--foreground)]">{title}</h1>
                 </div>
-                <p className="hidden text-sm font-semibold text-[var(--foreground)] lg:block">{TITLES[active]}</p>
+                <p className="hidden text-sm font-semibold text-[var(--foreground)] lg:block">{title}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
+                <LanguageToggle />
                 <ThemeToggle />
                 <RoleSwitcher />
               </div>
             </div>
 
-            {/* Always-visible page buttons */}
             <div className="border-t border-[var(--salla-border)] pt-3">
               <NavLinks active={active} variant="top" />
             </div>

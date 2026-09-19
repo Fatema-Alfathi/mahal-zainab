@@ -1,5 +1,5 @@
 import { fittingDateForPickup } from "@/lib/customers";
-import type { Booking, Customer, Dress, Employee, EmployeeDiscountPolicy, FixedExpense, VariableExpense } from "@/types";
+import type { Booking, Customer, Dress, Employee, EmployeeDiscountPolicy, FixedExpense, GovernmentRecord, VariableExpense } from "@/types";
 
 export const INITIAL_DISCOUNT_POLICY: EmployeeDiscountPolicy = {
   enabled: false,
@@ -128,6 +128,36 @@ const DRESS_CATALOG = [
     status: "available",
     totalMaintenanceCost: 0,
   },
+  {
+    id: "dress-evening-nine",
+    name: "فستان ليلى المخملي",
+    barcode: "ZNB-LYL-009",
+    size: "M",
+    category: "evening",
+    color: "خمري",
+    styleId: "style-layla",
+    measurements: { bust: 92, waist: 72, hips: 98, length: 154 },
+    purchasePrice: 165,
+    rentalPricePerDay: 28,
+    insuranceAmount: 35,
+    status: "available",
+    totalMaintenanceCost: 0,
+  },
+  {
+    id: "dress-yal-070",
+    name: "فستان سلطانة الكريستال",
+    barcode: "ZNB-SUL-070",
+    size: "L",
+    category: "wedding",
+    color: "ذهبي",
+    styleId: "style-sultana",
+    measurements: { bust: 96, waist: 76, hips: 102, length: 155 },
+    purchasePrice: 280,
+    rentalPricePerDay: 42,
+    insuranceAmount: 55,
+    status: "reserved",
+    totalMaintenanceCost: 0,
+  },
 ] as const;
 
 const DRESS_FILES: Record<
@@ -181,13 +211,27 @@ const DRESS_FILES: Record<
     purchaseDate: "2025-03-01",
     shippingCost: 8,
     customsCost: 4,
-    needsAlteration: false,
+    needsAlteration: true,
   },
   "dress-noor-gold": {
     description: "نفس قصة نور بلون ذهبي، مناسب للزفاف والملكة.",
     purchaseDate: "2025-04-18",
     shippingCost: 18,
     customsCost: 12,
+    needsAlteration: false,
+  },
+  "dress-evening-nine": {
+    description: "قطعة ثانية من ليلى المخملي، تحتاج تعديل خصر قبل التأجير.",
+    purchaseDate: "2025-05-10",
+    shippingCost: 10,
+    customsCost: 5,
+    needsAlteration: true,
+  },
+  "dress-yal-070": {
+    description: "قطعة ثانية من سلطانة، محجوزة وتطلع للعميلة اليوم.",
+    purchaseDate: "2025-06-02",
+    shippingCost: 22,
+    customsCost: 15,
     needsAlteration: false,
   },
 };
@@ -255,6 +299,7 @@ export const INITIAL_CUSTOMERS: Customer[] = [
   { id: "cust-rania", number: "ZNB-C-016", name: "رانيا محمود", phone: "99410022", eventDate: "2026-09-06", notes: "تحتاج بروفة وتعديل خصر." },
   { id: "cust-hind", number: "ZNB-C-017", name: "هند سالم", phone: "99410033", eventDate: "2026-09-08", notes: "حجز يوم واحد." },
   { id: "cust-jawaher", number: "ZNB-C-018", name: "جواهر ناصر", phone: "99410044", eventDate: "2026-09-20", notes: "الفستان محجوز ولم يُسلَّم بعد." },
+  { id: "cust-shahd", number: "ZNB-C-019", name: "شهد العلوي", phone: "99410055", eventDate: "2026-09-15", notes: "تستلم الفستان اليوم." },
 ];
 
 export const INITIAL_EMPLOYEES: Employee[] = [
@@ -267,7 +312,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     salary: 180,
     startDate: "2024-09-01",
     active: true,
-    notes: "مسؤولة الصالة واستقبال العميلات.",
+    notes: "مسؤولة البوتيك واستقبال العميلات.",
   },
   {
     id: "emp-hind",
@@ -293,6 +338,37 @@ export const INITIAL_EMPLOYEES: Employee[] = [
   },
 ];
 
+export const INITIAL_GOVERNMENT_RECORDS: GovernmentRecord[] = [
+  {
+    id: "gov-lease",
+    kind: "lease",
+    name: "عقد إيجار المحل",
+    renewalDate: "2026-11-30",
+    notes: "عقد المالك. التجديد قبل نهاية نوفمبر.",
+  },
+  {
+    id: "gov-register",
+    kind: "register",
+    name: "السجل التجاري",
+    renewalDate: "2026-10-20",
+    notes: "تجديد سجل وزارة التجارة.",
+  },
+  {
+    id: "gov-municipal",
+    kind: "license",
+    name: "الرخصة البلدية",
+    renewalDate: "2027-01-15",
+    notes: "رخصة البلدية لنشاط التأجير.",
+  },
+  {
+    id: "gov-civil-defense",
+    kind: "license",
+    name: "شهادة الدفاع المدني",
+    renewalDate: "2026-09-20",
+    notes: "شهادة السلامة للبوتيك.",
+  },
+];
+
 const CUSTOMER_BY_NAME = Object.fromEntries(INITIAL_CUSTOMERS.map((item) => [item.name, item]));
 
 function booking(
@@ -310,12 +386,17 @@ function booking(
     needsAlterations?: boolean;
     needsFitting?: boolean;
     bookedAt?: string;
+    pickupDate?: string;
+    handoverDate?: string;
+    eventDate?: string;
+    returnDate?: string;
+    cancelledAt?: string;
   },
 ): Booking {
   const customer = CUSTOMER_BY_NAME[customerName];
   const depositPaid = extra?.depositPaid ?? Math.round(total * 0.4 * 1000) / 1000;
   const remainingAmount =
-    extra?.remainingAmount ?? (status === "completed" ? 0 : Math.max(0, Math.round((total - depositPaid) * 1000) / 1000));
+    extra?.remainingAmount ?? (status === "completed" || status === "cancelled" ? 0 : Math.max(0, Math.round((total - depositPaid) * 1000) / 1000));
   const needsAlterations = extra?.needsAlterations ?? false;
   const needsFitting = needsAlterations || (extra?.needsFitting ?? false);
   return {
@@ -326,8 +407,10 @@ function booking(
     bookedAt: extra?.bookedAt ?? startDate,
     startDate,
     endDate,
-    pickupDate: startDate,
-    returnDate: endDate,
+    pickupDate: extra?.pickupDate ?? startDate,
+    handoverDate: extra?.handoverDate ?? (status === "completed" ? startDate : ""),
+    eventDate: extra?.eventDate ?? customer?.eventDate ?? "",
+    returnDate: extra?.returnDate ?? endDate,
     needsFitting,
     needsAlterations,
     fittingDate: needsFitting ? fittingDateForPickup(startDate) : "",
@@ -335,13 +418,14 @@ function booking(
     discountType: extra?.discount?.type ?? "none",
     discountValue: extra?.discount?.value ?? 0,
     discountAmount: extra?.discount?.amount ?? 0,
-    totalRevenueGenerated: total,
-    depositPaid,
-    remainingAmount: status === "completed" ? 0 : remainingAmount,
+    totalRevenueGenerated: status === "cancelled" ? 0 : total,
+    depositPaid: status === "cancelled" ? extra?.depositPaid ?? 0 : depositPaid,
+    remainingAmount,
     insuranceAmount: DRESS_INSURANCE[dressId] ?? 20,
     insurancePaid: DRESS_INSURANCE[dressId] ?? 20,
-    insuranceReturned: status === "completed",
+    insuranceReturned: status === "completed" || status === "cancelled",
     status,
+    cancelledAt: extra?.cancelledAt ?? (status === "cancelled" ? extra?.bookedAt ?? startDate : ""),
   };
 }
 
@@ -380,17 +464,21 @@ export const INITIAL_BOOKINGS: Booking[] = [
     needsAlterations: true,
     bookedAt: "2026-08-01",
   }),
-  booking("book-12", "dress-celeste", "ليلى حداد", "2026-09-01", "2026-09-05", 100, "active", {
+  booking("book-12", "dress-celeste", "ليلى حداد", "2026-09-01", "2026-09-20", 100, "active", {
     depositPaid: 40,
     remainingAmount: 60,
     needsFitting: true,
     bookedAt: "2026-08-22",
+    handoverDate: "2026-09-01",
+    returnDate: "2026-09-20",
   }),
-  booking("book-13", "dress-sultana", "رانيا محمود", "2026-09-02", "2026-09-06", 168, "active", {
+  booking("book-13", "dress-sultana", "رانيا محمود", "2026-09-02", "2026-09-14", 168, "active", {
     depositPaid: 70,
     remainingAmount: 98,
     needsAlterations: true,
     bookedAt: "2026-08-20",
+    handoverDate: "2026-09-02",
+    returnDate: "2026-09-14",
   }),
   booking("book-14", "dress-aurora", "هند سالم", "2026-09-08", "2026-09-08", 18, "completed", {
     depositPaid: 18,
@@ -402,6 +490,22 @@ export const INITIAL_BOOKINGS: Booking[] = [
     needsAlterations: true,
     bookedAt: "2026-09-04",
   }),
+  booking("book-16", "dress-yal-070", "شهد العلوي", "2026-09-14", "2026-09-16", 84, "active", {
+    depositPaid: 30,
+    remainingAmount: 54,
+    bookedAt: "2026-09-10",
+    pickupDate: "2026-09-14",
+  }),
+  booking("book-cancel-1", "dress-aurora-blush", "لين قريشي", "2026-08-21", "2026-08-23", 54, "cancelled", {
+    bookedAt: "2026-08-12",
+    cancelledAt: "2026-08-18",
+    depositPaid: 0,
+  }),
+  booking("book-cancel-2", "dress-noor-gold", "أميرة صالح", "2026-09-12", "2026-09-14", 70, "cancelled", {
+    bookedAt: "2026-09-02",
+    cancelledAt: "2026-09-08",
+    depositPaid: 0,
+  }),
 ];
 
 export const DRESS_PRESENTATION: Record<
@@ -409,7 +513,7 @@ export const DRESS_PRESENTATION: Record<
   { designer: string; silhouette: string; palette: string; images: string[] }
 > = {
   "dress-aurora": {
-    designer: "محل زينب",
+    designer: "بوتيك YAL",
     silhouette: "فستان كرة",
     palette: "from-rose-200 via-pink-100 to-amber-100",
     images: [
@@ -419,7 +523,7 @@ export const DRESS_PRESENTATION: Record<
     ],
   },
   "dress-celeste": {
-    designer: "محل زينب",
+    designer: "بوتيك YAL",
     silhouette: "قصة A مطرّزة",
     palette: "from-amber-100 via-yellow-50 to-rose-100",
     images: [
@@ -429,7 +533,7 @@ export const DRESS_PRESENTATION: Record<
     ],
   },
   "dress-noor": {
-    designer: "محل زينب",
+    designer: "بوتيك YAL",
     silhouette: "كوتور لؤلؤي",
     palette: "from-violet-100 via-fuchsia-50 to-rose-100",
     images: [
@@ -439,7 +543,7 @@ export const DRESS_PRESENTATION: Record<
     ],
   },
   "dress-zahra": {
-    designer: "محل زينب",
+    designer: "بوتيك YAL",
     silhouette: "قصة A شمبانيا",
     palette: "from-orange-100 via-amber-50 to-rose-100",
     images: [
@@ -449,7 +553,7 @@ export const DRESS_PRESENTATION: Record<
     ],
   },
   "dress-layla": {
-    designer: "محل زينب",
+    designer: "بوتيك YAL",
     silhouette: "عمود سهرة",
     palette: "from-fuchsia-100 via-rose-50 to-violet-100",
     images: [
@@ -459,7 +563,7 @@ export const DRESS_PRESENTATION: Record<
     ],
   },
   "dress-sultana": {
-    designer: "محل زينب",
+    designer: "بوتيك YAL",
     silhouette: "حورية البحر",
     palette: "from-yellow-100 via-amber-100 to-rose-200",
     images: [
@@ -469,7 +573,7 @@ export const DRESS_PRESENTATION: Record<
     ],
   },
   "dress-aurora-blush": {
-    designer: "محل زينب",
+    designer: "بوتيك YAL",
     silhouette: "فستان كرة",
     palette: "from-rose-200 via-pink-100 to-fuchsia-100",
     images: [
@@ -479,13 +583,33 @@ export const DRESS_PRESENTATION: Record<
     ],
   },
   "dress-noor-gold": {
-    designer: "محل زينب",
+    designer: "بوتيك YAL",
     silhouette: "كوتور لؤلؤي",
     palette: "from-yellow-100 via-amber-50 to-rose-100",
     images: [
       "https://images.unsplash.com/photo-1612336307429-8a898d10e223?auto=format&fit=crop&w=900&h=1100&q=80",
       "https://images.pexels.com/photos/3014856/pexels-photo-3014856.jpeg?auto=compress&cs=tinysrgb&w=900",
       "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&h=1100&q=80",
+    ],
+  },
+  "dress-evening-nine": {
+    designer: "بوتيك YAL",
+    silhouette: "عمود سهرة",
+    palette: "from-fuchsia-100 via-rose-50 to-violet-100",
+    images: [
+      "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&h=1100&q=80",
+      "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=900&h=1100&q=80",
+      "https://images.unsplash.com/photo-1596783074918-c84cb06531ca?auto=format&fit=crop&w=900&h=1100&q=80",
+    ],
+  },
+  "dress-yal-070": {
+    designer: "بوتيك YAL",
+    silhouette: "حورية البحر",
+    palette: "from-yellow-100 via-amber-100 to-rose-200",
+    images: [
+      "https://images.unsplash.com/photo-1612336307429-8a898d10e223?auto=format&fit=crop&w=900&h=1100&q=80",
+      "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&h=1100&q=80",
+      "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=900&h=1100&q=80",
     ],
   },
 };

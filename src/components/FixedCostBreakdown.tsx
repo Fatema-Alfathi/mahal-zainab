@@ -19,24 +19,26 @@ import {
   Zap,
 } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
+import { SALARY_EXPENSE_ID } from "@/lib/employees";
 import { totalFixedExpenses } from "@/lib/finance";
 import { cn, formatCurrency } from "@/lib/format";
 import { isSalaryExpense, isStandardMonthlyExpense, sortMonthlyExpenses } from "@/lib/monthlyExpenses";
 
 const ICONS: Record<string, typeof Building2> = {
-  الإيجار: Building2,
-  الرواتب: Users,
-  الكهرباء: Zap,
-  الإنترنت: Wifi,
-  الإعلانات: Megaphone,
-  "جلسات التصوير": Camera,
-  "تنظيف الفساتين": Sparkles,
-  "تصليح وتعديل الفساتين": Scissors,
-  المشتريات: ShoppingBag,
-  السفر: Plane,
-  المعارض: Store,
-  الضيافة: Coffee,
-  "مصروفات أخرى": MoreHorizontal,
+  "fixed-rent": Building2,
+  [SALARY_EXPENSE_ID]: Users,
+  "fixed-electricity": Zap,
+  "fixed-internet": Wifi,
+  "fixed-ads": Megaphone,
+  "fixed-photos": Camera,
+  "fixed-cleaning": Sparkles,
+  "fixed-repair": Scissors,
+  "fixed-purchases": ShoppingBag,
+  "fixed-travel": Plane,
+  "fixed-exhibitions": Store,
+  "fixed-hospitality": Coffee,
+  "fixed-other": MoreHorizontal,
 };
 
 const fieldClass =
@@ -44,30 +46,27 @@ const fieldClass =
 
 export function FixedCostBreakdown() {
   const { fixedExpenses, addFixedExpense, updateFixedExpense, deleteFixedExpense } = useShop();
+  const { t } = useLanguage();
   const [adding, setAdding] = useState(false);
   const rows = useMemo(() => sortMonthlyExpenses(fixedExpenses), [fixedExpenses]);
   const total = totalFixedExpenses(fixedExpenses);
 
   return (
-    <section className="dash-panel overflow-hidden rounded-2xl">
-      <div className="border-b border-[var(--salla-border)] px-5 py-5 sm:px-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-medium text-[var(--salla-primary)]">كل شهر</p>
-            <h3 className="mt-1 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">المصاريف الشهرية</h3>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--salla-muted)]">
-              الإيجار والرواتب والكهرباء وباقي مصاريف المحل. غيّري المبلغ أو أضيفي مصروف جديد.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setAdding((value) => !value)}
-            className="shop-btn inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
-          >
-            <Plus className="h-4 w-4" aria-hidden />
-            إضافة مصروف
-          </button>
+    <section className="shop-card rounded-3xl p-6">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm text-[var(--salla-muted)]">{t("fixed.kicker")}</p>
+          <h3 className="mt-1 text-2xl font-medium text-[var(--foreground)]">{t("fixed.title")}</h3>
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">{t("fixed.lead")}</p>
         </div>
+        <button
+          type="button"
+          onClick={() => setAdding((value) => !value)}
+          className="shop-btn inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm"
+        >
+          <Plus className="h-4 w-4" aria-hidden />
+          {t("fixed.add")}
+        </button>
       </div>
 
       <div className="p-5 sm:p-6">
@@ -144,6 +143,7 @@ function AmountField({
   amount: number;
   onSave: (amount: number) => void;
 }) {
+  const { t } = useLanguage();
   const [value, setValue] = useState(String(amount));
 
   useEffect(() => {
@@ -167,10 +167,10 @@ function AmountField({
           onSave(parsed);
           setValue(String(parsed));
         }}
-        className="w-24 rounded-lg border border-[var(--salla-border)] bg-[var(--salla-surface)] px-2 py-1.5 text-left tabular-nums text-[var(--foreground)] outline-none focus:border-[var(--salla-primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--salla-primary)_20%,transparent)]"
-        aria-label={`مبلغ ${name}`}
+        className="w-24 rounded-xl border-0 bg-white px-2 py-1.5 text-left tabular-nums text-[var(--foreground)] outline-none ring-[var(--salla-border)] focus:ring-2"
+        aria-label={t("fixed.amountAria", { name })}
       />
-      <span className="text-xs text-[var(--salla-muted)]">ر.ع.</span>
+      <span className="text-xs text-[var(--salla-muted)]">{t("currency")}</span>
     </label>
   );
 }
@@ -182,6 +182,7 @@ function AddMonthlyExpenseForm({
   onSubmit: (name: string, amount: number) => boolean;
   onCancel: () => void;
 }) {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
@@ -190,35 +191,32 @@ function AddMonthlyExpenseForm({
     event.preventDefault();
     const parsed = Number(amount);
     if (!name.trim()) {
-      setError("اكتبي اسم المصروف.");
+      setError("fixed.nameRequired");
       return;
     }
     if (!Number.isFinite(parsed) || parsed < 0) {
-      setError("أدخلي مبلغ صفر أو أكثر.");
+      setError("fixed.amountMin");
       return;
     }
     if (!onSubmit(name.trim(), parsed)) {
-      setError("تعذر حفظ المصروف.");
+      setError("fixed.saveFail");
       return;
     }
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="mb-4 grid gap-3 rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/50 p-4 sm:grid-cols-[1fr_8rem_auto]"
-    >
-      <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-[var(--foreground)]">اسم المصروف</span>
+    <form onSubmit={handleSubmit} className="mb-4 grid gap-3 rounded-2xl bg-[var(--salla-soft)]/80 p-4 sm:grid-cols-[1fr_8rem_auto]">
+      <label className="block text-sm sm:col-span-1">
+        <span className="mb-1 block text-[var(--foreground)]">{t("fixed.name")}</span>
         <input
           value={name}
           onChange={(event) => setName(event.target.value)}
-          className={fieldClass}
-          placeholder="مثل: صيانة المكيف"
+          className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-[var(--foreground)] outline-none ring-[var(--salla-border)] focus:ring-2"
+          placeholder={t("fixed.namePh")}
         />
       </label>
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-[var(--foreground)]">المبلغ (ر.ع.)</span>
+        <span className="mb-1 block text-[var(--foreground)]">{t("fixed.amount")}</span>
         <input
           type="number"
           min="0"
@@ -230,18 +228,14 @@ function AddMonthlyExpenseForm({
         />
       </label>
       <div className="flex items-end gap-2">
-        <button type="submit" className="shop-btn rounded-xl px-4 py-2.5 text-sm font-medium">
-          حفظ
+        <button type="submit" className="shop-btn rounded-2xl px-4 py-2.5 text-sm">
+          {t("save")}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-xl px-3 py-2.5 text-sm text-[var(--salla-muted)] hover:bg-[var(--salla-surface)]"
-        >
-          إلغاء
+        <button type="button" onClick={onCancel} className="rounded-2xl px-3 py-2.5 text-sm text-[var(--salla-muted)] hover:bg-white">
+          {t("cancel")}
         </button>
       </div>
-      {error ? <p className={cn("text-sm text-[var(--salla-danger)] sm:col-span-3")}>{error}</p> : null}
+      {error ? <p className="text-sm text-[var(--foreground)] sm:col-span-3">{t(error)}</p> : null}
     </form>
   );
 }

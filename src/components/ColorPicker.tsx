@@ -1,6 +1,8 @@
 "use client";
 
 import { DRESS_COLORS, type DressColor } from "@/types";
+import { colorLabel } from "@/lib/labels";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/format";
 
 export function ColorPicker({
@@ -10,9 +12,10 @@ export function ColorPicker({
   value: DressColor;
   onChange: (value: DressColor) => void;
 }) {
+  const { t } = useLanguage();
   return (
     <fieldset>
-      <legend className="mb-2 text-sm text-rose-700">اللون</legend>
+      <legend className="mb-2 text-sm text-rose-700">{t("filter.color")}</legend>
       <div className="flex flex-wrap gap-2">
         {DRESS_COLORS.map((color) => (
           <button
@@ -24,7 +27,7 @@ export function ColorPicker({
               value === color ? "shop-btn" : "bg-rose-50 text-rose-500 hover:bg-rose-100",
             )}
           >
-            {color}
+            {colorLabel(color)}
           </button>
         ))}
       </div>

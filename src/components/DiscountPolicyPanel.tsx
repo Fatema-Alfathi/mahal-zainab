@@ -1,6 +1,7 @@
 "use client";
 
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn, formatCurrency } from "@/lib/format";
 import { employeeDiscountPolicySummary } from "@/lib/labels";
 import type { AuthorizedDiscountType } from "@/types";
@@ -9,6 +10,7 @@ const PERCENT_PRESETS = [5, 10, 15, 20];
 
 export function DiscountPolicyPanel() {
   const { discountPolicy, setDiscountPolicy } = useShop();
+  const { t } = useLanguage();
 
   function update(next: Partial<typeof discountPolicy>) {
     setDiscountPolicy({ ...discountPolicy, ...next });
@@ -90,7 +92,7 @@ export function DiscountPolicyPanel() {
                         : "bg-[var(--salla-surface)] text-[var(--foreground)] ring-1 ring-[var(--salla-border)] hover:bg-[var(--salla-soft)]",
                     )}
                   >
-                    {type === "percent" ? "نسبة ٪" : "مبلغ ر.ع."}
+                    {type === "percent" ? t("discount.percent") : t("discount.amount")}
                   </button>
                 ))}
               </div>

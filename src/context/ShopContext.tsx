@@ -4,10 +4,13 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
+  useState,
   type ReactNode,
 } from "react";
+import { clearSession, readSession, verifyLogin, writeSession, type AuthSession } from "@/lib/auth";
 import {
   INITIAL_BOOKINGS,
   INITIAL_CUSTOMERS,
@@ -15,6 +18,7 @@ import {
   INITIAL_DISCOUNT_POLICY,
   INITIAL_EMPLOYEES,
   INITIAL_FIXED_EXPENSES,
+  INITIAL_GOVERNMENT_RECORDS,
   INITIAL_VARIABLE_EXPENSES,
 } from "@/data/mockData";
 import {
@@ -32,6 +36,7 @@ import {
   syncSalaryExpense,
 } from "@/lib/employees";
 import { isSalaryExpense, isStandardMonthlyExpense, normalizeExpenseAmount } from "@/lib/monthlyExpenses";
+import { normalizeGovernmentRecordDraft } from "@/lib/governmentRecords";
 import {
   applyBookingDiscount,
   calculateBookingSubtotal,
@@ -47,6 +52,7 @@ import {
   type DressCatalogDraft,
   type EmployeeDiscountPolicy,
   type EmployeeDraft,
+  type GovernmentRecordDraft,
   type ShopState,
   type UserRole,
   type VariableExpense,
@@ -68,7 +74,8 @@ function resolveBookingDiscount(
 }
 
 type Action =
-  | { type: "set-role"; role: UserRole }
+  | { type: "sign-in"; session: AuthSession }
+  | { type: "sign-out" }
   | {
       type: "create-booking";
       dressId: string;
@@ -78,6 +85,9 @@ type Action =
       eventDate?: string;
       startDate: string;
       endDate: string;
+      pickupDate?: string;
+      handoverDate?: string;
+      returnDate?: string;
       discountType: DiscountType;
       discountValue: number;
       depositPaid: number;
@@ -88,9 +98,13 @@ type Action =
   | { type: "update-customer"; customerId: string; draft: CustomerDraft }
   | { type: "add-employee"; draft: EmployeeDraft }
   | { type: "update-employee"; employeeId: string; draft: EmployeeDraft }
+  | { type: "add-government-record"; draft: GovernmentRecordDraft }
+  | { type: "update-government-record"; recordId: string; draft: GovernmentRecordDraft }
+  | { type: "delete-government-record"; recordId: string }
   | { type: "set-discount-policy"; policy: EmployeeDiscountPolicy }
   | { type: "pickup-dress"; dressId: string }
   | { type: "return-dress"; dressId: string }
+  | { type: "cancel-booking"; bookingId: string }
   | { type: "complete-maintenance"; dressId: string }
   | { type: "add-variable-expense"; expense: Omit<VariableExpense, "id"> }
   | { type: "update-fixed-expense"; expenseId: string; amount: number }
@@ -102,8 +116,16 @@ type Action =
 
 function shopReducer(state: ShopState, action: Action): ShopState {
   switch (action.type) {
-    case "set-role":
-      return { ...state, role: action.role };
+    case "sign-in":
+      return {
+        ...state,
+        signedIn: true,
+        role: action.session.role,
+        sessionName: action.session.name,
+        employeeId: action.session.employeeId,
+      };
+    case "sign-out":
+      return { ...state, signedIn: false, role: "employee", sessionName: "", employeeId: "" };
 
     case "create-booking": {
       const dress = state.dresses.find((item) => item.id === action.dressId);
@@ -173,8 +195,10 @@ function shopReducer(state: ShopState, action: Action): ShopState {
             bookedAt: todayIso(),
             startDate: action.startDate,
             endDate: action.endDate,
-            pickupDate: action.startDate,
-            returnDate: action.endDate,
+            pickupDate: action.pickupDate || action.startDate,
+            handoverDate: action.handoverDate || (startsLater ? "" : action.startDate),
+            eventDate: action.eventDate ?? "",
+            returnDate: action.returnDate || action.endDate,
             needsFitting: fitting.needsFitting,
             needsAlterations: fitting.needsAlterations,
             fittingDate: fitting.fittingDate,
@@ -189,6 +213,7 @@ function shopReducer(state: ShopState, action: Action): ShopState {
             insurancePaid: dress.insuranceAmount,
             insuranceReturned: false,
             status: "active",
+            cancelledAt: "",
           },
           ...state.bookings,
         ],
@@ -254,6 +279,37 @@ function shopReducer(state: ShopState, action: Action): ShopState {
       };
     }
 
+    case "add-government-record": {
+      if (state.role !== "owner") return state;
+      const draft = normalizeGovernmentRecordDraft(action.draft);
+      if (!draft) return state;
+      return {
+        ...state,
+        governmentRecords: [{ id: crypto.randomUUID(), ...draft }, ...state.governmentRecords],
+      };
+    }
+
+    case "update-government-record": {
+      if (state.role !== "owner") return state;
+      const current = state.governmentRecords.find((item) => item.id === action.recordId);
+      const draft = normalizeGovernmentRecordDraft(action.draft);
+      if (!current || !draft) return state;
+      return {
+        ...state,
+        governmentRecords: state.governmentRecords.map((item) =>
+          item.id === action.recordId ? { ...item, ...draft } : item,
+        ),
+      };
+    }
+
+    case "delete-government-record": {
+      if (state.role !== "owner") return state;
+      return {
+        ...state,
+        governmentRecords: state.governmentRecords.filter((item) => item.id !== action.recordId),
+      };
+    }
+
     case "pickup-dress": {
       const dress = state.dresses.find((item) => item.id === action.dressId);
       if (!dress || dress.status !== "reserved") return state;
@@ -262,6 +318,38 @@ function shopReducer(state: ShopState, action: Action): ShopState {
         dresses: state.dresses.map((item) =>
           item.id === action.dressId ? { ...item, status: "rented" } : item,
         ),
+        bookings: state.bookings.map((booking) =>
+          booking.dressId === action.dressId && booking.status === "active"
+            ? { ...booking, handoverDate: booking.handoverDate || todayIso() }
+            : booking,
+        ),
+      };
+    }
+
+    case "cancel-booking": {
+      const booking = state.bookings.find((item) => item.id === action.bookingId);
+      if (!booking || booking.status !== "active") return state;
+      const dress = state.dresses.find((item) => item.id === booking.dressId);
+      const freeDress = dress && (dress.status === "reserved" || dress.status === "rented");
+      return {
+        ...state,
+        bookings: state.bookings.map((item) =>
+          item.id === action.bookingId
+            ? {
+                ...item,
+                status: "cancelled",
+                cancelledAt: todayIso(),
+                remainingAmount: 0,
+                insuranceReturned: true,
+                totalRevenueGenerated: 0,
+              }
+            : item,
+        ),
+        dresses: freeDress
+          ? state.dresses.map((item) =>
+              item.id === booking.dressId ? { ...item, status: "available", needsAlteration: false } : item,
+            )
+          : state.dresses,
       };
     }
 
@@ -461,10 +549,14 @@ function shopReducer(state: ShopState, action: Action): ShopState {
 }
 
 const initialState: ShopState = {
-  role: "owner",
+  role: "employee",
+  signedIn: false,
+  sessionName: "",
+  employeeId: "",
   dresses: INITIAL_DRESSES,
   customers: INITIAL_CUSTOMERS,
   employees: INITIAL_EMPLOYEES,
+  governmentRecords: INITIAL_GOVERNMENT_RECORDS,
   fixedExpenses: INITIAL_FIXED_EXPENSES,
   variableExpenses: INITIAL_VARIABLE_EXPENSES,
   bookings: INITIAL_BOOKINGS,
@@ -472,8 +564,10 @@ const initialState: ShopState = {
 };
 
 interface ShopContextValue extends ShopState {
+  authReady: boolean;
   isOwner: boolean;
-  setRole: (role: UserRole) => void;
+  signIn: (username: string, password: string) => boolean;
+  signOut: () => void;
   createBooking: (input: {
     dressId: string;
     customerId?: string;
@@ -482,6 +576,9 @@ interface ShopContextValue extends ShopState {
     eventDate?: string;
     startDate: string;
     endDate: string;
+    pickupDate?: string;
+    handoverDate?: string;
+    returnDate?: string;
     discountType: DiscountType;
     discountValue: number;
     depositPaid: number;
@@ -492,9 +589,13 @@ interface ShopContextValue extends ShopState {
   updateCustomer: (customerId: string, draft: CustomerDraft) => boolean;
   addEmployee: (draft: EmployeeDraft) => boolean;
   updateEmployee: (employeeId: string, draft: EmployeeDraft) => boolean;
+  addGovernmentRecord: (draft: GovernmentRecordDraft) => boolean;
+  updateGovernmentRecord: (recordId: string, draft: GovernmentRecordDraft) => boolean;
+  deleteGovernmentRecord: (recordId: string) => boolean;
   setDiscountPolicy: (policy: EmployeeDiscountPolicy) => void;
   pickupDress: (dressId: string) => void;
   returnDress: (dressId: string) => void;
+  cancelBooking: (bookingId: string) => void;
   completeMaintenance: (dressId: string) => void;
   addVariableExpense: (expense: Omit<VariableExpense, "id">) => void;
   updateFixedExpense: (expenseId: string, amount: number) => boolean;
@@ -509,9 +610,34 @@ const ShopContext = createContext<ShopContextValue | null>(null);
 
 export function ShopProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(shopReducer, initialState);
+  const [authReady, setAuthReady] = useState(false);
 
-  const setRole = useCallback((role: UserRole) => {
-    dispatch({ type: "set-role", role });
+  useEffect(() => {
+    const saved = readSession();
+    if (saved?.role === "owner") {
+      dispatch({ type: "sign-in", session: saved });
+    } else if (saved?.role === "employee") {
+      const employee = initialState.employees.find((item) => item.id === saved.employeeId && item.active);
+      if (employee) {
+        dispatch({ type: "sign-in", session: { role: "employee", name: employee.name, employeeId: employee.id } });
+      } else {
+        clearSession();
+      }
+    }
+    setAuthReady(true);
+  }, []);
+
+  const signIn = useCallback((username: string, password: string) => {
+    const session = verifyLogin(state.employees, username, password);
+    if (!session) return false;
+    writeSession(session);
+    dispatch({ type: "sign-in", session });
+    return true;
+  }, [state.employees]);
+
+  const signOut = useCallback(() => {
+    clearSession();
+    dispatch({ type: "sign-out" });
   }, []);
 
   const createBooking = useCallback(
@@ -523,6 +649,9 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       eventDate?: string;
       startDate: string;
       endDate: string;
+      pickupDate?: string;
+      handoverDate?: string;
+      returnDate?: string;
       discountType: DiscountType;
       discountValue: number;
       depositPaid: number;
@@ -582,6 +711,39 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     [state.employees, state.role],
   );
 
+  const addGovernmentRecord = useCallback(
+    (draft: GovernmentRecordDraft) => {
+      if (state.role !== "owner") return false;
+      const normalized = normalizeGovernmentRecordDraft(draft);
+      if (!normalized) return false;
+      dispatch({ type: "add-government-record", draft: normalized });
+      return true;
+    },
+    [state.role],
+  );
+
+  const updateGovernmentRecord = useCallback(
+    (recordId: string, draft: GovernmentRecordDraft) => {
+      if (state.role !== "owner") return false;
+      const current = state.governmentRecords.find((item) => item.id === recordId);
+      const normalized = normalizeGovernmentRecordDraft(draft);
+      if (!current || !normalized) return false;
+      dispatch({ type: "update-government-record", recordId, draft: normalized });
+      return true;
+    },
+    [state.governmentRecords, state.role],
+  );
+
+  const deleteGovernmentRecord = useCallback(
+    (recordId: string) => {
+      if (state.role !== "owner") return false;
+      if (!state.governmentRecords.some((item) => item.id === recordId)) return false;
+      dispatch({ type: "delete-government-record", recordId });
+      return true;
+    },
+    [state.governmentRecords, state.role],
+  );
+
   const setDiscountPolicy = useCallback((policy: EmployeeDiscountPolicy) => {
     dispatch({ type: "set-discount-policy", policy });
   }, []);
@@ -592,6 +754,10 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
   const returnDress = useCallback((dressId: string) => {
     dispatch({ type: "return-dress", dressId });
+  }, []);
+
+  const cancelBooking = useCallback((bookingId: string) => {
+    dispatch({ type: "cancel-booking", bookingId });
   }, []);
 
   const completeMaintenance = useCallback((dressId: string) => {
@@ -667,16 +833,22 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ShopContextValue>(
     () => ({
       ...state,
-      isOwner: state.role === "owner",
-      setRole,
+      authReady,
+      isOwner: state.role === "owner" && state.signedIn,
+      signIn,
+      signOut,
       createBooking,
       addCustomer,
       updateCustomer,
       addEmployee,
       updateEmployee,
+      addGovernmentRecord,
+      updateGovernmentRecord,
+      deleteGovernmentRecord,
       setDiscountPolicy,
       pickupDress,
       returnDress,
+      cancelBooking,
       completeMaintenance,
       addVariableExpense,
       updateFixedExpense,
@@ -688,15 +860,21 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     }),
     [
       state,
-      setRole,
+      authReady,
+      signIn,
+      signOut,
       createBooking,
       addCustomer,
       updateCustomer,
       addEmployee,
       updateEmployee,
+      addGovernmentRecord,
+      updateGovernmentRecord,
+      deleteGovernmentRecord,
       setDiscountPolicy,
       pickupDress,
       returnDress,
+      cancelBooking,
       completeMaintenance,
       addVariableExpense,
       updateFixedExpense,

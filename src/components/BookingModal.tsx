@@ -6,11 +6,12 @@ import { DressBarcode } from "@/components/DressBarcode";
 import { DressGallery } from "@/components/DressGallery";
 import { useShop } from "@/context/ShopContext";
 import { DressVariants } from "@/components/DressVariants";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { categoryLabel, dressDisplay, measurementLine, sizeLabel } from "@/lib/dressCatalog";
 import { fittingDateForPickup } from "@/lib/customers";
 import { applyBookingDiscount, calculateBookingSubtotal, rentalDayCount } from "@/lib/finance";
 import { formatCurrency, formatDate, todayIso } from "@/lib/format";
-import { DISCOUNT_TYPE_LABELS, authorizedDiscountLabel, daysLabel, discountLabel } from "@/lib/labels";
+import { DISCOUNT_TYPE_LABELS, authorizedDiscountLabel, colorLabel, daysLabel, discountLabel } from "@/lib/labels";
 import type { DiscountType, Dress } from "@/types";
 
 const PERCENT_PRESETS = [5, 10, 15, 20];
@@ -25,12 +26,14 @@ export function BookingModal({
   onSwitchDress?: (dress: Dress) => void;
 }) {
   const { dresses, customers, isOwner, createBooking, discountPolicy } = useShop();
+  const { t } = useLanguage();
   const presentation = dressDisplay(dress);
   const [customerId, setCustomerId] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [startDate, setStartDate] = useState(todayIso());
+  const [handoverDate, setHandoverDate] = useState(todayIso());
   const [endDate, setEndDate] = useState(todayIso());
   const [needsAlterations, setNeedsAlterations] = useState(false);
   const [needsFitting, setNeedsFitting] = useState(false);
@@ -64,38 +67,38 @@ export function BookingModal({
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!customerName.trim()) {
-      setError("اسم العميلة مطلوب.");
+      setError("book.nameRequired");
       return;
     }
     if (!phone.trim()) {
-      setError("رقم هاتف العميلة مطلوب.");
+      setError("book.phoneRequired");
       return;
     }
     if (endDate < startDate) {
-      setError("تاريخ الانتهاء يجب أن يكون في يوم البداية أو بعده.");
+      setError("book.endAfterStart");
       return;
     }
     const parsedDeposit = depositPaid.trim() === "" ? 0 : Number(depositPaid);
     if (!Number.isFinite(parsedDeposit) || parsedDeposit < 0) {
-      setError("أدخلي عربون صفر أو أكثر.");
+      setError("book.depositMin");
       return;
     }
     if (parsedDeposit > quote.total) {
-      setError("العربون أكبر من إجمالي الحجز.");
+      setError("book.depositMax");
       return;
     }
     if (isOwner && discountType !== "none") {
       const parsedDiscount = Number(discountValue);
       if (!Number.isFinite(parsedDiscount) || parsedDiscount <= 0) {
-        setError("أدخل قيمة خصم أكبر من صفر، أو اختر بدون خصم.");
+        setError("book.discountValue");
         return;
       }
       if (discountType === "percent" && parsedDiscount > 100) {
-        setError("نسبة الخصم لا تتجاوز 100٪.");
+        setError("book.discountPct");
         return;
       }
       if (discountType === "amount" && parsedDiscount > quote.subtotal) {
-        setError("مبلغ الخصم أكبر من إجمالي الحجز.");
+        setError("book.discountAmt");
         return;
       }
     }
@@ -107,6 +110,9 @@ export function BookingModal({
       eventDate,
       startDate,
       endDate,
+      pickupDate: startDate,
+      handoverDate,
+      returnDate: endDate,
       discountType: effectiveType,
       discountValue: effectiveType === "none" ? 0 : effectiveValue,
       depositPaid: parsedDeposit,
@@ -118,15 +124,15 @@ export function BookingModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
-      <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق نافذة الحجز" onClick={onClose} />
-      <div role="dialog" aria-modal="true" aria-labelledby="booking-title" className="shop-card relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-2xl p-6">
+      <button type="button" className="absolute inset-0 cursor-default" aria-label={t("book.closeAria")} onClick={onClose} />
+      <div role="dialog" aria-modal="true" aria-labelledby="booking-title" className="shop-card relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl p-6">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="text-xs text-rose-400">
-              حجز جديد · {categoryLabel(dress.category)} · {dress.color} · {sizeLabel(dress.size)}
+              {t("book.new")} · {categoryLabel(dress.category)} · {colorLabel(dress.color)} · {sizeLabel(dress.size)}
             </p>
             <h3 id="booking-title" className="mt-1 text-2xl text-rose-900">
-              حجز {dress.name}
+              {t("book.title", { name: dress.name })}
             </h3>
             {measurementLine(dress.measurements) ? (
               <p className="mt-1 text-xs leading-6 text-rose-400">{measurementLine(dress.measurements)}</p>
@@ -145,7 +151,7 @@ export function BookingModal({
               />
             </div>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label="إغلاق">
+          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label={t("close")}>
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -162,7 +168,7 @@ export function BookingModal({
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">عميلة موجودة؟</span>
+            <span className="mb-1 block text-rose-700">{t("book.existing")}</span>
             <select
               value={customerId}
               onChange={(event) => {
@@ -176,7 +182,7 @@ export function BookingModal({
               }}
               className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2 text-rose-900"
             >
-              <option value="">عميلة جديدة</option>
+              <option value="">{t("book.newCustomer")}</option>
               {customers.map((customer) => (
                 <option key={customer.id} value={customer.id}>
                   {customer.number} · {customer.name}
@@ -185,18 +191,18 @@ export function BookingModal({
             </select>
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">اسم العميلة</span>
+            <span className="mb-1 block text-rose-700">{t("book.name")}</span>
             <input
               type="text"
               value={customerName}
               onChange={(event) => setCustomerName(event.target.value)}
               className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2 text-rose-900"
-              placeholder="مثال: عائشة رحمن"
+              placeholder={t("book.namePh")}
             />
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
-              <span className="mb-1 block text-rose-700">رقم الهاتف</span>
+              <span className="mb-1 block text-rose-700">{t("book.phone")}</span>
               <input
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
@@ -205,7 +211,7 @@ export function BookingModal({
               />
             </label>
             <label className="block text-sm">
-              <span className="mb-1 block text-rose-700">تاريخ المناسبة</span>
+              <span className="mb-1 block text-rose-700">{t("book.wedding")}</span>
               <input
                 type="date"
                 value={eventDate}
@@ -216,16 +222,28 @@ export function BookingModal({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
-              <span className="mb-1 block text-rose-700">موعد الاستلام</span>
+              <span className="mb-1 block text-rose-700">{t("book.pickup")}</span>
               <input
                 type="date"
                 value={startDate}
-                onChange={(event) => setStartDate(event.target.value)}
+                onChange={(event) => {
+                  setStartDate(event.target.value);
+                  if (!handoverDate || handoverDate === startDate) setHandoverDate(event.target.value);
+                }}
                 className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2 text-rose-900"
               />
             </label>
             <label className="block text-sm">
-              <span className="mb-1 block text-rose-700">موعد الإرجاع</span>
+              <span className="mb-1 block text-rose-700">{t("book.handover")}</span>
+              <input
+                type="date"
+                value={handoverDate}
+                onChange={(event) => setHandoverDate(event.target.value)}
+                className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2 text-rose-900"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block text-rose-700">{t("book.return")}</span>
               <input
                 type="date"
                 value={endDate}
@@ -245,8 +263,8 @@ export function BookingModal({
               className="mt-1 h-4 w-4 accent-rose-500"
             />
             <span>
-              <span className="block font-medium">يحتاج تعديلات</span>
-              <span className="mt-1 block text-rose-400">إذا يحتاج تعديلات، لازم بروفة قبل الاستلام بخمسة أيام.</span>
+              <span className="block font-medium">{t("book.needAlt")}</span>
+              <span className="mt-1 block text-rose-400">{t("book.needAltHint")}</span>
             </span>
           </label>
           <label className="flex items-start gap-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-800">
@@ -258,16 +276,16 @@ export function BookingModal({
               className="mt-1 h-4 w-4 accent-rose-500"
             />
             <span>
-              <span className="block font-medium">يحتاج بروفة</span>
+              <span className="block font-medium">{t("book.needFit")}</span>
               <span className="mt-1 block text-rose-400">
                 {needsFitting || needsAlterations
-                  ? `موعد البروفة ${formatDate(fittingDateForPickup(startDate))}`
-                  : "اختياري إذا ما في تعديلات."}
+                  ? t("customers.fitDate", { date: formatDate(fittingDateForPickup(startDate)) })
+                  : t("book.needFitHint")}
               </span>
             </span>
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">العربون المدفوع الآن</span>
+            <span className="mb-1 block text-rose-700">{t("book.depositNow")}</span>
             <input
               type="number"
               min="0"
@@ -278,14 +296,12 @@ export function BookingModal({
               placeholder="0"
             />
             <span className="mt-1 block text-xs text-rose-400">
-              المتبقي على العميلة {formatCurrency(Math.max(0, quote.total - (Number(depositPaid) || 0)))}
+              {t("book.remainingDue", { amount: formatCurrency(Math.max(0, quote.total - (Number(depositPaid) || 0))) })}
             </span>
           </label>
           <div className="rounded-2xl bg-violet-50 px-4 py-3 text-sm text-violet-900">
-            <p className="font-medium">تأمين الفستان {formatCurrency(dress.insuranceAmount)}</p>
-            <p className="mt-1 text-xs leading-6 text-violet-700/80">
-              يُحصَل الآن مع العربون، ويُرجَع للعميلة عند الإرجاع إذا الفستان سليم. التأمين مو من فلوس الإيجار.
-            </p>
+            <p className="font-medium">{t("book.insurance", { amount: formatCurrency(dress.insuranceAmount) })}</p>
+            <p className="mt-1 text-xs leading-6 text-violet-700/80">{t("book.insuranceHint")}</p>
           </div>
           {isOwner ? (
             <OwnerDiscountFields
@@ -307,16 +323,14 @@ export function BookingModal({
                 className="mt-1 h-4 w-4 accent-rose-500"
               />
               <span>
-                <span className="block font-medium">تطبيق خصم المالك</span>
+                <span className="block font-medium">{t("book.applyOwner")}</span>
                 <span className="mt-1 block text-rose-400">
-                  {authorizedDiscountLabel(discountPolicy.type, discountPolicy.value)}. القيمة ثابتة بقرار المالك ولا يمكن تغييرها.
+                  {authorizedDiscountLabel(discountPolicy.type, discountPolicy.value)}. {t("book.ownerLocked")}
                 </span>
               </span>
             </label>
           ) : (
-            <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              الخصم مغلق حالياً. الموظفات يطبقنه فقط إذا سمح المالك وحدّد قيمته.
-            </p>
+            <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">{t("book.noStaffDiscount")}</p>
           )}
           {isOwner ? (
             <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
@@ -326,7 +340,7 @@ export function BookingModal({
               </div>
               <dl className="mt-2 space-y-1 text-xs text-emerald-800/90">
                 <div className="flex justify-between gap-3">
-                  <dt>قبل الخصم</dt>
+                  <dt>{t("book.before")}</dt>
                   <dd className="tabular-nums">{formatCurrency(quote.subtotal)}</dd>
                 </div>
                 {quote.discountAmount > 0 ? (
@@ -338,21 +352,22 @@ export function BookingModal({
               </dl>
               <p className="mt-2 text-2xl tabular-nums">{formatCurrency(quote.total)}</p>
               <p className="text-xs text-emerald-700/80">
-                إيجار فقط. التأمين {formatCurrency(dress.insuranceAmount)} يُحصَل ويرجع، وما يدخل في الدخل.
+                {t("book.rentOnly", { amount: formatCurrency(dress.insuranceAmount) })}
               </p>
             </div>
           ) : (
             <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
-              تم حجز {daysLabel(days)}
               {effectiveType !== "none"
-                ? ` مع ${authorizedDiscountLabel(discountPolicy.type, discountPolicy.value)}`
-                : ""}
-              . يُحتسب السعر تلقائياً في دفتر المالك.
+                ? t("book.staffBookedWith", {
+                    days: daysLabel(days),
+                    discount: authorizedDiscountLabel(discountPolicy.type, discountPolicy.value),
+                  })
+                : t("book.staffBooked", { days: daysLabel(days) })}
             </p>
           )}
-          {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+          {error ? <p className="text-sm text-rose-700">{t(error)}</p> : null}
           <button type="submit" className="shop-btn w-full rounded-2xl py-2.5 text-sm">
-            تأكيد الحجز
+            {t("book.confirm")}
           </button>
         </form>
       </div>
@@ -371,9 +386,10 @@ function OwnerDiscountFields({
   onTypeChange: (type: DiscountType) => void;
   onValueChange: (value: string) => void;
 }) {
+  const { t } = useLanguage();
   return (
     <fieldset className="space-y-2">
-      <legend className="mb-1 text-sm text-rose-700">خصم هذا الحجز</legend>
+      <legend className="mb-1 text-sm text-rose-700">{t("book.thisDiscount")}</legend>
       <div className="grid grid-cols-3 gap-2">
         {(["none", "percent", "amount"] as DiscountType[]).map((type) => (
           <button
@@ -409,7 +425,7 @@ function OwnerDiscountFields({
             ))}
           </div>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">نسبة الخصم</span>
+            <span className="mb-1 block text-rose-700">{t("book.percent")}</span>
             <input
               type="number"
               min="0"
@@ -425,7 +441,7 @@ function OwnerDiscountFields({
       ) : null}
       {discountType === "amount" ? (
         <label className="block text-sm">
-          <span className="mb-1 block text-rose-700">مبلغ الخصم بالريال العماني</span>
+          <span className="mb-1 block text-rose-700">{t("book.amount")}</span>
           <input
             type="number"
             min="0"

@@ -63,3 +63,21 @@ export function customerBookings(bookings: Booking[], customerId: string): Booki
     .filter((booking) => booking.customerId === customerId)
     .sort((a, b) => (a.bookedAt < b.bookedAt ? 1 : -1));
 }
+
+export function customerOpenBookings(bookings: Booking[], customerId: string): Booking[] {
+  return customerBookings(bookings, customerId).filter((booking) => booking.status !== "cancelled");
+}
+
+export function cancelledBookings(bookings: Booking[]): Booking[] {
+  return bookings
+    .filter((booking) => booking.status === "cancelled")
+    .sort((a, b) => (a.cancelledAt || a.bookedAt) < (b.cancelledAt || b.bookedAt) ? 1 : -1);
+}
+
+export function bookingWeddingDate(booking: Booking | undefined, customer?: Customer): string {
+  return booking?.eventDate || customer?.eventDate || "";
+}
+
+export function countedBookings(bookings: Booking[]): Booking[] {
+  return bookings.filter((booking) => booking.status !== "cancelled");
+}

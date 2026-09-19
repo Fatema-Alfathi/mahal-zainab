@@ -3,6 +3,7 @@
 import { Banknote, Landmark, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import {
   grossRevenue,
   netProfit,
@@ -14,6 +15,7 @@ import { formatCurrency } from "@/lib/format";
 
 export function FinancialNerveCenter() {
   const { bookings, fixedExpenses, variableExpenses } = useShop();
+  const { t } = useLanguage();
   const revenue = grossRevenue(bookings);
   const opex = totalOperatingExpenses(fixedExpenses, variableExpenses);
   const profit = netProfit(bookings, fixedExpenses, variableExpenses);
@@ -30,34 +32,28 @@ export function FinancialNerveCenter() {
   return (
     <section className="space-y-6">
       <div>
-        <p className="text-sm text-stone-400">ملخص الحسابات</p>
-        <h2 className="mt-1 text-3xl font-medium text-stone-800">أرباح وخسائر المحل</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-7 text-stone-500">
-          أسعار شراء الفساتين رأس مال وتظهر في عائد كل فستان، وليست ضمن مصروفات التشغيل الشهرية.
-        </p>
+        <p className="text-sm text-stone-400">{t("fin.kicker")}</p>
+        <h2 className="mt-1 text-3xl font-medium text-stone-800">{t("fin.title")}</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-7 text-stone-500">{t("fin.lead")}</p>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard
-          label="الإيراد الإجمالي"
+          label={t("fin.revenue")}
           value={revenue}
-          hint="كل المبالغ المحصّلة من تأجير الفساتين، بما فيها الحجوزات النشطة."
+          hint={t("fin.revenueHint")}
           icon={Banknote}
           tone="rose"
         />
         <MetricCard
-          label="إجمالي مصروفات التشغيل"
+          label={t("fin.opex")}
           value={opex}
-          hint="الإيجار والرواتب والبرامج والتسويق والتنظيف الجاف والإصلاحات وفواتير الخدمات."
+          hint={t("fin.opexHint")}
           icon={Wallet}
         />
         <MetricCard
-          label="صافي الربح"
+          label={t("fin.profit")}
           value={profit}
-          hint={
-            profitable
-              ? "الإيرادات تغطي مصروفات التشغيل لهذه الفترة."
-              : "مصروفات التشغيل حالياً أعلى من حصيلة التأجير."
-          }
+          hint={profitable ? t("fin.profitYes") : t("fin.profitNo")}
           icon={profitable ? TrendingUp : TrendingDown}
           tone={profitable ? "profit" : "loss"}
         />
@@ -66,20 +62,20 @@ export function FinancialNerveCenter() {
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm font-medium text-stone-700">
             <Landmark className="h-4 w-4 text-stone-400" aria-hidden />
-            الإيرادات مقابل مصروفات التشغيل
+            {t("fin.vs")}
           </div>
-          <p className="text-xs text-stone-500">لقطة الدفتر الحالية</p>
+          <p className="text-xs text-stone-500">{t("fin.snapshot")}</p>
         </div>
         <div className="space-y-3">
-          <BarRow label="الإيراد الإجمالي" amount={revenue} width={Math.min(100, revenueShare)} tone="teal" />
-          <BarRow label="إجمالي التشغيل" amount={opex} width={Math.min(100, opexShare)} tone="stone" />
+          <BarRow label={t("fin.revenue")} amount={revenue} width={Math.min(100, revenueShare)} tone="teal" />
+          <BarRow label={t("fin.opexBar")} amount={opex} width={Math.min(100, opexShare)} tone="stone" />
         </div>
         <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-5">
-          <OpexChip label="ثابت شهري" value={fixedTotal} />
-          <OpexChip label="التسويق" value={marketing} />
-          <OpexChip label="التنظيف الجاف" value={cleaning} />
-          <OpexChip label="الإصلاحات" value={repairs} />
-          <OpexChip label="خدمات وأخرى" value={utilities + other} />
+          <OpexChip label={t("fin.fixed")} value={fixedTotal} />
+          <OpexChip label={t("fin.marketing")} value={marketing} />
+          <OpexChip label={t("fin.cleaning")} value={cleaning} />
+          <OpexChip label={t("fin.repairs")} value={repairs} />
+          <OpexChip label={t("fin.utilitiesOther")} value={utilities + other} />
         </dl>
       </div>
     </section>
@@ -97,6 +93,7 @@ function BarRow({
   width: number;
   tone: "teal" | "stone";
 }) {
+  useLanguage();
   return (
     <div>
       <div className="mb-1 flex items-center justify-between text-sm">
@@ -114,6 +111,7 @@ function BarRow({
 }
 
 function OpexChip({ label, value }: { label: string; value: number }) {
+  useLanguage();
   return (
     <div className="rounded-2xl bg-[#f3f1ee] px-3 py-2">
       <dt className="text-xs text-stone-500">{label}</dt>

@@ -1,27 +1,22 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import {
-  CalendarDays,
-  Phone,
-  Pencil,
-  Plus,
-  Search,
-  StickyNote,
-  UserRound,
-  X,
-} from "lucide-react";
+import { Ban, CalendarDays, Pencil, Phone, Plus, Search, StickyNote, UserRound, X } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
-import { customerBookings, isCustomerNumberTaken, suggestCustomerNumber } from "@/lib/customers";
-import { cn, formatCurrency, formatDate, formatSignedCurrency } from "@/lib/format";
-import type { Customer, CustomerDraft } from "@/types";
+import { useLanguage } from "@/i18n/LanguageProvider";
+import { bookingWeddingDate, cancelledBookings, customerBookings, isCustomerNumberTaken, suggestCustomerNumber } from "@/lib/customers";
+import { cn, formatCurrency, formatDate, formatDateOrDash, formatSignedCurrency } from "@/lib/format";
+import { bookingStatusLabel } from "@/lib/labels";
+import type { Booking, Customer, CustomerDraft } from "@/types";
 
 export function CustomerManager() {
-  const { customers, bookings, dresses, addCustomer, updateCustomer } = useShop();
+  const { customers, bookings, dresses, addCustomer, updateCustomer, cancelBooking } = useShop();
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [editor, setEditor] = useState<{ mode: "add" } | { mode: "edit"; customer: Customer } | null>(null);
   const [openId, setOpenId] = useState<string | null>(customers[0]?.id ?? null);
   const [notice, setNotice] = useState("");
+  const [pendingCancel, setPendingCancel] = useState<Booking | null>(null);
 
   const visible = useMemo(() => {
     const key = query.trim();
@@ -38,13 +33,9 @@ export function CustomerManager() {
     <section className="space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-[var(--salla-primary)]">ملفات العرايس</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-3xl">
-            إدارة العميلات
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--salla-muted)]">
-            كل عروس لها رقم وملف: الهاتف، تاريخ المناسبة، الملاحظات، وسجل حجوزاتها مع العربون والتأمين والبروفة.
-          </p>
+          <p className="text-sm text-[var(--salla-muted)]">{t("customers.kicker")}</p>
+          <h1 className="mt-1 font-serif text-3xl text-[var(--foreground)]">{t("customers.title")}</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">{t("customers.lead")}</p>
         </div>
         <button
           type="button"
@@ -55,7 +46,7 @@ export function CustomerManager() {
           className="shop-btn inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
         >
           <Plus className="h-4 w-4" aria-hidden />
-          عميلة جديدة
+          {t("customers.add")}
         </button>
       </div>
 
@@ -273,15 +264,13 @@ export function CustomerManager() {
             </div>
           </article>
         ) : (
-          <div className="dash-panel flex items-center justify-center rounded-2xl px-4 py-16 text-sm text-[var(--salla-muted)]">
-            اختاري عميلة من القائمة.
-          </div>
+          <p className="dash-panel rounded-3xl px-4 py-10 text-center text-sm text-[var(--salla-muted)]">{t("customers.pick")}</p>
         )}
       </div>
 
       {editor ? (
         <CustomerFormDialog
-          title={editor.mode === "add" ? "عميلة جديدة" : `تعديل ${editor.customer.name}`}
+          title={editor.mode === "add" ? t("customers.add") : t("customers.editTitle", { name: editor.customer.name })}
           initialDraft={
             editor.mode === "add"
               ? { number: suggestCustomerNumber(customers), name: "", phone: "", eventDate: "", notes: "" }
@@ -299,10 +288,36 @@ export function CustomerManager() {
             const ok =
               editor.mode === "add" ? addCustomer(draft) : updateCustomer(editor.customer.id, draft);
             if (!ok) return false;
-            setNotice(editor.mode === "add" ? "تم فتح ملف العميلة." : "تم حفظ ملف العميلة.");
+            setNotice(editor.mode === "add" ? "customers.savedAdd" : "customers.savedEdit");
             return true;
           }}
         />
+      ) : null}
+
+      {pendingCancel ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
+          <button type="button" className="absolute inset-0 cursor-default" aria-label={t("cancel")} onClick={() => setPendingCancel(null)} />
+          <div className="shop-card relative w-full max-w-md rounded-3xl p-6">
+            <h3 className="text-xl text-rose-900">{t("customers.cancelTitle", { name: pendingCancel.customerName })}</h3>
+            <p className="mt-2 text-sm leading-6 text-rose-600">{t("customers.cancelBody")}</p>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button type="button" onClick={() => setPendingCancel(null)} className="rounded-2xl bg-rose-50 px-4 py-2 text-sm text-rose-800">
+                {t("floor.undo")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  cancelBooking(pendingCancel.id);
+                  setPendingCancel(null);
+                  setNotice("customers.cancelledOk");
+                }}
+                className="shop-btn-red rounded-2xl px-4 py-2 text-sm"
+              >
+                {t("floor.confirmCancel")}
+              </button>
+            </div>
+          </div>
+        </div>
       ) : null}
     </section>
   );
@@ -356,29 +371,30 @@ function CustomerFormDialog({
   onSave: (draft: CustomerDraft) => boolean;
 }) {
   const { customers } = useShop();
+  const { t } = useLanguage();
   const [draft, setDraft] = useState<CustomerDraft>(initialDraft);
   const [error, setError] = useState("");
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!draft.name.trim()) {
-      setError("اسم العميلة مطلوب.");
+      setError("customers.nameRequired");
       return;
     }
     if (!draft.number.trim()) {
-      setError("رقم العميلة مطلوب.");
+      setError("customers.numberRequired");
       return;
     }
     if (isCustomerNumberTaken(customers, draft.number, excludeId)) {
-      setError("هذا الرقم مستخدم لعميلة ثانية.");
+      setError("customers.numberTaken");
       return;
     }
     if (!draft.phone.trim()) {
-      setError("رقم الهاتف مطلوب.");
+      setError("customers.phoneRequired");
       return;
     }
     if (!onSave(draft)) {
-      setError("تعذر الحفظ. راجعي الاسم أو الهاتف، يمكن الملف موجود.");
+      setError("customers.saveFail");
       return;
     }
     onClose();
@@ -410,43 +426,104 @@ function CustomerFormDialog({
               className={fieldClass}
             />
           </Field>
-          <Field label="الاسم">
+          <label className="block text-sm">
+            <span className="mb-1 block text-[var(--foreground)]">{t("customers.fieldName")}</span>
             <input
               value={draft.name}
               onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
               className={fieldClass}
             />
-          </Field>
-          <Field label="رقم الهاتف">
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block text-[var(--foreground)]">{t("customers.fieldPhone")}</span>
             <input
               value={draft.phone}
               onChange={(event) => setDraft((current) => ({ ...current, phone: event.target.value }))}
               className={fieldClass}
               placeholder="9xxxxxxx"
             />
-          </Field>
-          <Field label="تاريخ المناسبة">
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block text-[var(--foreground)]">{t("customers.fieldWedding")}</span>
             <input
               type="date"
               value={draft.eventDate}
               onChange={(event) => setDraft((current) => ({ ...current, eventDate: event.target.value }))}
               className={fieldClass}
             />
-          </Field>
-          <Field label="ملاحظات">
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block text-[var(--foreground)]">{t("customers.fieldNotes")}</span>
             <textarea
               value={draft.notes}
               onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
               rows={3}
               className={fieldClass}
             />
-          </Field>
-          {error ? <p className="text-sm text-[var(--salla-danger)]">{error}</p> : null}
-          <button type="submit" className="shop-btn w-full rounded-xl py-2.5 text-sm font-medium">
-            حفظ الملف
+          </label>
+          {error ? <p className="text-sm text-[var(--foreground)]">{t(error)}</p> : null}
+          <button type="submit" className="shop-btn w-full rounded-2xl py-2.5 text-sm">
+            {t("customers.saveFile")}
           </button>
         </form>
       </div>
     </div>
+  );
+}
+
+function DateChip({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-rose-50 px-3 py-2">
+      <dt className="text-[11px] text-rose-400">{label}</dt>
+      <dd className="mt-0.5 text-sm font-medium tabular-nums text-rose-900">{value}</dd>
+    </div>
+  );
+}
+
+function CancelledBookingsPanel({
+  bookings,
+  dresses,
+}: {
+  bookings: Booking[];
+  dresses: { id: string; name: string }[];
+}) {
+  const { t } = useLanguage();
+  const rows = cancelledBookings(bookings);
+  return (
+    <section className="dash-panel rounded-3xl p-5" aria-label={t("customers.cancelledTitle")}>
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium text-rose-400">{t("customers.cancelledKicker")}</p>
+          <h2 className="mt-1 text-lg text-rose-900">{t("customers.cancelledTitle")}</h2>
+          <p className="mt-1 text-xs text-rose-400">{t("customers.cancelledLead")}</p>
+        </div>
+        <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-medium text-white">{rows.length}</span>
+      </div>
+      {rows.length === 0 ? (
+        <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{t("customers.cancelledEmpty")}</p>
+      ) : (
+        <ul className="space-y-2">
+          {rows.map((booking) => {
+            const dress = dresses.find((item) => item.id === booking.dressId);
+            return (
+              <li key={booking.id} className="shop-tint-red rounded-2xl px-4 py-3">
+                <p className="text-sm font-medium text-rose-900">
+                  {booking.customerName} · {dress?.name ?? booking.dressId}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-rose-600">
+                  {t("customers.cancelledLine", {
+                    pickup: formatDateOrDash(booking.pickupDate),
+                    handover: formatDateOrDash(booking.handoverDate),
+                    wedding: formatDateOrDash(booking.eventDate),
+                    returnDate: formatDateOrDash(booking.returnDate),
+                  })}
+                </p>
+                <p className="mt-1 text-xs text-rose-500">{t("customers.cancelledOn", { date: formatDateOrDash(booking.cancelledAt) })}</p>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }

@@ -9,14 +9,16 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { ownerHistory, type HistoryRow } from "@/lib/ownerSnapshot";
 import { cn, formatCurrency, formatSignedCurrency, monthNameShortAr } from "@/lib/format";
 
 export function OwnerHistory() {
   const { bookings, fixedExpenses, variableExpenses } = useShop();
+  const { t, locale } = useLanguage();
   const history = useMemo(
     () => ownerHistory(bookings, fixedExpenses, variableExpenses),
-    [bookings, fixedExpenses, variableExpenses],
+    [bookings, fixedExpenses, variableExpenses, locale],
   );
   const years = history.years.map((row) => row.key);
   const [year, setYear] = useState(years[years.length - 1] ?? "");
@@ -99,12 +101,10 @@ export function OwnerHistory() {
       <div className="dash-panel rounded-2xl p-5 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-[var(--foreground)]">دخل كل شهر</h3>
-            <p className="mt-1 text-xs text-[var(--salla-muted)]">
-              اختاري السنة. الأخضر أعلى دخل، والأحمر أقل دخل في نفس السنة.
-            </p>
+            <h3 className="text-xl text-[var(--foreground)]">{t("history.monthIncome")}</h3>
+            <p className="mt-1 text-sm text-[var(--salla-muted)]">{t("history.monthHint")}</p>
           </div>
-          <div className="inline-flex flex-wrap gap-1 rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/60 p-1" role="group" aria-label="اختيار السنة">
+          <div className="flex flex-wrap gap-2" role="group" aria-label={t("history.pickYear")}>
             {years.map((item) => (
               <button
                 key={item}
@@ -285,6 +285,7 @@ function Highlight({
   accent: "success" | "danger" | "warn" | "info";
   icon: typeof TrendingUp;
 }) {
+  const { t } = useLanguage();
   const value = row ? row[field] : 0;
   return (
     <div className="dash-panel rounded-2xl p-4">

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { DressPhoto } from "@/components/DressPhoto";
 import { cn } from "@/lib/format";
 
@@ -18,10 +19,13 @@ export function DressGallery({
   className?: string;
   heightClass?: string;
 }) {
+  const { t, dir } = useLanguage();
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const slides = images.length > 0 ? images : [""];
   const count = slides.length;
+  const PrevIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
+  const NextIcon = dir === "rtl" ? ChevronLeft : ChevronRight;
 
   const goTo = useCallback(
     (next: number) => {
@@ -60,7 +64,7 @@ export function DressGallery({
       >
         {slides.map((src, slideIndex) => (
           <div key={`${src}-${slideIndex}`} className="h-full w-full shrink-0 snap-center">
-            <DressPhoto src={src} alt={`${alt} — صورة ${slideIndex + 1}`} fallbackClassName={fallbackClassName} />
+            <DressPhoto src={src} alt={t("gallery.alt", { name: alt, n: slideIndex + 1 })} fallbackClassName={fallbackClassName} />
           </div>
         ))}
       </div>
@@ -70,18 +74,18 @@ export function DressGallery({
           <button
             type="button"
             onClick={() => goTo(index - 1)}
-            className="absolute start-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--salla-border)] bg-[var(--salla-surface)]/95 text-[var(--salla-primary)] shadow-sm hover:bg-[var(--salla-surface)]"
-            aria-label="الصورة السابقة"
+            className="absolute start-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-rose-600 shadow-sm hover:bg-white"
+            aria-label={t("gallery.prev")}
           >
-            <ChevronRight className="h-4 w-4" aria-hidden />
+            <PrevIcon className="h-4 w-4" aria-hidden />
           </button>
           <button
             type="button"
             onClick={() => goTo(index + 1)}
-            className="absolute end-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--salla-border)] bg-[var(--salla-surface)]/95 text-[var(--salla-primary)] shadow-sm hover:bg-[var(--salla-surface)]"
-            aria-label="الصورة التالية"
+            className="absolute end-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-rose-600 shadow-sm hover:bg-white"
+            aria-label={t("gallery.next")}
           >
-            <ChevronLeft className="h-4 w-4" aria-hidden />
+            <NextIcon className="h-4 w-4" aria-hidden />
           </button>
           <div className="absolute inset-x-0 bottom-2 z-10 flex justify-center gap-1.5" dir="ltr">
             {slides.map((_, dotIndex) => (
@@ -93,7 +97,7 @@ export function DressGallery({
                   "h-1.5 rounded-full transition-all",
                   dotIndex === index ? "w-5 bg-white" : "w-1.5 bg-white/50 hover:bg-white/80",
                 )}
-                aria-label={`الصورة ${dotIndex + 1} من ${count}`}
+                aria-label={t("gallery.photoOf", { n: dotIndex + 1, count })}
               />
             ))}
           </div>

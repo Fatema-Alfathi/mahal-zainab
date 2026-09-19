@@ -1,6 +1,7 @@
 "use client";
 
 import { DRESS_CATEGORY_LABELS } from "@/lib/labels";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/format";
 import { DRESS_CATEGORIES, type DressCategory } from "@/types";
 
@@ -13,10 +14,11 @@ export function CategoryFilter({
   value: CategoryFilterValue;
   onChange: (value: CategoryFilterValue) => void;
 }) {
+  const { t } = useLanguage();
   return (
-    <FilterGroup label="التصنيف" ariaLabel="تصفية حسب التصنيف">
+    <FilterGroup label={t("filter.category")} ariaLabel={t("filter.categoryAria")}>
       <Chip active={value === "all"} onClick={() => onChange("all")}>
-        الكل
+        {t("filter.allCategories")}
       </Chip>
       {DRESS_CATEGORIES.map((category) => (
         <Chip key={category} active={value === category} onClick={() => onChange(category)}>

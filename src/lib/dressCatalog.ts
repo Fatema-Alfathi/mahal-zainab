@@ -1,4 +1,5 @@
 import { DRESS_PRESENTATION } from "@/data/mockData";
+import { t } from "@/i18n/t";
 import { formatDate } from "@/lib/format";
 import { DRESS_CATEGORY_LABELS, joinArabic, piecesLabel } from "@/lib/labels";
 import {
@@ -51,11 +52,11 @@ export function styleFamilySummary(dresses: Dress[], dress: Dress) {
     siblings: family.filter((item) => item.id !== dress.id),
     countLabel: piecesLabel(family.length),
     sizeLine: sameSize
-      ? `نفس المقاس (${sizes[0] ?? dress.size})`
-      : `مختلف (${joinArabic(sizes)})`,
+      ? t("variants.sameSize", { value: sizes[0] ?? dress.size })
+      : t("variants.diffSize", { value: joinArabic(sizes) }),
     colorLine: sameColor
-      ? `نفس اللون (${colors[0] ?? dress.color})`
-      : `مختلف (${joinArabic(colors)})`,
+      ? t("variants.sameColor", { value: t(`color.${colors[0] ?? dress.color}`) })
+      : t("variants.diffColor", { value: joinArabic(colors.map((item) => t(`color.${item}`))) }),
     sameSize,
     sameColor,
   };
@@ -91,7 +92,7 @@ export function normalizeMeasurements(input: DressMeasurements): DressMeasuremen
 }
 
 export function sizeLabel(size: DressSize): string {
-  return `مقاس ${size}`;
+  return t("sizeLabel", { size });
 }
 
 export function matchesDressQuery(dress: Dress, query: string): boolean {
@@ -111,18 +112,18 @@ export function matchesDressQuery(dress: Dress, query: string): boolean {
 
 export function measurementLine(measurements: DressMeasurements): string {
   const parts = [
-    measurements.bust ? `صدر ${measurements.bust}` : "",
-    measurements.waist ? `خصر ${measurements.waist}` : "",
-    measurements.hips ? `أرداف ${measurements.hips}` : "",
-    measurements.length ? `طول ${measurements.length}` : "",
+    measurements.bust ? t("measure.bust", { n: measurements.bust }) : "",
+    measurements.waist ? t("measure.waist", { n: measurements.waist }) : "",
+    measurements.hips ? t("measure.hips", { n: measurements.hips }) : "",
+    measurements.length ? t("measure.length", { n: measurements.length }) : "",
   ].filter(Boolean);
-  return parts.length ? `${parts.join(" · ")} سم` : "";
+  return parts.length ? `${parts.join(" · ")} ${t("cm")}` : "";
 }
 
 export function dressDisplay(dress: Dress) {
   const extra = DRESS_PRESENTATION[dress.id];
   return {
-    designer: extra?.designer ?? "محل زينب",
+    designer: extra?.designer ?? t("brand"),
     silhouette: dress.silhouette || extra?.silhouette || "",
     palette: extra?.palette ?? "from-rose-100 via-amber-50 to-rose-200",
     images: dress.images.length > 0 ? dress.images : extra?.images ?? [],
@@ -172,7 +173,7 @@ export function dressActiveBookings(bookings: Booking[], dressId: string): Booki
 
 export function bookingDateLine(booking: Pick<Booking, "startDate" | "endDate">): string {
   if (booking.startDate === booking.endDate) return formatDate(booking.startDate);
-  return `من ${formatDate(booking.startDate)} إلى ${formatDate(booking.endDate)}`;
+  return t("bookingLine", { start: formatDate(booking.startDate), end: formatDate(booking.endDate) });
 }
 
 export function statusAfterCare(current: DressStatus, needsCleaning: boolean): DressStatus {
@@ -214,7 +215,7 @@ export function normalizeDressDraft(draft: DressCatalogDraft): DressCatalogDraft
     name,
     barcode,
     description: draft.description.trim(),
-    silhouette: draft.silhouette.trim() || "فستان سهرة",
+    silhouette: draft.silhouette.trim() || t("eveningDress"),
     size: isDressSize(draft.size) ? draft.size : "M",
     category: isDressCategory(draft.category) ? draft.category : "evening",
     color: isDressColor(draft.color) ? draft.color : "أبيض",

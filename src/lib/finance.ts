@@ -1,3 +1,4 @@
+import { t } from "@/i18n/t";
 import {
   DRY_CLEANING_FEE,
   type Booking,
@@ -65,7 +66,9 @@ export function calculateBookingRevenue(
 }
 
 export function grossRevenue(bookings: Booking[]): number {
-  return bookings.reduce((sum, booking) => sum + booking.totalRevenueGenerated, 0);
+  return bookings
+    .filter((booking) => booking.status !== "cancelled")
+    .reduce((sum, booking) => sum + booking.totalRevenueGenerated, 0);
 }
 
 export function totalFixedExpenses(fixedExpenses: FixedExpense[]): number {
@@ -102,7 +105,7 @@ export function sumByCategory(
 
 export function dressRentalRevenue(dressId: string, bookings: Booking[]): number {
   return bookings
-    .filter((booking) => booking.dressId === dressId)
+    .filter((booking) => booking.dressId === dressId && booking.status !== "cancelled")
     .reduce((sum, booking) => sum + booking.totalRevenueGenerated, 0);
 }
 
@@ -184,7 +187,7 @@ export function createDryCleaningExpense(
     category: "Dry Cleaning",
     amount: DRY_CLEANING_FEE,
     date,
-    description: `تنظيف جاف إلزامي بعد التأجير — ${dressName}`,
+    description: t("var.dryCleaningDesc", { name: dressName }),
     associatedDressId: dressId,
   };
 }

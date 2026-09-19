@@ -19,13 +19,15 @@ export type DateRange = { start: string; end: string };
 export function incomeInRange(bookings: Booking[], range: DateRange): number {
   return roundMoney(
     bookings
-      .filter((booking) => isIsoInRange(booking.startDate, range.start, range.end))
+      .filter((booking) => booking.status !== "cancelled" && isIsoInRange(booking.startDate, range.start, range.end))
       .reduce((sum, booking) => sum + booking.totalRevenueGenerated, 0),
   );
 }
 
 export function bookingsInRange(bookings: Booking[], range: DateRange): number {
-  return bookings.filter((booking) => isIsoInRange(booking.startDate, range.start, range.end)).length;
+  return bookings.filter(
+    (booking) => booking.status !== "cancelled" && isIsoInRange(booking.startDate, range.start, range.end),
+  ).length;
 }
 
 export function variableExpensesInRange(expenses: VariableExpense[], range: DateRange): number {
@@ -112,11 +114,19 @@ export function ownerSnapshot(
     monthProfit: thisMonthProfit,
     monthBookings: thisMonthBookings,
     yearBookings: bookingsInRange(bookings, year),
-    remainingDue: roundMoney(bookings.reduce((sum, booking) => sum + booking.remainingAmount, 0)),
-    depositsPaid: roundMoney(bookings.reduce((sum, booking) => sum + booking.depositPaid, 0)),
+    remainingDue: roundMoney(
+      bookings
+        .filter((booking) => booking.status !== "cancelled")
+        .reduce((sum, booking) => sum + booking.remainingAmount, 0),
+    ),
+    depositsPaid: roundMoney(
+      bookings
+        .filter((booking) => booking.status !== "cancelled")
+        .reduce((sum, booking) => sum + booking.depositPaid, 0),
+    ),
     insuranceHeld: roundMoney(
       bookings
-        .filter((booking) => !booking.insuranceReturned)
+        .filter((booking) => booking.status !== "cancelled" && !booking.insuranceReturned)
         .reduce((sum, booking) => sum + booking.insurancePaid, 0),
     ),
     availableDresses: dresses.filter((dress) => dress.status === "available").length,

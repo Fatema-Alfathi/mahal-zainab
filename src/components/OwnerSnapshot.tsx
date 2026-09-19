@@ -11,7 +11,11 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
+import { DailyAlerts } from "@/components/DailyAlerts";
+import { GovernmentRecords } from "@/components/GovernmentRecords";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { ownerHistory, ownerSnapshot } from "@/lib/ownerSnapshot";
 import { comparisonLabel } from "@/lib/labels";
 import {
@@ -25,13 +29,14 @@ import {
 
 export function OwnerSnapshot() {
   const { dresses, bookings, fixedExpenses, variableExpenses } = useShop();
+  const { t, locale } = useLanguage();
   const snap = useMemo(
     () => ownerSnapshot(dresses, bookings, fixedExpenses, variableExpenses),
-    [bookings, dresses, fixedExpenses, variableExpenses],
+    [bookings, dresses, fixedExpenses, variableExpenses, locale],
   );
   const history = useMemo(
     () => ownerHistory(bookings, fixedExpenses, variableExpenses),
-    [bookings, fixedExpenses, variableExpenses],
+    [bookings, fixedExpenses, variableExpenses, locale],
   );
   const recentMonths = history.months.slice(-12);
   const maxMonthIncome = Math.max(...recentMonths.map((row) => row.income), 1);
@@ -43,59 +48,63 @@ export function OwnerSnapshot() {
       <div className="dash-panel overflow-hidden rounded-2xl">
         <div className="flex flex-col gap-5 border-b border-[var(--salla-border)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--salla-primary)_8%,var(--salla-surface)),var(--salla-surface)_55%)] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div>
-            <p className="text-sm font-medium text-[var(--salla-primary)]">مرحباً بك</p>
+            <p className="text-sm font-medium text-[var(--salla-primary)]">{t("owner.kicker")}</p>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-3xl">
-              نظرة عامة على محل زينب
+              {t("brand")}
             </h2>
             <p className="mt-2 text-sm text-[var(--salla-muted)]" suppressHydrationWarning>
               {formatDateLong(todayIso())}
               {" · "}
               {snap.monthProfit >= 0
-                ? `دخل ${snap.thisMonthLabel} يغطي المصروفات حتى اليوم`
-                : `مصروفات ${snap.thisMonthLabel} أعلى من الدخل حتى اليوم`}
+                ? t("owner.profitCovered", { month: snap.thisMonthLabel })
+                : t("owner.expensesHigher", { month: snap.thisMonthLabel })}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <StatusPill label="متاح" value={snap.availableDresses} tone="success" />
-            <StatusPill label="محجوز" value={snap.reservedDresses} tone="info" />
-            <StatusPill label="عند العميلة" value={snap.rentedDresses} tone="warn" />
-            <StatusPill label="تنظيف" value={snap.maintenanceDresses} tone="danger" />
+            <StatusPill label={t("owner.availableShort")} value={snap.availableDresses} tone="success" />
+            <StatusPill label={t("owner.reservedShort")} value={snap.reservedDresses} tone="info" />
+            <StatusPill label={t("owner.rentedShort")} value={snap.rentedDresses} tone="warn" />
+            <StatusPill label={t("owner.cleaningShort")} value={snap.maintenanceDresses} tone="danger" />
           </div>
         </div>
       </div>
 
+      <DailyAlerts />
+
+      <GovernmentRecords />
+
       {/* KPI row */}
       <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi
-          label={`دخل ${snap.thisMonthLabel}`}
+          label={t("owner.incomeOf", { month: snap.thisMonthLabel })}
           value={formatCurrency(snap.monthIncome)}
-          hint="حتى اليوم"
+          hint={t("owner.untilToday")}
           icon={CircleDollarSign}
           change={snap.comparison.income.change}
           accent="success"
         />
         <Kpi
-          label="المصروفات"
+          label={t("owner.expenses")}
           value={formatCurrency(snap.monthExpenses)}
-          hint="ثابت ومتغير هذا الشهر"
+          hint={t("owner.expensesHint")}
           icon={Wallet}
           change={snap.comparison.expenses.change}
           invert
           accent="danger"
         />
         <Kpi
-          label="صافي الربح"
+          label={t("owner.profit")}
           value={formatSignedCurrency(snap.monthProfit)}
-          hint={snap.monthProfit >= 0 ? "بعد المصروفات" : "المصروفات أعلى حالياً"}
+          hint={snap.monthProfit >= 0 ? t("owner.afterCosts") : t("owner.costsHigherNow")}
           icon={TrendingUp}
           change={snap.comparison.profit.change}
           accent={snap.monthProfit >= 0 ? "success" : "danger"}
           emphasize={snap.monthProfit >= 0 ? "good" : "bad"}
         />
         <Kpi
-          label="الحجوزات"
+          label={t("owner.bookings")}
           value={String(snap.monthBookings)}
-          hint={`${snap.yearBookings} حجز هذه السنة`}
+          hint={t("owner.yearBookings", { n: snap.yearBookings })}
           icon={CalendarDays}
           change={snap.comparison.bookings.change}
           accent="primary"
@@ -126,11 +135,11 @@ export function OwnerSnapshot() {
             <span className="bg-amber-400" style={{ width: `${(snap.rentedDresses / dressTotal) * 100}%` }} />
             <span className="bg-[var(--salla-danger)]" style={{ width: `${(snap.maintenanceDresses / dressTotal) * 100}%` }} />
           </div>
-          <ul className="mt-4 space-y-2.5 text-sm">
-            <DressRow label="متاحة" value={snap.availableDresses} color="bg-[var(--salla-success)]" />
-            <DressRow label="محجوزة في المحل" value={snap.reservedDresses} color="bg-sky-500" />
-            <DressRow label="عند العميلات" value={snap.rentedDresses} color="bg-amber-400" />
-            <DressRow label="يحتاج تنظيف" value={snap.maintenanceDresses} color="bg-[var(--salla-danger)]" />
+          <ul className="mt-4 space-y-2 text-sm">
+            <DressRow label={t("owner.available")} value={snap.availableDresses} color="bg-emerald-500" />
+            <DressRow label={t("owner.reservedInShop")} value={snap.reservedDresses} color="bg-sky-500" />
+            <DressRow label={t("owner.withCustomers")} value={snap.rentedDresses} color="bg-yellow-400" />
+            <DressRow label={t("owner.cleaningShort")} value={snap.maintenanceDresses} color="bg-red-500" />
           </ul>
         </div>
       </div>
@@ -187,17 +196,15 @@ export function OwnerSnapshot() {
       <div className="dash-panel rounded-2xl p-5 sm:p-6">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-[var(--foreground)]">حركة الدخل الشهرية</h3>
-            <p className="mt-1 text-xs text-[var(--salla-muted)]">
-              آخر {recentMonths.length} شهر · الأعلى والأقل مميزين
-            </p>
+            <h3 className="text-lg text-[var(--foreground)]">{t("owner.monthFlow")}</h3>
+            <p className="mt-1 text-xs text-[var(--salla-muted)]">{t("owner.monthFlowHint", { n: recentMonths.length })}</p>
           </div>
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full bg-[color-mix(in_srgb,var(--salla-success)_15%,transparent)] px-2.5 py-1 font-medium text-[var(--salla-success)]">
-              أعلى: {history.highestIncomeMonth?.label ?? "—"}
+            <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-white">
+              {t("owner.highest", { label: history.highestIncomeMonth?.label ?? "—" })}
             </span>
-            <span className="rounded-full bg-[color-mix(in_srgb,var(--salla-danger)_15%,transparent)] px-2.5 py-1 font-medium text-[var(--salla-danger)]">
-              أقل: {history.lowestIncomeMonth?.label ?? "—"}
+            <span className="rounded-full bg-red-600 px-2.5 py-1 text-white">
+              {t("owner.lowest", { label: history.lowestIncomeMonth?.label ?? "—" })}
             </span>
           </div>
         </div>
@@ -294,6 +301,7 @@ function Kpi({
   emphasize?: "good" | "bad";
   accent?: "success" | "danger" | "primary";
 }) {
+  useLanguage();
   const up = change > 0.05;
   const down = change < -0.05;
   const good = invert ? down : up;
@@ -354,6 +362,7 @@ function MetricTile({
   highlight?: boolean;
   danger?: boolean;
 }) {
+  useLanguage();
   return (
     <div
       className={cn(
@@ -402,6 +411,7 @@ function CompareCard({
   money?: boolean;
   invert?: boolean;
 }) {
+  const { t } = useLanguage();
   const up = change > 0.05;
   const down = change < -0.05;
   const good = invert ? down : up;

@@ -3,8 +3,9 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Plus, Receipt } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { formatCurrency, formatDate, todayIso } from "@/lib/format";
-import { CATEGORY_LABELS } from "@/lib/labels";
+import { categoryExpenseLabel } from "@/lib/labels";
 import { VARIABLE_EXPENSE_CATEGORIES, type VariableExpenseCategory } from "@/types";
 
 const fieldClass =
@@ -12,6 +13,7 @@ const fieldClass =
 
 export function VariableExpenseLog() {
   const { variableExpenses, dresses, addVariableExpense } = useShop();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const rows = useMemo(
@@ -74,7 +76,7 @@ export function VariableExpenseLog() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-[var(--foreground)]">{expense.description}</p>
                     <p className="mt-1 text-xs text-[var(--salla-muted)]">
-                      {CATEGORY_LABELS[expense.category]} · {formatDate(expense.date)}
+                      {categoryExpenseLabel(expense.category)} · {formatDate(expense.date)}
                       {dress ? ` · ${dress.name}` : ""}
                     </p>
                   </div>
@@ -124,6 +126,7 @@ function AddExpenseForm({
   }) => void;
   onCancel: () => void;
 }) {
+  const { t } = useLanguage();
   const [category, setCategory] = useState<VariableExpenseCategory>("Marketing Campaign");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(todayIso());
@@ -136,11 +139,11 @@ function AddExpenseForm({
     event.preventDefault();
     const parsed = Number(amount);
     if (!description.trim()) {
-      setError("اكتبي وصفاً قصيراً.");
+      setError("var.descRequired");
       return;
     }
     if (!Number.isFinite(parsed) || parsed <= 0) {
-      setError("أدخلي مبلغاً أكبر من صفر.");
+      setError("var.amountMin");
       return;
     }
     onSubmit({
@@ -158,17 +161,21 @@ function AddExpenseForm({
       className="mb-4 grid gap-3 rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/50 p-4"
     >
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-[var(--foreground)]">النوع</span>
-        <select value={category} onChange={(event) => setCategory(event.target.value as VariableExpenseCategory)} className={fieldClass}>
+        <span className="mb-1 block text-[var(--foreground)]">{t("var.type")}</span>
+        <select
+          value={category}
+          onChange={(event) => setCategory(event.target.value as VariableExpenseCategory)}
+          className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-[var(--foreground)]"
+        >
           {VARIABLE_EXPENSE_CATEGORIES.map((item) => (
             <option key={item} value={item}>
-              {CATEGORY_LABELS[item]}
+              {categoryExpenseLabel(item)}
             </option>
           ))}
         </select>
       </label>
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-[var(--foreground)]">المبلغ (ر.ع.)</span>
+        <span className="mb-1 block text-[var(--foreground))">{t("var.amount")}</span>
         <input
           type="number"
           min="0"
@@ -180,24 +187,33 @@ function AddExpenseForm({
         />
       </label>
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-[var(--foreground)]">التاريخ</span>
-        <input type="date" value={date} onChange={(event) => setDate(event.target.value)} className={fieldClass} />
+        <span className="mb-1 block text-[var(--foreground)]">{t("var.date")}</span>
+        <input
+          type="date"
+          value={date}
+          onChange={(event) => setDate(event.target.value)}
+          className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-[var(--foreground)]"
+        />
       </label>
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-[var(--foreground)]">الوصف</span>
+        <span className="mb-1 block text-[var(--foreground)]">{t("var.desc")}</span>
         <input
           type="text"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
-          className={fieldClass}
-          placeholder="إعلان إنستغرام"
+          className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-[var(--foreground)]"
+          placeholder={t("var.descPh")}
         />
       </label>
       {showDressLink ? (
         <label className="block text-sm">
-          <span className="mb-1.5 block font-medium text-[var(--foreground)]">مرتبط بأي فستان؟ (اختياري)</span>
-          <select value={associatedDressId} onChange={(event) => setAssociatedDressId(event.target.value)} className={fieldClass}>
-            <option value="">مصروف عام</option>
+          <span className="mb-1 block text-[var(--foreground)]">{t("var.dress")}</span>
+          <select
+            value={associatedDressId}
+            onChange={(event) => setAssociatedDressId(event.target.value)}
+            className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-[var(--foreground)]"
+          >
+            <option value="">{t("var.noDress")}</option>
             {dresses.map((dress) => (
               <option key={dress.id} value={dress.id}>
                 {dress.name}
@@ -206,17 +222,13 @@ function AddExpenseForm({
           </select>
         </label>
       ) : null}
-      {error ? <p className="text-sm text-[var(--salla-danger)]">{error}</p> : null}
+      {error ? <p className="text-sm text-[var(--foreground)]">{t(error)}</p> : null}
       <div className="flex gap-2">
-        <button type="submit" className="shop-btn rounded-xl px-4 py-2.5 text-sm font-medium">
-          حفظ
+        <button type="submit" className="shop-btn rounded-2xl px-4 py-2 text-sm">
+          {t("var.save")}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-xl px-4 py-2.5 text-sm text-[var(--salla-muted)] hover:bg-[var(--salla-surface)]"
-        >
-          إلغاء
+        <button type="button" onClick={onCancel} className="rounded-2xl px-4 py-2 text-sm text-[var(--salla-muted)] hover:bg-white">
+          {t("cancel")}
         </button>
       </div>
     </form>
