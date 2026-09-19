@@ -27,9 +27,9 @@ export function DailyAlerts({ compact = false }: { compact?: boolean }) {
     <section className={cn("dash-panel rounded-3xl p-5", compact && "p-4")} aria-label={t("alerts.aria")}>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium text-rose-400">{t("alerts.kicker")}</p>
-          <h2 className="mt-1 text-lg text-rose-900">{t("alerts.title")}</h2>
-          <p className="mt-1 text-xs text-rose-400">{t("alerts.lead")}</p>
+          <p className="text-xs font-medium text-[var(--salla-muted)]">{t("alerts.kicker")}</p>
+          <h2 className="mt-1 text-lg text-[var(--foreground)]">{t("alerts.title")}</h2>
+          <p className="mt-1 text-xs text-[var(--salla-muted)]">{t("alerts.lead")}</p>
         </div>
         <span
           className={cn(
@@ -63,7 +63,7 @@ function AlertRow({ alert }: { alert: DailyAlert }) {
         ? "shop-tint-yellow"
         : alert.tone === "blue"
           ? "shop-tint-blue"
-          : "bg-rose-50 ring-1 ring-[#8b1530]/20";
+          : "bg-[color-mix(in_srgb,var(--salla-primary)_12%,var(--salla-surface))] ring-1 ring-[color-mix(in_srgb,#8b1530_35%,transparent)]";
 
   const content = (
     <div className="flex items-start gap-3">
@@ -79,15 +79,15 @@ function AlertRow({ alert }: { alert: DailyAlert }) {
         <Icon className="h-4 w-4" aria-hidden />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-rose-900">{alert.title}</p>
-        {single && alert.detail ? <p className="mt-0.5 text-xs leading-5 text-rose-500">{alert.detail}</p> : null}
+        <p className="text-sm font-medium text-[var(--foreground)]">{alert.title}</p>
+        {single && alert.detail ? <p className="mt-0.5 text-xs leading-5 text-[var(--salla-muted)]">{alert.detail}</p> : null}
         {alert.items.length > 1 ? (
           <ul className="mt-2 space-y-1">
             {alert.items.map((item) => (
               <li key={`${alert.id}-${item.dressId}`}>
                 <Link
                   href={`/calendar/?dress=${item.dressId}`}
-                  className="text-xs text-rose-800 hover:text-[#8b1530] hover:underline"
+                  className="text-xs text-[var(--salla-primary)] hover:underline"
                 >
                   {item.customerName ? `${item.dressName} — ${item.customerName}` : item.dressName}
                   {item.note ? ` · ${item.note}` : ""}

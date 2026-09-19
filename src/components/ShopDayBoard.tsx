@@ -43,7 +43,7 @@ const TONE_CELL: Record<ShopDayTone, string> = {
 const TONE_ROW: Record<ShopDayTone, string> = {
   red: "shop-tint-red",
   yellow: "shop-tint-yellow",
-  wine: "bg-rose-50 ring-1 ring-[#8b1530]/20",
+  wine: "bg-[color-mix(in_srgb,var(--salla-primary)_12%,var(--salla-surface))] ring-1 ring-[color-mix(in_srgb,#8b1530_35%,transparent)]",
   blue: "shop-tint-blue",
 };
 
@@ -73,25 +73,25 @@ export function ShopDayBoard() {
   return (
     <section className="mb-8" aria-label={t("cal.shopAria")}>
       <div className="mb-5">
-        <p className="text-sm text-rose-400">{t("cal.shopKicker")}</p>
-        <h1 className="mt-1 text-3xl font-medium text-rose-900">{heading}</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">{t("cal.shopLead")}</p>
+        <p className="text-sm text-[var(--salla-muted)]">{t("cal.shopKicker")}</p>
+        <h1 className="mt-1 text-3xl font-medium text-[var(--foreground)]">{heading}</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--salla-muted)]">{t("cal.shopLead")}</p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,22rem)]">
         <div className="shop-card rounded-3xl p-4 sm:p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs text-rose-400" suppressHydrationWarning>
+              <p className="text-xs text-[var(--salla-muted)]" suppressHydrationWarning>
                 {formatDateLong(today)}
               </p>
-              <h2 className="mt-1 text-xl text-rose-900">{monthYearLabel(monthIso)}</h2>
+              <h2 className="mt-1 text-xl text-[var(--foreground)]">{monthYearLabel(monthIso)}</h2>
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setMonthIso((current) => shiftMonthsIso(current, -1))}
-                className="rounded-full p-2 text-rose-700 hover:bg-rose-50"
+                className="rounded-full p-2 text-[var(--salla-primary)] hover:bg-[var(--salla-soft)]"
                 aria-label={t("previousMonth")}
               >
                 <PrevIcon className="h-5 w-5" aria-hidden />
@@ -99,7 +99,7 @@ export function ShopDayBoard() {
               <button
                 type="button"
                 onClick={() => setMonthIso((current) => shiftMonthsIso(current, 1))}
-                className="rounded-full p-2 text-rose-700 hover:bg-rose-50"
+                className="rounded-full p-2 text-[var(--salla-primary)] hover:bg-[var(--salla-soft)]"
                 aria-label={t("nextMonth")}
               >
                 <NextIcon className="h-5 w-5" aria-hidden />
@@ -110,21 +110,21 @@ export function ShopDayBoard() {
                   setMonthIso(startOfMonthIso(today));
                   setPickedDate(today);
                 }}
-                className="rounded-2xl bg-rose-50 px-3 py-1.5 text-xs text-rose-800 hover:bg-rose-100"
+                className="rounded-2xl bg-[var(--salla-soft)] px-3 py-1.5 text-xs text-[var(--foreground)] hover:bg-[var(--salla-border)]"
               >
                 {t("today")}
               </button>
             </div>
           </div>
 
-          <div className="mb-3 flex flex-wrap gap-3 text-xs text-rose-600">
+          <div className="mb-3 flex flex-wrap gap-3 text-xs text-[var(--salla-muted)]">
             <Legend tone="red" label={t("cal.legendReturn")} />
             <Legend tone="yellow" label={t("cal.legendOut")} />
             <Legend tone="wine" label={t("cal.legendPrep")} />
             <Legend tone="blue" label={t("cal.legendAlt")} />
           </div>
 
-          <div className="grid grid-cols-7 gap-1 text-center text-xs text-rose-400">
+          <div className="grid grid-cols-7 gap-1 text-center text-xs text-[var(--salla-muted)]">
             {weekdaysSat().map((day) => (
               <div key={day} className="py-1 font-medium">
                 {day}
@@ -146,9 +146,11 @@ export function ShopDayBoard() {
                   onClick={() => setPickedDate(date)}
                   className={cn(
                     "min-h-12 rounded-2xl px-1 py-1.5 text-sm",
-                    tone ? TONE_CELL[tone] : "bg-rose-50/80 text-rose-900 hover:bg-rose-100",
-                    isToday && "ring-2 ring-[#d4a017] ring-offset-1",
-                    isPicked && "outline outline-2 outline-offset-1 outline-rose-900",
+                    tone
+                      ? TONE_CELL[tone]
+                      : "bg-[var(--salla-soft)] text-[var(--foreground)] hover:bg-[var(--salla-border)]",
+                    isToday && "ring-2 ring-[#d4a017] ring-offset-1 ring-offset-[var(--salla-surface)]",
+                    isPicked && "outline outline-2 outline-offset-1 outline-[var(--salla-primary)]",
                   )}
                   aria-label={
                     dayEvents.length > 0
@@ -164,12 +166,12 @@ export function ShopDayBoard() {
         </div>
 
         <div className="shop-card rounded-3xl p-4 sm:p-5">
-          <div className="flex items-center gap-2 text-rose-900">
-            <CalendarDays className="h-5 w-5 text-rose-400" aria-hidden />
+          <div className="flex items-center gap-2 text-[var(--foreground)]">
+            <CalendarDays className="h-5 w-5 text-[var(--salla-primary)]" aria-hidden />
             <h3 className="text-lg">{formatDate(pickedDate)}</h3>
           </div>
           {events.length === 0 ? (
-            <p className="mt-3 text-sm leading-7 text-rose-500">
+            <p className="mt-3 text-sm leading-7 text-[var(--salla-muted)]">
               {pickedDate === today ? t("cal.emptyToday") : t("cal.emptyDay")}
             </p>
           ) : (
@@ -197,8 +199,8 @@ function DayEventRow({ event }: { event: ShopDayEvent }) {
           <Icon className="h-4 w-4" aria-hidden />
         </span>
         <span className="min-w-0">
-          <span className="block text-sm font-medium text-rose-900">{event.title}</span>
-          <span className="mt-0.5 block text-xs leading-5 text-rose-500">{event.detail}</span>
+          <span className="block text-sm font-medium text-[var(--foreground)]">{event.title}</span>
+          <span className="mt-0.5 block text-xs leading-5 text-[var(--salla-muted)]">{event.detail}</span>
         </span>
       </Link>
     </li>
