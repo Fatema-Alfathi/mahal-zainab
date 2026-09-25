@@ -13,6 +13,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { BookingDateList } from "@/components/BookingDateList";
 import { BookingModal } from "@/components/BookingModal";
 import { DailyAlerts } from "@/components/DailyAlerts";
 import { DressCalendarPanel } from "@/components/DressBookingCalendar";
@@ -25,7 +26,7 @@ import { DressVariants } from "@/components/DressVariants";
 import { SizeFilter, type SizeFilterValue } from "@/components/SizeFilter";
 import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
-import { categoryLabel, bookingDateLine, dressActiveBookings, dressDisplay, dressNeedsAlteration, matchesDressQuery, measurementLine, sizeLabel } from "@/lib/dressCatalog";
+import { categoryLabel, dressActiveBookings, dressDisplay, dressNeedsAlteration, matchesDressQuery, measurementLine, sizeLabel } from "@/lib/dressCatalog";
 import { cn, formatCurrency } from "@/lib/format";
 import { colorLabel, dressStatusLabel } from "@/lib/labels";
 import type { Dress, DressStatus } from "@/types";
@@ -267,12 +268,16 @@ export function DressGrid() {
                 ) : null}
 
                 {windows.length > 0 ? (
-                  <div className="space-y-1 rounded-xl bg-[var(--salla-soft)] px-3 py-2 text-xs text-[var(--foreground)]">
+                  <div className="space-y-2 rounded-xl bg-[var(--salla-soft)] px-3 py-2 text-xs text-[var(--foreground)]">
                     {windows.map((booking) => (
-                      <p key={booking.id}>
-                        {dressStatusLabel(dress.status === "rented" ? "rented" : "reserved")} {bookingDateLine(booking)}
-                        {booking.customerName ? ` — ${booking.customerName}` : ""}
-                      </p>
+                      <div key={booking.id}>
+                        <p>
+                          {booking.invoiceNumber ? `${booking.invoiceNumber} · ` : ""}
+                          {dressStatusLabel(dress.status === "rented" ? "rented" : "reserved")}
+                          {booking.customerName ? ` — ${booking.customerName}` : ""}
+                        </p>
+                        <BookingDateList booking={booking} />
+                      </div>
                     ))}
                   </div>
                 ) : dress.status === "reserved" && guest ? (

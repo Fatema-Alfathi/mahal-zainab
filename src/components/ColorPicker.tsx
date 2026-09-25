@@ -1,9 +1,9 @@
 "use client";
 
-import { DRESS_COLORS, type DressColor } from "@/types";
+import { DressSelect } from "@/components/DressSelect";
 import { colorLabel } from "@/lib/labels";
 import { useLanguage } from "@/i18n/LanguageProvider";
-import { cn } from "@/lib/format";
+import { DRESS_COLORS, type DressColor } from "@/types";
 
 export function ColorPicker({
   value,
@@ -14,23 +14,18 @@ export function ColorPicker({
 }) {
   const { t } = useLanguage();
   return (
-    <fieldset>
-      <legend className="mb-2 text-sm text-rose-700">{t("filter.color")}</legend>
-      <div className="flex flex-wrap gap-2">
-        {DRESS_COLORS.map((color) => (
-          <button
-            key={color}
-            type="button"
-            onClick={() => onChange(color)}
-            className={cn(
-              "rounded-full px-3 py-1.5 text-sm",
-              value === color ? "shop-btn" : "bg-rose-50 text-rose-500 hover:bg-rose-100",
-            )}
-          >
-            {colorLabel(color)}
-          </button>
-        ))}
-      </div>
-    </fieldset>
+    <DressSelect
+      label={t("filter.color")}
+      ariaLabel={t("filter.colorAria")}
+      value={value}
+      onChange={(next) => onChange(next as DressColor)}
+      swatch={value}
+    >
+      {DRESS_COLORS.map((color) => (
+        <option key={color} value={color}>
+          {colorLabel(color)}
+        </option>
+      ))}
+    </DressSelect>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Chip, FilterGroup } from "@/components/CategoryFilter";
+import { DressSelect } from "@/components/DressSelect";
 import { colorLabel } from "@/lib/labels";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { DRESS_COLORS, type DressColor } from "@/types";
@@ -16,15 +16,19 @@ export function ColorFilter({
 }) {
   const { t } = useLanguage();
   return (
-    <FilterGroup label={t("filter.color")} ariaLabel={t("filter.colorAria")}>
-      <Chip active={value === "all"} onClick={() => onChange("all")}>
-        {t("filter.allColors")}
-      </Chip>
+    <DressSelect
+      label={t("filter.color")}
+      ariaLabel={t("filter.colorAria")}
+      value={value}
+      onChange={(next) => onChange(next as ColorFilterValue)}
+      swatch={value === "all" ? undefined : value}
+    >
+      <option value="all">{t("filter.allColors")}</option>
       {DRESS_COLORS.map((color) => (
-        <Chip key={color} active={value === color} onClick={() => onChange(color)}>
+        <option key={color} value={color}>
           {colorLabel(color)}
-        </Chip>
+        </option>
       ))}
-    </FilterGroup>
+    </DressSelect>
   );
 }

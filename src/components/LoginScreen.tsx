@@ -1,21 +1,32 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
+import { activeEmployees } from "@/lib/employees";
+
+const OWNER_LOGIN = "مالك";
+
+const fieldClass =
+  "w-full rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)] px-3 py-2.5 text-[var(--foreground)] outline-none transition focus:border-[var(--salla-primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--salla-primary)_20%,transparent)]";
 
 export function LoginScreen() {
-  const { signIn } = useShop();
+  const { signIn, employees } = useShop();
   const { t } = useLanguage();
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(OWNER_LOGIN);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(false);
+
+  const staff = useMemo(
+    () => activeEmployees(employees).sort((a, b) => a.name.localeCompare(b.name, "ar")),
+    [employees],
+  );
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -39,47 +50,54 @@ export function LoginScreen() {
         <div className="flex flex-col items-center text-center">
           <BrandLogo size="md" />
           <h1 className="mt-4 text-3xl font-semibold text-[var(--salla-primary)]">{t("brand")}</h1>
-          <p className="mt-2 text-sm leading-7 text-[var(--salla-muted)]">{t("login.lead")}</p>
         </div>
 
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-          <label className="block text-sm">
-            <span className="mb-1 block text-[var(--foreground)]">{t("login.user")}</span>
-            <input
-              value={username}
-              onChange={(event) => {
-                setUsername(event.target.value);
-                setError(false);
-              }}
-              autoComplete="username"
-              className="w-full rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)] px-3 py-2.5 text-[var(--foreground)] outline-none transition focus:border-[var(--salla-primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--salla-primary)_20%,transparent)]"
-              placeholder={t("login.userPh")}
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block text-[var(--foreground)]">{t("login.password")}</span>
-            <span className="relative block">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block text-sm">
+              <span className="mb-1 block text-[var(--foreground)]">{t("login.user")}</span>
+              <select
+                value={username}
                 onChange={(event) => {
-                  setPassword(event.target.value);
+                  setUsername(event.target.value);
                   setError(false);
                 }}
-                autoComplete="current-password"
-                className="w-full rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)] px-3 py-2.5 pe-11 text-[var(--foreground)] outline-none transition focus:border-[var(--salla-primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--salla-primary)_20%,transparent)]"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((open) => !open)}
-                className="absolute end-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-[var(--salla-muted)] hover:bg-[var(--salla-bg)] hover:text-[var(--salla-primary)]"
-                aria-label={showPassword ? t("login.hidePassword") : t("login.showPassword")}
-                aria-pressed={showPassword}
+                aria-label={t("login.userAria")}
+                className={fieldClass}
               >
-                {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
-              </button>
-            </span>
-          </label>
+                <option value={OWNER_LOGIN}>{t("login.ownerOption")}</option>
+                {staff.map((employee) => (
+                  <option key={employee.id} value={employee.name}>
+                    {employee.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block text-[var(--foreground)]">{t("login.password")}</span>
+              <span className="relative block">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(event) => {
+                    setPassword(event.target.value);
+                    setError(false);
+                  }}
+                  autoComplete="current-password"
+                  className={`${fieldClass} pe-11`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((open) => !open)}
+                  className="absolute end-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-[var(--salla-muted)] hover:bg-[var(--salla-bg)] hover:text-[var(--salla-primary)]"
+                  aria-label={showPassword ? t("login.hidePassword") : t("login.showPassword")}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+                </button>
+              </span>
+            </label>
+          </div>
           {error ? (
             <p
               className="rounded-xl border border-[color-mix(in_srgb,var(--salla-danger)_35%,transparent)] bg-[color-mix(in_srgb,var(--salla-danger)_10%,transparent)] px-3 py-2 text-sm text-[var(--salla-danger)]"

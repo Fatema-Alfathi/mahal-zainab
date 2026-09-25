@@ -1,5 +1,6 @@
 "use client";
 
+import { DressSelect } from "@/components/DressSelect";
 import { DRESS_CATEGORY_LABELS } from "@/lib/labels";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/format";
@@ -16,16 +17,19 @@ export function CategoryFilter({
 }) {
   const { t } = useLanguage();
   return (
-    <FilterGroup label={t("filter.category")} ariaLabel={t("filter.categoryAria")}>
-      <Chip active={value === "all"} onClick={() => onChange("all")}>
-        {t("filter.allCategories")}
-      </Chip>
+    <DressSelect
+      label={t("filter.category")}
+      ariaLabel={t("filter.categoryAria")}
+      value={value}
+      onChange={(next) => onChange(next as CategoryFilterValue)}
+    >
+      <option value="all">{t("filter.allCategories")}</option>
       {DRESS_CATEGORIES.map((category) => (
-        <Chip key={category} active={value === category} onClick={() => onChange(category)}>
+        <option key={category} value={category}>
           {DRESS_CATEGORY_LABELS[category]}
-        </Chip>
+        </option>
       ))}
-    </FilterGroup>
+    </DressSelect>
   );
 }
 

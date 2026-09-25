@@ -1,6 +1,9 @@
-import { roundMoney } from "@/lib/finance";
+import { compactLoginName, isReservedOwnerName } from "@/lib/auth";
 import { normalizePhone } from "@/lib/customers";
+import { roundMoney } from "@/lib/finance";
 import type { Employee, EmployeeDraft, FixedExpense } from "@/types";
+
+export const EMPLOYEES_KEY = "yal-employees";
 
 export const SALARY_EXPENSE_ID = "fixed-salaries";
 export const SALARY_EXPENSE_NAME = "الرواتب";
@@ -26,13 +29,65 @@ export function isEmployeePhoneTaken(employees: Employee[], phone: string, exclu
   return employees.some((item) => item.id !== excludeId && normalizePhone(item.phone) === key);
 }
 
+export function isEmployeeNameTaken(employees: Employee[], name: string, excludeId?: string): boolean {
+  const key = compactLoginName(name);
+  if (!key) return false;
+  return employees.some((item) => item.id !== excludeId && compactLoginName(item.name) === key);
+}
+
+export function employeeLoginNameError(
+  employees: Employee[],
+  name: string,
+  excludeId?: string,
+): "name-required" | "owner-name" | "name-taken" | null {
+  const next = name.trim();
+  if (!next) return "name-required";
+  if (isReservedOwnerName(next)) return "owner-name";
+  if (isEmployeeNameTaken(employees, next, excludeId)) return "name-taken";
+  return null;
+}
+
+function isStoredEmployee(value: unknown): value is Employee {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Record<string, unknown>;
+  return (
+    typeof item.id === "string" &&
+    typeof item.number === "string" &&
+    typeof item.name === "string" &&
+    typeof item.phone === "string" &&
+    typeof item.jobTitle === "string" &&
+    typeof item.salary === "number" &&
+    typeof item.startDate === "string" &&
+    typeof item.active === "boolean" &&
+    typeof item.notes === "string"
+  );
+}
+
+export function readStoredEmployees(): Employee[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(EMPLOYEES_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return null;
+    const employees = parsed.filter(isStoredEmployee);
+    return employees.length > 0 ? employees : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeStoredEmployees(employees: Employee[]) {
+  window.localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(employees));
+}
+
 export function normalizeEmployeeDraft(draft: EmployeeDraft): EmployeeDraft | null {
   const name = draft.name.trim();
   const number = draft.number.trim();
   const phone = normalizePhone(draft.phone);
   const jobTitle = draft.jobTitle.trim();
   const salary = Number(draft.salary);
-  if (!name || !number || !phone || !jobTitle) return null;
+  if (!name || !number || !jobTitle) return null;
   if (!Number.isFinite(salary) || salary < 0) return null;
   return {
     number,

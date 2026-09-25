@@ -1,4 +1,5 @@
 import { fittingDateForPickup } from "@/lib/customers";
+import { assignInvoiceNumbers } from "@/lib/invoices";
 import type { Booking, Customer, Dress, Employee, EmployeeDiscountPolicy, FixedExpense, GovernmentRecord, VariableExpense } from "@/types";
 
 export const INITIAL_DISCOUNT_POLICY: EmployeeDiscountPolicy = {
@@ -401,6 +402,7 @@ function booking(
   const needsFitting = needsAlterations || (extra?.needsFitting ?? false);
   return {
     id,
+    invoiceNumber: "",
     dressId,
     customerId: customer?.id ?? "",
     customerName,
@@ -429,7 +431,7 @@ function booking(
   };
 }
 
-export const INITIAL_BOOKINGS: Booking[] = [
+export const INITIAL_BOOKINGS: Booking[] = assignInvoiceNumbers([
   booking("book-2025-1", "dress-aurora", "منى الكندي", "2025-10-10", "2025-10-12", 54, "completed"),
   booking("book-2025-2", "dress-noor", "أسماء البلوشي", "2025-11-15", "2025-11-18", 140, "completed"),
   booking("book-2025-3", "dress-sultana", "رقية الزدجالي", "2025-11-22", "2025-11-24", 84, "completed"),
@@ -506,7 +508,7 @@ export const INITIAL_BOOKINGS: Booking[] = [
     cancelledAt: "2026-09-08",
     depositPaid: 0,
   }),
-];
+]);
 
 export const DRESS_PRESENTATION: Record<
   string,

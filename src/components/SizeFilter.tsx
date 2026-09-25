@@ -1,6 +1,6 @@
 "use client";
 
-import { Chip, FilterGroup } from "@/components/CategoryFilter";
+import { DressSelect } from "@/components/DressSelect";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { DRESS_SIZES, type DressSize } from "@/types";
 
@@ -15,15 +15,18 @@ export function SizeFilter({
 }) {
   const { t } = useLanguage();
   return (
-    <FilterGroup label={t("filter.size")} ariaLabel={t("filter.sizeAria")}>
-      <Chip active={value === "all"} onClick={() => onChange("all")}>
-        {t("filter.allSizes")}
-      </Chip>
+    <DressSelect
+      label={t("filter.size")}
+      ariaLabel={t("filter.sizeAria")}
+      value={value}
+      onChange={(next) => onChange(next as SizeFilterValue)}
+    >
+      <option value="all">{t("filter.allSizes")}</option>
       {DRESS_SIZES.map((size) => (
-        <Chip key={size} active={value === size} onClick={() => onChange(size)} className="tabular-nums">
+        <option key={size} value={size}>
           {size}
-        </Chip>
+        </option>
       ))}
-    </FilterGroup>
+    </DressSelect>
   );
 }

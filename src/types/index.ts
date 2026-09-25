@@ -1,21 +1,69 @@
 export type DressStatus = "available" | "reserved" | "rented" | "maintenance";
-export const DRESS_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"] as const;
+export const DRESS_SIZES = [
+  "XXS",
+  "XS",
+  "S",
+  "M",
+  "L",
+  "XL",
+  "2XL",
+  "3XL",
+  "4XL",
+  "5XL",
+  "36",
+  "38",
+  "40",
+  "42",
+  "44",
+  "46",
+  "48",
+  "50",
+  "52",
+] as const;
 export type DressSize = (typeof DRESS_SIZES)[number];
-export const DRESS_CATEGORIES = ["wedding", "evening", "soft", "engagement", "henna", "graduation"] as const;
+export const DRESS_CATEGORIES = [
+  "wedding",
+  "evening",
+  "soft",
+  "engagement",
+  "henna",
+  "graduation",
+  "contract",
+  "reception",
+  "photoshoot",
+  "traditional",
+  "bridesmaid",
+  "dinner",
+] as const;
 export type DressCategory = (typeof DRESS_CATEGORIES)[number];
 export const DRESS_COLORS = [
   "أبيض",
   "عاجي",
+  "سكري",
+  "شمبانيا",
   "ذهبي",
   "فضي",
+  "نحاسي",
   "وردي",
+  "مشمشي",
+  "مرجاني",
   "أحمر",
-  "أسود",
-  "أزرق",
-  "أخضر",
-  "بنفسجي",
-  "شمبانيا",
   "خمري",
+  "عنابي",
+  "أسود",
+  "كحلي",
+  "أزرق",
+  "تركواز",
+  "أخضر",
+  "فستقي",
+  "نعناعي",
+  "زيتي",
+  "بنفسجي",
+  "ليلكي",
+  "بيج",
+  "نود",
+  "بني",
+  "رمادي",
 ] as const;
 export type DressColor = (typeof DRESS_COLORS)[number];
 
@@ -167,6 +215,7 @@ export type EmployeeDraft = {
 
 export interface Booking {
   id: string;
+  invoiceNumber: string;
   dressId: string;
   customerId: string;
   customerName: string;

@@ -204,6 +204,12 @@ html.dark .shop-btn {
   box-shadow: none;
 }
 
+.shop-tint-violet {
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  box-shadow: none;
+}
+
 html.dark .shop-tint-green {
   background: #14352a;
   border-color: #1f6b4a;
@@ -222,6 +228,11 @@ html.dark .shop-tint-yellow {
 html.dark .shop-tint-blue {
   background: #1a2d3a;
   border-color: #2a5570;
+}
+
+html.dark .shop-tint-violet {
+  background: #2a1f3d;
+  border-color: #5b3d7a;
 }
 
 .dash-panel {

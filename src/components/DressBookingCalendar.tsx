@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { BookingDateList } from "@/components/BookingDateList";
 import { DressPhoto } from "@/components/DressPhoto";
 import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import {
   bookingRecordLabel,
-  bookingRecordLine,
   dressBookingHistory,
   markDressDay,
   monthCells,
@@ -258,7 +258,12 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
           <ul className="mt-3 space-y-2">
             {pickedMark.bookings.map((booking) => (
               <li key={booking.id} className="rounded-2xl bg-[var(--salla-soft)] px-3 py-3 text-sm text-[var(--foreground)]">
-                {bookingRecordLine(booking, dress)}
+                <p>
+                  {booking.invoiceNumber ? `${booking.invoiceNumber} · ` : ""}
+                  {bookingRecordLabel(booking, dress)}
+                  {booking.customerName ? ` — ${booking.customerName}` : ""}
+                </p>
+                <BookingDateList booking={booking} />
               </li>
             ))}
           </ul>
@@ -281,7 +286,12 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
                   }}
                   className="w-full rounded-2xl bg-[var(--salla-soft)] px-3 py-3 text-start text-sm text-[var(--foreground)] hover:bg-[var(--salla-soft)]"
                 >
-                  {bookingRecordLine(booking, dress)}
+                  <p>
+                    {booking.invoiceNumber ? `${booking.invoiceNumber} · ` : ""}
+                    {bookingRecordLabel(booking, dress)}
+                    {booking.customerName ? ` — ${booking.customerName}` : ""}
+                  </p>
+                  <BookingDateList booking={booking} />
                 </button>
               </li>
             ))}

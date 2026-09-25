@@ -12,6 +12,18 @@ import {
 } from "react";
 import { clearSession, readSession, verifyLogin, writeSession, type AuthSession } from "@/lib/auth";
 import {
+  defaultPasswordStore,
+  ownerPassword,
+  readPasswords,
+  removeStaffPasswordInStore,
+  sanitizePassword,
+  setOwnerPasswordInStore,
+  setStaffPasswordInStore,
+  staffPassword,
+  writePasswords,
+  type PasswordStore,
+} from "@/lib/passwords";
+import {
   INITIAL_BOOKINGS,
   INITIAL_CUSTOMERS,
   INITIAL_DRESSES,
@@ -30,11 +42,16 @@ import {
 } from "@/lib/customers";
 import { isBarcodeTaken, normalizeDressDraft, statusAfterCare } from "@/lib/dressCatalog";
 import {
+  employeeLoginNameError,
   isEmployeeNumberTaken,
   isEmployeePhoneTaken,
   normalizeEmployeeDraft,
+  readStoredEmployees,
+  suggestEmployeeNumber,
   syncSalaryExpense,
+  writeStoredEmployees,
 } from "@/lib/employees";
+import { suggestInvoiceNumber } from "@/lib/invoices";
 import { isSalaryExpense, isStandardMonthlyExpense, normalizeExpenseAmount } from "@/lib/monthlyExpenses";
 import { normalizeGovernmentRecordDraft } from "@/lib/governmentRecords";
 import {
@@ -96,8 +113,10 @@ type Action =
     }
   | { type: "add-customer"; draft: CustomerDraft }
   | { type: "update-customer"; customerId: string; draft: CustomerDraft }
-  | { type: "add-employee"; draft: EmployeeDraft }
+  | { type: "hydrate-employees"; employees: ShopState["employees"] }
+  | { type: "add-employee"; employeeId: string; draft: EmployeeDraft }
   | { type: "update-employee"; employeeId: string; draft: EmployeeDraft }
+  | { type: "delete-employee"; employeeId: string }
   | { type: "add-government-record"; draft: GovernmentRecordDraft }
   | { type: "update-government-record"; recordId: string; draft: GovernmentRecordDraft }
   | { type: "delete-government-record"; recordId: string }
@@ -189,6 +208,7 @@ function shopReducer(state: ShopState, action: Action): ShopState {
         bookings: [
           {
             id: crypto.randomUUID(),
+            invoiceNumber: suggestInvoiceNumber(state.bookings),
             dressId: action.dressId,
             customerId: customer.id,
             customerName: customer.name,
@@ -249,12 +269,21 @@ function shopReducer(state: ShopState, action: Action): ShopState {
       };
     }
 
+    case "hydrate-employees": {
+      return {
+        ...state,
+        employees: action.employees,
+        fixedExpenses: syncSalaryExpense(state.fixedExpenses, action.employees),
+      };
+    }
+
     case "add-employee": {
       if (state.role !== "owner") return state;
       const draft = normalizeEmployeeDraft(action.draft);
       if (!draft || isEmployeeNumberTaken(state.employees, draft.number)) return state;
       if (isEmployeePhoneTaken(state.employees, draft.phone)) return state;
-      const employees = [{ id: crypto.randomUUID(), ...draft }, ...state.employees];
+      if (employeeLoginNameError(state.employees, draft.name)) return state;
+      const employees = [{ id: action.employeeId, ...draft }, ...state.employees];
       return {
         ...state,
         employees,
@@ -269,9 +298,21 @@ function shopReducer(state: ShopState, action: Action): ShopState {
       if (!current || !draft) return state;
       if (isEmployeeNumberTaken(state.employees, draft.number, action.employeeId)) return state;
       if (isEmployeePhoneTaken(state.employees, draft.phone, action.employeeId)) return state;
+      if (employeeLoginNameError(state.employees, draft.name, action.employeeId)) return state;
       const employees = state.employees.map((item) =>
         item.id === action.employeeId ? { ...item, ...draft } : item,
       );
+      return {
+        ...state,
+        employees,
+        fixedExpenses: syncSalaryExpense(state.fixedExpenses, employees),
+      };
+    }
+
+    case "delete-employee": {
+      if (state.role !== "owner") return state;
+      if (!state.employees.some((item) => item.id === action.employeeId)) return state;
+      const employees = state.employees.filter((item) => item.id !== action.employeeId);
       return {
         ...state,
         employees,
@@ -587,8 +628,21 @@ interface ShopContextValue extends ShopState {
   }) => void;
   addCustomer: (draft: CustomerDraft) => boolean;
   updateCustomer: (customerId: string, draft: CustomerDraft) => boolean;
-  addEmployee: (draft: EmployeeDraft) => boolean;
+  addEmployee: (draft: EmployeeDraft, password?: string) => string | false;
   updateEmployee: (employeeId: string, draft: EmployeeDraft) => boolean;
+  deleteEmployee: (employeeId: string) => boolean;
+  addStaffAccount: (
+    name: string,
+    password: string,
+  ) => "ok" | "forbidden" | "name-required" | "owner-name" | "name-taken" | "too-short";
+  renameEmployee: (
+    employeeId: string,
+    name: string,
+  ) => "ok" | "forbidden" | "name-required" | "owner-name" | "name-taken";
+  ownerLoginPassword: string;
+  staffLoginPassword: (employeeId: string) => string;
+  changeOwnerPassword: (current: string, next: string) => "ok" | "forbidden" | "wrong-current" | "too-short";
+  changeStaffPassword: (employeeId: string, next: string) => "ok" | "forbidden" | "too-short";
   addGovernmentRecord: (draft: GovernmentRecordDraft) => boolean;
   updateGovernmentRecord: (recordId: string, draft: GovernmentRecordDraft) => boolean;
   deleteGovernmentRecord: (recordId: string) => boolean;
@@ -611,29 +665,66 @@ const ShopContext = createContext<ShopContextValue | null>(null);
 export function ShopProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(shopReducer, initialState);
   const [authReady, setAuthReady] = useState(false);
+  const [rosterReady, setRosterReady] = useState(false);
+  const [passwords, setPasswords] = useState<PasswordStore>(defaultPasswordStore);
 
   useEffect(() => {
+    setPasswords(readPasswords());
+    const storedEmployees = readStoredEmployees();
+    if (storedEmployees) dispatch({ type: "hydrate-employees", employees: storedEmployees });
+    const roster = storedEmployees ?? initialState.employees;
     const saved = readSession();
     if (saved?.role === "owner") {
       dispatch({ type: "sign-in", session: saved });
     } else if (saved?.role === "employee") {
-      const employee = initialState.employees.find((item) => item.id === saved.employeeId && item.active);
+      const employee = roster.find((item) => item.id === saved.employeeId && item.active);
       if (employee) {
         dispatch({ type: "sign-in", session: { role: "employee", name: employee.name, employeeId: employee.id } });
       } else {
         clearSession();
       }
     }
+    setRosterReady(true);
     setAuthReady(true);
   }, []);
 
+  useEffect(() => {
+    if (!rosterReady) return;
+    writeStoredEmployees(state.employees);
+  }, [rosterReady, state.employees]);
+
   const signIn = useCallback((username: string, password: string) => {
-    const session = verifyLogin(state.employees, username, password);
+    const session = verifyLogin(state.employees, username, password, passwords);
     if (!session) return false;
     writeSession(session);
     dispatch({ type: "sign-in", session });
     return true;
-  }, [state.employees]);
+  }, [passwords, state.employees]);
+
+  const changeOwnerPassword = useCallback(
+    (current: string, next: string) => {
+      if (state.role !== "owner" || !state.signedIn) return "forbidden";
+      const result = setOwnerPasswordInStore(passwords, current, next);
+      if (result === "wrong-current" || result === "too-short") return result;
+      writePasswords(result);
+      setPasswords(result);
+      return "ok";
+    },
+    [passwords, state.role, state.signedIn],
+  );
+
+  const changeStaffPassword = useCallback(
+    (employeeId: string, next: string) => {
+      if (state.role !== "owner" || !state.signedIn) return "forbidden";
+      if (!state.employees.some((item) => item.id === employeeId)) return "forbidden";
+      const result = setStaffPasswordInStore(passwords, employeeId, next);
+      if (result === "too-short") return result;
+      writePasswords(result);
+      setPasswords(result);
+      return "ok";
+    },
+    [passwords, state.employees, state.role, state.signedIn],
+  );
 
   const signOut = useCallback(() => {
     clearSession();
@@ -686,15 +777,23 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   );
 
   const addEmployee = useCallback(
-    (draft: EmployeeDraft) => {
+    (draft: EmployeeDraft, password?: string) => {
       if (state.role !== "owner") return false;
       const normalized = normalizeEmployeeDraft(draft);
       if (!normalized || isEmployeeNumberTaken(state.employees, normalized.number)) return false;
       if (isEmployeePhoneTaken(state.employees, normalized.phone)) return false;
-      dispatch({ type: "add-employee", draft: normalized });
-      return true;
+      if (employeeLoginNameError(state.employees, normalized.name)) return false;
+      const employeeId = crypto.randomUUID();
+      if (password !== undefined) {
+        const nextPasswords = setStaffPasswordInStore(passwords, employeeId, password);
+        if (nextPasswords === "too-short") return false;
+        writePasswords(nextPasswords);
+        setPasswords(nextPasswords);
+      }
+      dispatch({ type: "add-employee", employeeId, draft: normalized });
+      return employeeId;
     },
-    [state.employees, state.role],
+    [passwords, state.employees, state.role],
   );
 
   const updateEmployee = useCallback(
@@ -705,10 +804,76 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       if (!current || !normalized) return false;
       if (isEmployeeNumberTaken(state.employees, normalized.number, employeeId)) return false;
       if (isEmployeePhoneTaken(state.employees, normalized.phone, employeeId)) return false;
+      if (employeeLoginNameError(state.employees, normalized.name, employeeId)) return false;
       dispatch({ type: "update-employee", employeeId, draft: normalized });
       return true;
     },
     [state.employees, state.role],
+  );
+
+  const addStaffAccount = useCallback(
+    (name: string, password: string): "ok" | "forbidden" | "name-required" | "owner-name" | "name-taken" | "too-short" => {
+      if (state.role !== "owner" || !state.signedIn) return "forbidden";
+      const nameError = employeeLoginNameError(state.employees, name);
+      if (nameError) return nameError;
+      const sanitized = sanitizePassword(password);
+      if (!sanitized) return "too-short";
+      const employeeId = crypto.randomUUID();
+      const nextPasswords = setStaffPasswordInStore(passwords, employeeId, sanitized);
+      if (nextPasswords === "too-short") return "too-short";
+      dispatch({
+        type: "add-employee",
+        employeeId,
+        draft: {
+          number: suggestEmployeeNumber(state.employees),
+          name: name.trim(),
+          phone: "",
+          jobTitle: "بائعة",
+          salary: 0,
+          startDate: todayIso(),
+          active: true,
+          notes: "",
+        },
+      });
+      writePasswords(nextPasswords);
+      setPasswords(nextPasswords);
+      return "ok";
+    },
+    [passwords, state.employees, state.role, state.signedIn],
+  );
+
+  const renameEmployee = useCallback(
+    (employeeId: string, name: string): "ok" | "forbidden" | "name-required" | "owner-name" | "name-taken" => {
+      if (state.role !== "owner" || !state.signedIn) return "forbidden";
+      const current = state.employees.find((item) => item.id === employeeId);
+      if (!current) return "forbidden";
+      const nameError = employeeLoginNameError(state.employees, name, employeeId);
+      if (nameError) return nameError;
+      const nextName = name.trim();
+      if (nextName === current.name) return "ok";
+      dispatch({
+        type: "update-employee",
+        employeeId,
+        draft: { ...current, name: nextName },
+      });
+      return "ok";
+    },
+    [state.employees, state.role, state.signedIn],
+  );
+
+  const deleteEmployee = useCallback(
+    (employeeId: string) => {
+      if (state.role !== "owner" || !state.signedIn) return false;
+      if (!state.employees.some((item) => item.id === employeeId)) return false;
+      const nextPasswords = removeStaffPasswordInStore(passwords, employeeId);
+      if (nextPasswords !== passwords) {
+        writePasswords(nextPasswords);
+        setPasswords(nextPasswords);
+      }
+      dispatch({ type: "delete-employee", employeeId });
+      return true;
+    },
+    [passwords, state.employees, state.role, state.signedIn],
   );
 
   const addGovernmentRecord = useCallback(
@@ -830,6 +995,11 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     [state.dresses],
   );
 
+  const staffLoginPassword = useCallback(
+    (employeeId: string) => staffPassword(passwords, employeeId),
+    [passwords],
+  );
+
   const value = useMemo<ShopContextValue>(
     () => ({
       ...state,
@@ -842,6 +1012,13 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       updateCustomer,
       addEmployee,
       updateEmployee,
+      deleteEmployee,
+      addStaffAccount,
+      renameEmployee,
+      ownerLoginPassword: ownerPassword(passwords),
+      staffLoginPassword,
+      changeOwnerPassword,
+      changeStaffPassword,
       addGovernmentRecord,
       updateGovernmentRecord,
       deleteGovernmentRecord,
@@ -868,6 +1045,13 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       updateCustomer,
       addEmployee,
       updateEmployee,
+      deleteEmployee,
+      addStaffAccount,
+      renameEmployee,
+      passwords,
+      staffLoginPassword,
+      changeOwnerPassword,
+      changeStaffPassword,
       addGovernmentRecord,
       updateGovernmentRecord,
       deleteGovernmentRecord,

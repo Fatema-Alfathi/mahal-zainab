@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, Pencil, Plus, Trash2, X } from "lucide-react";
+import { BookingDateList } from "@/components/BookingDateList";
 import { DressCalendarPanel } from "@/components/DressBookingCalendar";
 import { DressGallery } from "@/components/DressGallery";
 import { DressPhoto } from "@/components/DressPhoto";
@@ -16,7 +17,6 @@ import { SizePicker } from "@/components/SizePicker";
 import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import {
-  bookingDateLine,
   categoryLabel,
   dressActiveBookings,
   dressDisplay,
@@ -257,12 +257,16 @@ export function DressManager() {
                   </div>
 
                   {windows.length > 0 ? (
-                    <div className="space-y-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 py-3 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-200">
+                    <div className="space-y-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-3 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-200">
                       {windows.map((booking) => (
-                        <p key={booking.id}>
-                          {dressStatusLabel(dress.status === "rented" ? "rented" : "reserved")} {bookingDateLine(booking)}
-                          {booking.customerName ? ` — ${booking.customerName}` : ""}
-                        </p>
+                        <div key={booking.id}>
+                          <p>
+                            {booking.invoiceNumber ? `${booking.invoiceNumber} · ` : ""}
+                            {dressStatusLabel(dress.status === "rented" ? "rented" : "reserved")}
+                            {booking.customerName ? ` — ${booking.customerName}` : ""}
+                          </p>
+                          <BookingDateList booking={booking} />
+                        </div>
                       ))}
                     </div>
                   ) : null}
@@ -478,18 +482,20 @@ function DressFormDialog({
               className="w-full rounded-2xl border-0 bg-[var(--salla-soft)] px-3 py-2.5 outline-none ring-[var(--salla-border)] focus:ring-2"
             />
           </label>
-          <CategoryPicker
-            value={draft.category}
-            onChange={(category) => setDraft((current) => ({ ...current, category }))}
-          />
-          <ColorPicker
-            value={draft.color}
-            onChange={(color) => setDraft((current) => ({ ...current, color }))}
-          />
-          <SizePicker
-            value={draft.size}
-            onChange={(size) => setDraft((current) => ({ ...current, size }))}
-          />
+          <div className="grid gap-3 sm:grid-cols-3">
+            <CategoryPicker
+              value={draft.category}
+              onChange={(category) => setDraft((current) => ({ ...current, category }))}
+            />
+            <ColorPicker
+              value={draft.color}
+              onChange={(color) => setDraft((current) => ({ ...current, color }))}
+            />
+            <SizePicker
+              value={draft.size}
+              onChange={(size) => setDraft((current) => ({ ...current, size }))}
+            />
+          </div>
           <label className="block text-sm">
             <span className="mb-1 block text-[var(--foreground)]">{t("dresses.sameStyle")}</span>
             <select

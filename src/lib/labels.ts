@@ -37,26 +37,11 @@ export function dressCategoryLabel(category: DressCategory): string {
   return t(`cat.${category}`);
 }
 
-export const DRESS_CATEGORY_LABELS: Record<DressCategory, string> = {
-  get wedding() {
-    return t("cat.wedding");
+export const DRESS_CATEGORY_LABELS = new Proxy({} as Record<DressCategory, string>, {
+  get(_target, category: string) {
+    return t(`cat.${category}`);
   },
-  get evening() {
-    return t("cat.evening");
-  },
-  get soft() {
-    return t("cat.soft");
-  },
-  get engagement() {
-    return t("cat.engagement");
-  },
-  get henna() {
-    return t("cat.henna");
-  },
-  get graduation() {
-    return t("cat.graduation");
-  },
-};
+});
 
 export function colorLabel(color: string): string {
   return t(`color.${color}`);

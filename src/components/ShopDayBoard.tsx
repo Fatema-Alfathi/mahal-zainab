@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, ChevronRight, HandHeart, RotateCcw, Scissors, Shirt, Sparkles } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, HandHeart, RotateCcw, Ruler, Scissors, Shirt, Sparkles } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { monthCells } from "@/lib/dressCalendar";
@@ -28,6 +28,7 @@ import {
 const KIND_ICON: Record<ShopDayKind, typeof CalendarDays> = {
   return: RotateCcw,
   out: HandHeart,
+  fitting: Ruler,
   prep: Shirt,
   alteration: Scissors,
   cleaning: Sparkles,
@@ -36,22 +37,28 @@ const KIND_ICON: Record<ShopDayKind, typeof CalendarDays> = {
 const TONE_CELL: Record<ShopDayTone, string> = {
   red: "bg-red-600 text-white",
   yellow: "bg-yellow-400 text-yellow-950",
+  violet: "bg-violet-600 text-white",
   wine: "bg-[#8b1530] text-white",
   blue: "bg-sky-600 text-white",
+  green: "bg-emerald-600 text-white",
 };
 
 const TONE_ROW: Record<ShopDayTone, string> = {
   red: "shop-tint-red",
   yellow: "shop-tint-yellow",
+  violet: "shop-tint-violet",
   wine: "bg-[color-mix(in_srgb,var(--salla-primary)_12%,var(--salla-surface))] ring-1 ring-[color-mix(in_srgb,#8b1530_35%,transparent)]",
   blue: "shop-tint-blue",
+  green: "shop-tint-green",
 };
 
 const TONE_ICON: Record<ShopDayTone, string> = {
   red: "bg-red-600 text-white",
   yellow: "bg-yellow-400 text-yellow-950",
+  violet: "bg-violet-600 text-white",
   wine: "bg-[#8b1530] text-white",
   blue: "bg-sky-600 text-white",
+  green: "bg-emerald-600 text-white",
 };
 
 export function ShopDayBoard() {
@@ -119,7 +126,9 @@ export function ShopDayBoard() {
 
           <div className="mb-3 flex flex-wrap gap-3 text-xs text-[var(--salla-muted)]">
             <Legend tone="red" label={t("cal.legendReturn")} />
+            <Legend tone="green" label={t("cal.legendClean")} />
             <Legend tone="yellow" label={t("cal.legendOut")} />
+            <Legend tone="violet" label={t("cal.legendFitting")} />
             <Legend tone="wine" label={t("cal.legendPrep")} />
             <Legend tone="blue" label={t("cal.legendAlt")} />
           </div>

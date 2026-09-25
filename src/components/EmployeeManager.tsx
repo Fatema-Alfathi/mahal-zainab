@@ -7,6 +7,7 @@ import {
   Pencil,
   Phone,
   Plus,
+  Trash2,
   Search,
   StickyNote,
   UserRound,
@@ -15,15 +16,18 @@ import {
   X,
 } from "lucide-react";
 import { DiscountPolicyPanel } from "@/components/DiscountPolicyPanel";
+import { PasswordField, PasswordManager } from "@/components/PasswordManager";
 import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import {
   activeEmployees,
+  employeeLoginNameError,
   isEmployeeNumberTaken,
   isEmployeePhoneTaken,
   monthlySalaryTotal,
   suggestEmployeeNumber,
 } from "@/lib/employees";
+import { MIN_PASSWORD_LENGTH } from "@/lib/passwords";
 import { cn, formatCurrency, formatDate } from "@/lib/format";
 import { jobTitleLabel } from "@/lib/labels";
 import { EMPLOYEE_JOB_TITLES, type Employee, type EmployeeDraft } from "@/types";
@@ -32,10 +36,11 @@ const fieldClass =
   "w-full rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/70 px-3 py-2.5 outline-none transition focus:border-[var(--salla-primary)] focus:bg-[var(--salla-surface)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--salla-primary)_20%,transparent)]";
 
 export function EmployeeManager() {
-  const { employees, addEmployee, updateEmployee } = useShop();
+  const { employees, addEmployee, updateEmployee, deleteEmployee, changeStaffPassword } = useShop();
   const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [editor, setEditor] = useState<{ mode: "add" } | { mode: "edit"; employee: Employee } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Employee | null>(null);
   const [openId, setOpenId] = useState<string | null>(employees[0]?.id ?? null);
   const [notice, setNotice] = useState("");
 
@@ -80,7 +85,7 @@ export function EmployeeManager() {
 
       {notice ? (
         <p className="rounded-xl border border-[color-mix(in_srgb,var(--salla-success)_30%,var(--salla-border))] bg-[color-mix(in_srgb,var(--salla-success)_10%,transparent)] px-4 py-2.5 text-sm text-[var(--salla-success)]">
-          {notice}
+          {t(notice)}
         </p>
       ) : null}
 
@@ -183,17 +188,30 @@ export function EmployeeManager() {
                     </div>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNotice("");
-                    setEditor({ mode: "edit", employee: selected });
-                  }}
-                  className="inline-flex items-center gap-1.5 self-start rounded-xl border border-[var(--salla-border)] bg-[var(--salla-surface)] px-3 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--salla-soft)]"
-                >
-                  <Pencil className="h-3.5 w-3.5 text-[var(--salla-primary)]" aria-hidden />
-                  تعديل الملف
-                </button>
+                <div className="flex flex-wrap gap-2 self-start">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNotice("");
+                      setEditor({ mode: "edit", employee: selected });
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--salla-border)] bg-[var(--salla-surface)] px-3 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--salla-soft)]"
+                  >
+                    <Pencil className="h-3.5 w-3.5 text-[var(--salla-primary)]" aria-hidden />
+                    {t("staff.editFile")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNotice("");
+                      setPendingDelete(selected);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[color-mix(in_srgb,var(--salla-danger)_30%,var(--salla-border))] bg-[var(--salla-surface)] px-3 py-2 text-sm font-medium text-[var(--salla-danger)] hover:bg-[color-mix(in_srgb,var(--salla-danger)_8%,var(--salla-surface))]"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                    {t("staff.delete")}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -230,7 +248,27 @@ export function EmployeeManager() {
         )}
       </div>
 
+      <PasswordManager />
+
       <DiscountPolicyPanel />
+
+      {pendingDelete ? (
+        <ConfirmDeleteEmployeeDialog
+          name={pendingDelete.name}
+          onClose={() => setPendingDelete(null)}
+          onConfirm={() => {
+            const removedId = pendingDelete.id;
+            const ok = deleteEmployee(removedId);
+            setPendingDelete(null);
+            if (!ok) return;
+            setOpenId((current) => {
+              if (current !== removedId) return current;
+              return employees.find((item) => item.id !== removedId)?.id ?? null;
+            });
+            setNotice("staff.deleted");
+          }}
+        />
+      ) : null}
 
       {editor ? (
         <EmployeeFormDialog
@@ -260,11 +298,21 @@ export function EmployeeManager() {
           }
           excludeId={editor.mode === "edit" ? editor.employee.id : undefined}
           onClose={() => setEditor(null)}
-          onSave={(draft) => {
-            const ok =
-              editor.mode === "add" ? addEmployee(draft) : updateEmployee(editor.employee.id, draft);
+          onSave={(draft, password) => {
+            if (editor.mode === "add") {
+              const id = addEmployee(draft, password);
+              if (!id) return false;
+              setOpenId(id);
+              setNotice("staff.added");
+              return true;
+            }
+            const ok = updateEmployee(editor.employee.id, draft);
             if (!ok) return false;
-            setNotice(editor.mode === "add" ? "staff.added" : "staff.saved");
+            if (password.trim()) {
+              const passwordResult = changeStaffPassword(editor.employee.id, password);
+              if (passwordResult !== "ok") return false;
+            }
+            setNotice("staff.saved");
             return true;
           }}
         />
@@ -349,17 +397,28 @@ function EmployeeFormDialog({
   initialDraft: EmployeeDraft;
   excludeId?: string;
   onClose: () => void;
-  onSave: (draft: EmployeeDraft) => boolean;
+  onSave: (draft: EmployeeDraft, password: string) => boolean;
 }) {
   const { employees } = useShop();
   const { t } = useLanguage();
   const [draft, setDraft] = useState<EmployeeDraft>(initialDraft);
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const isNew = !excludeId;
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!draft.name.trim()) {
+    const nameError = employeeLoginNameError(employees, draft.name, excludeId);
+    if (nameError === "name-required") {
       setError("staff.nameRequired");
+      return;
+    }
+    if (nameError === "owner-name") {
+      setError("staff.ownerName");
+      return;
+    }
+    if (nameError === "name-taken") {
+      setError("staff.nameTaken");
       return;
     }
     if (!draft.number.trim()) {
@@ -387,7 +446,15 @@ function EmployeeFormDialog({
       setError("staff.salaryMin");
       return;
     }
-    if (!onSave(draft)) {
+    if (isNew && password.trim().length < MIN_PASSWORD_LENGTH) {
+      setError("pass.tooShort");
+      return;
+    }
+    if (!isNew && password.trim() && password.trim().length < MIN_PASSWORD_LENGTH) {
+      setError("pass.tooShort");
+      return;
+    }
+    if (!onSave(draft, password)) {
       setError("staff.saveFail");
       return;
     }
@@ -428,6 +495,13 @@ function EmployeeFormDialog({
               className={fieldClass}
             />
           </label>
+          <PasswordField
+            label={t("staff.password")}
+            value={password}
+            onChange={setPassword}
+            autoComplete="new-password"
+            hint={isNew ? t("staff.passwordHint") : t("staff.passwordKeep")}
+          />
           <label className="block text-sm">
             <span className="mb-1 block text-[var(--foreground)]">{t("staff.fieldPhone")}</span>
             <input
@@ -504,11 +578,55 @@ function EmployeeFormDialog({
               className={fieldClass}
             />
           </label>
-          {error ? <p className="text-sm text-[var(--foreground)]">{t(error)}</p> : null}
+          {error ? (
+            <p className="text-sm text-[var(--salla-danger)]">
+              {error === "pass.tooShort" ? t("pass.tooShort", { n: String(MIN_PASSWORD_LENGTH) }) : t(error)}
+            </p>
+          ) : null}
           <button type="submit" className="shop-btn w-full rounded-2xl py-2.5 text-sm">
             {t("staff.saveFile")}
           </button>
         </form>
+      </div>
+    </div>
+  );
+}
+
+export function ConfirmDeleteEmployeeDialog({
+  name,
+  onClose,
+  onConfirm,
+}: {
+  name: string;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  const { t } = useLanguage();
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+      <button type="button" className="absolute inset-0 cursor-default" aria-label={t("close")} onClick={onClose} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-staff-title"
+        className="dash-panel relative w-full max-w-md rounded-2xl p-6"
+      >
+        <h3 id="delete-staff-title" className="text-xl font-semibold text-[var(--foreground)]">
+          {t("staff.deleteTitle", { name })}
+        </h3>
+        <p className="mt-2 text-sm leading-6 text-[var(--salla-muted)]">{t("staff.deleteLead")}</p>
+        <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl px-4 py-2 text-sm text-[var(--salla-muted)] hover:bg-[var(--salla-soft)]"
+          >
+            {t("cancel")}
+          </button>
+          <button type="button" onClick={onConfirm} className="shop-btn-red rounded-xl px-4 py-2 text-sm font-medium">
+            {t("staff.deleteConfirm")}
+          </button>
+        </div>
       </div>
     </div>
   );

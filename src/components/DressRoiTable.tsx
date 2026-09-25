@@ -1,10 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import { BadgeCheck, CircleDollarSign, Shirt, TrendingUp } from "lucide-react";
+import { BadgeCheck, CircleDollarSign, TrendingUp } from "lucide-react";
+import { DressGallery } from "@/components/DressGallery";
 import { DressVariants } from "@/components/DressVariants";
 import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
+import { dressDisplay } from "@/lib/dressCatalog";
 import {
   capitalRecoveryPercent,
   dressAcquisitionCost,
@@ -71,27 +73,27 @@ export function DressRoiTable() {
       <div className="grid gap-4 md:grid-cols-2">
         {rows.map(({ dress, revenue, cleaning, repair, landed, net, recovered, brokenEven }) => {
           const barWidth = Math.max(0, Math.min(100, recovered));
+          const presentation = dressDisplay(dress);
           return (
             <article key={dress.id} className="dash-panel flex flex-col overflow-hidden rounded-2xl">
+              <DressGallery
+                images={presentation.images}
+                alt={dress.name}
+                fallbackClassName={presentation.palette}
+                heightClass="h-44 sm:h-48"
+              />
               <div className="border-b border-[var(--salla-border)] px-5 py-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="flex items-start gap-3">
-                      <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--salla-primary)_10%,transparent)] text-[var(--salla-primary)]">
-                        <Shirt className="h-4 w-4" aria-hidden />
-                      </span>
-                      <div className="min-w-0">
-                        <h4 className="text-base font-semibold leading-snug text-[var(--foreground)]">{dress.name}</h4>
-                        {brokenEven ? (
-                          <p className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[var(--salla-success)]">
-                            <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
-                            رجّع سعره وصار يربح
-                          </p>
-                        ) : (
-                          <p className="mt-1 text-xs text-[var(--salla-muted)]">لسه ما رجّع سعر الشراء</p>
-                        )}
-                      </div>
-                    </div>
+                    <h4 className="text-base font-semibold leading-snug text-[var(--foreground)]">{dress.name}</h4>
+                    {brokenEven ? (
+                      <p className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[var(--salla-success)]">
+                        <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
+                        رجّع سعره وصار يربح
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-xs text-[var(--salla-muted)]">لسه ما رجّع سعر الشراء</p>
+                    )}
                   </div>
                   <div className="text-left">
                     <p className="text-[11px] text-[var(--salla-muted)]">صافي</p>

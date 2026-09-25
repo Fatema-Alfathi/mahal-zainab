@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { Ban, CalendarDays, Pencil, Phone, Plus, Search, StickyNote, UserRound, X } from "lucide-react";
+import { BookingDateList } from "@/components/BookingDateList";
 import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { bookingWeddingDate, cancelledBookings, customerBookings, isCustomerNumberTaken, suggestCustomerNumber } from "@/lib/customers";
@@ -180,8 +181,8 @@ export function CustomerManager() {
             <div className="p-5 sm:p-6">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-base font-semibold text-[var(--foreground)]">سجل الحجوزات</h3>
-                  <p className="mt-0.5 text-xs text-[var(--salla-muted)]">العربون والتأمين والمواعيد</p>
+                  <h3 className="text-base font-semibold text-[var(--foreground)]">{t("customers.history")}</h3>
+                  <p className="mt-0.5 text-xs text-[var(--salla-muted)]">{t("customers.historyLead")}</p>
                 </div>
               </div>
 
@@ -191,18 +192,21 @@ export function CustomerManager() {
                 </div>
               ) : (
                 <div className="overflow-x-auto rounded-xl border border-[var(--salla-border)]">
-                  <table className="w-full min-w-[52rem] text-sm">
+                  <table className="w-full min-w-[68rem] text-sm">
                     <thead>
                       <tr className="bg-[var(--salla-soft)]/80 text-right text-xs text-[var(--salla-muted)]">
-                        <th className="px-3 py-3 font-medium">الفستان</th>
-                        <th className="px-3 py-3 font-medium">تاريخ الحجز</th>
-                        <th className="px-3 py-3 font-medium">السعر</th>
-                        <th className="px-3 py-3 font-medium">العربون</th>
-                        <th className="px-3 py-3 font-medium">التأمين</th>
-                        <th className="px-3 py-3 font-medium">المتبقي</th>
-                        <th className="px-3 py-3 font-medium">الاستلام</th>
-                        <th className="px-3 py-3 font-medium">الإرجاع</th>
-                        <th className="px-3 py-3 font-medium">بروفة / تعديل</th>
+                        <th className="px-3 py-3 font-medium">{t("customers.invoice")}</th>
+                        <th className="px-3 py-3 font-medium">{t("customers.dress")}</th>
+                        <th className="px-3 py-3 font-medium">{t("customers.bookedAt")}</th>
+                        <th className="px-3 py-3 font-medium">{t("customers.fittingDay")}</th>
+                        <th className="px-3 py-3 font-medium">{t("customers.pickup")}</th>
+                        <th className="px-3 py-3 font-medium">{t("customers.wedding")}</th>
+                        <th className="px-3 py-3 font-medium">{t("customers.handover")}</th>
+                        <th className="px-3 py-3 font-medium">{t("customers.return")}</th>
+                        <th className="px-3 py-3 font-medium">{t("customers.price")}</th>
+                        <th className="px-3 py-3 font-medium">{t("customers.deposit")}</th>
+                        <th className="px-3 py-3 font-medium">{t("customers.insurance")}</th>
+                        <th className="px-3 py-3 font-medium">{t("customers.remaining")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -213,11 +217,29 @@ export function CustomerManager() {
                             key={booking.id}
                             className="border-t border-[var(--salla-border)] align-top transition hover:bg-[var(--salla-soft)]/40"
                           >
+                            <td className="px-3 py-3 font-medium tabular-nums text-[var(--salla-primary)]">
+                              {booking.invoiceNumber}
+                            </td>
                             <td className="px-3 py-3 font-medium text-[var(--foreground)]">
                               {dress?.name ?? booking.dressId}
                             </td>
                             <td className="px-3 py-3 tabular-nums text-[var(--salla-muted)]">
-                              {formatDate(booking.bookedAt)}
+                              {formatDateOrDash(booking.bookedAt)}
+                            </td>
+                            <td className="px-3 py-3 tabular-nums text-[var(--salla-muted)]">
+                              {formatDateOrDash(booking.fittingDate)}
+                            </td>
+                            <td className="px-3 py-3 tabular-nums text-[var(--salla-muted)]">
+                              {formatDateOrDash(booking.pickupDate)}
+                            </td>
+                            <td className="px-3 py-3 tabular-nums text-[var(--salla-muted)]">
+                              {formatDateOrDash(booking.eventDate)}
+                            </td>
+                            <td className="px-3 py-3 tabular-nums text-[var(--salla-muted)]">
+                              {formatDateOrDash(booking.handoverDate)}
+                            </td>
+                            <td className="px-3 py-3 tabular-nums text-[var(--salla-muted)]">
+                              {formatDateOrDash(booking.returnDate)}
                             </td>
                             <td className="px-3 py-3 tabular-nums font-semibold text-[var(--salla-primary)]">
                               {formatCurrency(booking.totalRevenueGenerated)}
@@ -228,31 +250,11 @@ export function CustomerManager() {
                             <td className="px-3 py-3 tabular-nums text-[var(--foreground)]">
                               {formatCurrency(booking.insurancePaid)}
                               <span className="mt-0.5 block text-[11px] text-[var(--salla-muted)]">
-                                {booking.insuranceReturned ? "رُجِع للعميلة" : "عند المحل"}
+                                {booking.insuranceReturned ? t("customers.insuranceBack") : t("customers.insuranceShop")}
                               </span>
                             </td>
                             <td className="px-3 py-3 tabular-nums text-[var(--foreground)]">
                               {formatSignedCurrency(booking.remainingAmount)}
-                            </td>
-                            <td className="px-3 py-3 tabular-nums text-[var(--salla-muted)]">
-                              {formatDate(booking.pickupDate)}
-                            </td>
-                            <td className="px-3 py-3 tabular-nums text-[var(--salla-muted)]">
-                              {formatDate(booking.returnDate)}
-                            </td>
-                            <td className="px-3 py-3 text-[var(--foreground)]">
-                              {booking.needsAlterations ? (
-                                <p>تعديلات + بروفة</p>
-                              ) : booking.needsFitting ? (
-                                <p>بروفة فقط</p>
-                              ) : (
-                                <p className="text-[var(--salla-muted)]">بدون بروفة</p>
-                              )}
-                              {booking.fittingDate ? (
-                                <p className="mt-0.5 text-[11px] text-[var(--salla-muted)]">
-                                  موعد البروفة {formatDate(booking.fittingDate)}
-                                </p>
-                              ) : null}
                             </td>
                           </tr>
                         );
@@ -508,16 +510,9 @@ function CancelledBookingsPanel({
             return (
               <li key={booking.id} className="shop-tint-red rounded-2xl px-4 py-3">
                 <p className="text-sm font-medium text-rose-900">
-                  {booking.customerName} · {dress?.name ?? booking.dressId}
+                  {booking.invoiceNumber} · {booking.customerName} · {dress?.name ?? booking.dressId}
                 </p>
-                <p className="mt-1 text-xs leading-5 text-rose-600">
-                  {t("customers.cancelledLine", {
-                    pickup: formatDateOrDash(booking.pickupDate),
-                    handover: formatDateOrDash(booking.handoverDate),
-                    wedding: formatDateOrDash(booking.eventDate),
-                    returnDate: formatDateOrDash(booking.returnDate),
-                  })}
-                </p>
+                <BookingDateList booking={booking} />
                 <p className="mt-1 text-xs text-rose-500">{t("customers.cancelledOn", { date: formatDateOrDash(booking.cancelledAt) })}</p>
               </li>
             );

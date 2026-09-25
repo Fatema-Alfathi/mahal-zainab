@@ -3,8 +3,8 @@ import { dressNeedsAlteration, dressNeedsCleaning } from "@/lib/dressCatalog";
 import { endOfMonthIso, todayIso } from "@/lib/format";
 import type { Booking, Dress } from "@/types";
 
-export type ShopDayKind = "return" | "out" | "prep" | "alteration" | "cleaning";
-export type ShopDayTone = "red" | "yellow" | "blue" | "wine";
+export type ShopDayKind = "return" | "out" | "fitting" | "prep" | "alteration" | "cleaning";
+export type ShopDayTone = "red" | "yellow" | "violet" | "blue" | "wine" | "green";
 
 export type ShopDayEvent = {
   id: string;
@@ -17,7 +17,7 @@ export type ShopDayEvent = {
   tone: ShopDayTone;
 };
 
-const KIND_ORDER: ShopDayKind[] = ["return", "out", "prep", "alteration", "cleaning"];
+const KIND_ORDER: ShopDayKind[] = ["return", "out", "fitting", "prep", "alteration", "cleaning"];
 
 function pickupOf(booking: Booking): string {
   return booking.pickupDate || booking.startDate;
@@ -66,7 +66,9 @@ export function shopDayEvents(dresses: Dress[], bookings: Booking[], date: strin
     if (!dress) continue;
     const label = dressNumberLabel(dress);
     const number = dressNumber(dress);
+    const invoice = booking.invoiceNumber ? `${booking.invoiceNumber} · ` : "";
     const who = booking.customerName ? ` — ${booking.customerName}` : "";
+    const named = `${invoice}${dress.name}${who}`;
     const pickup = pickupOf(booking);
     const due = returnOf(booking);
     const handover = handoverOf(booking);
@@ -79,7 +81,7 @@ export function shopDayEvents(dresses: Dress[], bookings: Booking[], date: strin
         dressName: dress.name,
         number,
         title: t(isToday ? "cal.returnsToday" : "cal.returns", { dress: label }),
-        detail: `${dress.name}${who}`,
+        detail: named,
         tone: "red",
       });
     } else if (date === today && due < today) {
@@ -90,8 +92,21 @@ export function shopDayEvents(dresses: Dress[], bookings: Booking[], date: strin
         dressName: dress.name,
         number,
         title: t("cal.overdue", { dress: label }),
-        detail: `${dress.name}${who}`,
+        detail: named,
         tone: "red",
+      });
+    }
+
+    if (booking.fittingDate === date) {
+      push({
+        id: `fitting-${booking.id}`,
+        kind: "fitting",
+        dressId: dress.id,
+        dressName: dress.name,
+        number,
+        title: t(isToday ? "cal.fittingToday" : "cal.fitting", { dress: label }),
+        detail: named,
+        tone: "violet",
       });
     }
 
@@ -103,7 +118,7 @@ export function shopDayEvents(dresses: Dress[], bookings: Booking[], date: strin
         dressName: dress.name,
         number,
         title: t("cal.goesOut", { dress: label }),
-        detail: `${dress.name}${who}`,
+        detail: named,
         tone: "yellow",
       });
     }
@@ -139,7 +154,7 @@ export function shopDayEvents(dresses: Dress[], bookings: Booking[], date: strin
           number,
           title: t("cal.needsClean", { dress: label }),
           detail: dress.name,
-          tone: "red",
+          tone: "green",
         });
       }
       if (dressNeedsAlteration(dress, bookings) && dress.status === "available") {
@@ -165,10 +180,12 @@ export function shopDayEvents(dresses: Dress[], bookings: Booking[], date: strin
 }
 
 export function shopDayPrimaryTone(events: ShopDayEvent[]): ShopDayTone | null {
-  if (events.some((event) => event.kind === "return" || event.kind === "cleaning")) return "red";
+  if (events.some((event) => event.kind === "return")) return "red";
   if (events.some((event) => event.kind === "out")) return "yellow";
+  if (events.some((event) => event.kind === "fitting")) return "violet";
   if (events.some((event) => event.kind === "prep")) return "wine";
   if (events.some((event) => event.kind === "alteration")) return "blue";
+  if (events.some((event) => event.kind === "cleaning")) return "green";
   return null;
 }
 
