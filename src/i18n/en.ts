@@ -25,6 +25,8 @@ export const en: Record<string, string> = {
   "login.user": "Name or staff number",
   "login.userPh": "Owner or Maryam",
   "login.password": "Password",
+  "login.showPassword": "Show password",
+  "login.hidePassword": "Hide password",
   "login.submit": "Sign in",
   "login.error": "Name or password is wrong.",
   "login.hintOwner": "Owner: مالك and yal",

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useShop } from "@/context/ShopContext";
@@ -13,6 +14,7 @@ export function LoginScreen() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(false);
 
   function onSubmit(event: FormEvent) {
@@ -56,16 +58,27 @@ export function LoginScreen() {
           </label>
           <label className="block text-sm">
             <span className="mb-1 block text-[var(--foreground)]">{t("login.password")}</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => {
-                setPassword(event.target.value);
-                setError(false);
-              }}
-              autoComplete="current-password"
-              className="w-full rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)] px-3 py-2.5 text-[var(--foreground)] outline-none transition focus:border-[var(--salla-primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--salla-primary)_20%,transparent)]"
-            />
+            <span className="relative block">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  setError(false);
+                }}
+                autoComplete="current-password"
+                className="w-full rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)] px-3 py-2.5 pe-11 text-[var(--foreground)] outline-none transition focus:border-[var(--salla-primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--salla-primary)_20%,transparent)]"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((open) => !open)}
+                className="absolute end-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-[var(--salla-muted)] hover:bg-[var(--salla-bg)] hover:text-[var(--salla-primary)]"
+                aria-label={showPassword ? t("login.hidePassword") : t("login.showPassword")}
+                aria-pressed={showPassword}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+              </button>
+            </span>
           </label>
           {error ? (
             <p

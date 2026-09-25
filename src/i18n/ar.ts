@@ -25,6 +25,8 @@ export const ar: Record<string, string> = {
   "login.user": "الاسم أو رقم الموظفة",
   "login.userPh": "مالك أو مريم",
   "login.password": "كلمة السر",
+  "login.showPassword": "إظهار كلمة السر",
+  "login.hidePassword": "إخفاء كلمة السر",
   "login.submit": "دخول",
   "login.error": "الاسم أو كلمة السر غلط.",
   "login.hintOwner": "المالكة: مالك و yal",
