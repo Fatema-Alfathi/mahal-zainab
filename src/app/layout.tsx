@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Providers } from "@/app/providers";
+import { assetPath } from "@/lib/assetPath";
 import "./globals.css";
 
 const thmanyah = localFont({
@@ -39,8 +40,8 @@ export const metadata: Metadata = {
   title: "YAL Boutique · بوتيك YAL",
   description: "Boutique management for YAL wedding and evening dress rentals.",
   icons: {
-    icon: "/yal-logo.jpg",
-    apple: "/yal-logo.jpg",
+    icon: assetPath("/yal-logo.jpg"),
+    apple: assetPath("/yal-logo.jpg"),
   },
 };
 
