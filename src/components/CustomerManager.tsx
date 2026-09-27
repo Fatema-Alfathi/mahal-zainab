@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { Ban, CalendarDays, Pencil, Phone, Plus, Search, StickyNote, UserRound, X } from "lucide-react";
+import { BookingClientActions } from "@/components/BookingClientActions";
 import { BookingDateList } from "@/components/BookingDateList";
 import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
@@ -199,7 +200,7 @@ export function CustomerManager() {
                 </div>
               ) : (
                 <div className="overflow-x-auto rounded-xl border border-[var(--salla-border)]">
-                  <table className="w-full min-w-[68rem] text-sm">
+                  <table className="w-full min-w-[78rem] text-sm">
                     <thead>
                       <tr className="bg-[var(--salla-soft)]/80 text-right text-xs text-[var(--salla-muted)]">
                         <th className="px-3 py-3 font-medium">{t("customers.invoice")}</th>
@@ -285,16 +286,19 @@ export function CustomerManager() {
                               {formatSignedCurrency(booking.remainingAmount)}
                             </td>
                             <td className="px-3 py-3">
-                              {booking.status === "active" ? (
-                                <button
-                                  type="button"
-                                  onClick={() => setPendingCancel(booking)}
-                                  className="inline-flex items-center gap-1 rounded-xl px-2 py-1 text-xs text-red-700 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/40"
-                                >
-                                  <Ban className="h-3.5 w-3.5" aria-hidden />
-                                  {t("customers.cancelBooking")}
-                                </button>
-                              ) : null}
+                              <div className="flex flex-col items-end gap-1.5">
+                                <BookingClientActions booking={booking} dress={dress} customer={selected} />
+                                {booking.status === "active" ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setPendingCancel(booking)}
+                                    className="inline-flex items-center gap-1 rounded-xl px-2 py-1 text-xs text-red-700 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/40"
+                                  >
+                                    <Ban className="h-3.5 w-3.5" aria-hidden />
+                                    {t("customers.cancelBooking")}
+                                  </button>
+                                ) : null}
+                              </div>
                             </td>
                           </tr>
                         );

@@ -68,6 +68,12 @@ export type VariableExpenseCategory =
   | "Utility Bills"
   | "Other";
 export type BookingStatus = "active" | "completed" | "cancelled";
+
+export interface BookingPayment {
+  id: string;
+  paidAt: string;
+  amount: number;
+}
 export type DiscountType = "none" | "percent" | "amount";
 export type AuthorizedDiscountType = Exclude<DiscountType, "none">;
 export type UserRole = "owner" | "employee";
@@ -229,6 +235,7 @@ export interface Booking {
   status: BookingStatus;
   cancelledAt: string;
   bookedByEmployeeId: string;
+  payments: BookingPayment[];
 }
 
 export interface ShopState {

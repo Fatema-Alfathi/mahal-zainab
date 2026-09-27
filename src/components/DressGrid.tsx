@@ -13,6 +13,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { BookingClientActions } from "@/components/BookingClientActions";
 import { BookingDateList } from "@/components/BookingDateList";
 import { BookingModal } from "@/components/BookingModal";
 import { DailyAlerts } from "@/components/DailyAlerts";
@@ -43,7 +44,7 @@ type StatusFilter = "all" | DressStatus;
 const FILTER_IDS: StatusFilter[] = ["all", "available", "reserved", "rented", "maintenance"];
 
 export function DressGrid() {
-  const { dresses, bookings, isOwner, pickupDress, completeMaintenance, cancelBooking } = useShop();
+  const { dresses, bookings, customers, isOwner, pickupDress, completeMaintenance, cancelBooking } = useShop();
   const { t } = useLanguage();
   const [bookingDress, setBookingDress] = useState<Dress | null>(null);
   const [returningDress, setReturningDress] = useState<Dress | null>(null);
@@ -182,6 +183,8 @@ export function DressGrid() {
           const guest = activeCustomerByDress.get(dress.id);
           const windows = dressActiveBookings(bookings, dress.id);
           const needsAlteration = dressNeedsAlteration(dress, bookings);
+          const activeBooking = bookings.find((item) => item.dressId === dress.id && item.status === "active");
+          const client = customers.find((item) => item.id === activeBooking?.customerId);
 
           return (
             <article
@@ -357,6 +360,7 @@ export function DressGrid() {
                       {isOwner ? t("floor.doneCleaning") : t("floor.careRunning")}
                     </span>
                   ) : null}
+                  {activeBooking ? <BookingClientActions booking={activeBooking} dress={dress} customer={client} /> : null}
                 </div>
               </div>
             </article>

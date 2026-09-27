@@ -3,11 +3,14 @@ import { dressNeedsAlteration } from "@/lib/dressCatalog";
 import { t } from "@/i18n/t";
 import { joinArabic } from "@/lib/labels";
 import { formatDate, shiftIso, todayIso } from "@/lib/format";
-import type { Booking, Dress } from "@/types";
+import { fittingReminderText, returnReminderText } from "@/lib/whatsapp";
+import type { Booking, Customer, Dress } from "@/types";
 
 export type DailyAlertKind =
   | "return-overdue"
   | "return-today"
+  | "fitting-today"
+  | "fitting-tomorrow"
   | "cleaning"
   | "pickup-today"
   | "prep"
@@ -22,6 +25,9 @@ export type DailyAlertItem = {
   customerName: string;
   note: string;
   itemKey?: string;
+  bookingId?: string;
+  phone?: string;
+  reminderText?: string;
 };
 
 export type DailyAlert = {
@@ -49,13 +55,25 @@ function activeBookings(bookings: Booking[]): Booking[] {
   return bookings.filter((booking) => booking.status === "active");
 }
 
-function namedItem(dress: Dress, booking?: Booking, note = "", itemKey?: string): DailyAlertItem {
+function phoneOf(customers: Customer[], booking: Booking): string {
+  return customers.find((item) => item.id === booking.customerId)?.phone ?? "";
+}
+
+function namedItem(
+  dress: Dress,
+  booking?: Booking,
+  note = "",
+  extras?: { itemKey?: string; phone?: string; reminderText?: string },
+): DailyAlertItem {
   return {
     dressId: dress.id,
     dressName: dress.name,
     customerName: booking?.customerName ?? "",
     note,
-    itemKey,
+    itemKey: extras?.itemKey,
+    bookingId: booking?.id,
+    phone: extras?.phone,
+    reminderText: extras?.reminderText,
   };
 }
 
@@ -68,7 +86,7 @@ function namesLine(items: DailyAlertItem[]): string {
 function dressesCountPhrase(
   count: number,
   named: string | undefined,
-  kind: "overdue" | "returnToday" | "clean" | "pickup" | "prep" | "tomorrow" | "cancelled",
+  kind: "overdue" | "returnToday" | "fittingToday" | "fittingTomorrow" | "clean" | "pickup" | "prep" | "tomorrow" | "cancelled",
 ): string {
   if (count === 1 && named) return `${named} ${t(`alert.${kind}.one`)}`;
   if (count === 1) return t("alert.dressWord", { phrase: t(`alert.${kind}.one`) });
@@ -93,7 +111,7 @@ function buildAlert(
   kind: DailyAlertKind,
   items: DailyAlertItem[],
   tone: DailyAlertTone,
-  phraseKind: "overdue" | "returnToday" | "clean" | "pickup" | "prep" | "tomorrow" | "cancelled",
+  phraseKind: "overdue" | "returnToday" | "fittingToday" | "fittingTomorrow" | "clean" | "pickup" | "prep" | "tomorrow" | "cancelled",
   detailForOne?: string,
   title?: string,
 ): DailyAlert | null {
@@ -109,7 +127,12 @@ function buildAlert(
   };
 }
 
-export function dailyAlerts(dresses: Dress[], bookings: Booking[], today = todayIso()): DailyAlert[] {
+export function dailyAlerts(
+  dresses: Dress[],
+  bookings: Booking[],
+  today = todayIso(),
+  customers: Customer[] = [],
+): DailyAlert[] {
   const byId = dressMap(dresses);
   const active = activeBookings(bookings);
   const tomorrow = shiftIso(today, 1);
@@ -119,6 +142,8 @@ export function dailyAlerts(dresses: Dress[], bookings: Booking[], today = today
 
   const overdueItems: DailyAlertItem[] = [];
   const returnTodayItems: DailyAlertItem[] = [];
+  const fittingTodayItems: DailyAlertItem[] = [];
+  const fittingTomorrowItems: DailyAlertItem[] = [];
   const pickupTodayItems: DailyAlertItem[] = [];
   const tomorrowItems: DailyAlertItem[] = [];
   const prepItems: DailyAlertItem[] = [];
@@ -128,12 +153,38 @@ export function dailyAlerts(dresses: Dress[], bookings: Booking[], today = today
     if (!dress) continue;
     const pickup = pickupOf(booking);
     const due = returnOf(booking);
+    const phone = phoneOf(customers, booking);
+    const returnText = returnReminderText(booking, dress.name);
 
     if (due < today) {
-      overdueItems.push(namedItem(dress, booking, t("alert.wasDue", { date: formatDate(due) })));
+      overdueItems.push(
+        namedItem(dress, booking, t("alert.wasDue", { date: formatDate(due) }), {
+          phone,
+          reminderText: returnText,
+        }),
+      );
     } else if (due === today) {
       returnTodayItems.push(
-        namedItem(dress, booking, booking.customerName ? t("alert.from", { name: booking.customerName }) : t("alert.returnTodayNote")),
+        namedItem(dress, booking, booking.customerName ? t("alert.from", { name: booking.customerName }) : t("alert.returnTodayNote"), {
+          phone,
+          reminderText: returnText,
+        }),
+      );
+    }
+
+    if (booking.fittingDate === today) {
+      fittingTodayItems.push(
+        namedItem(dress, booking, booking.customerName ? t("alert.fitName", { name: booking.customerName }) : t("alert.fitTodayNote"), {
+          phone,
+          reminderText: fittingReminderText(booking, dress.name),
+        }),
+      );
+    } else if (booking.fittingDate === tomorrow) {
+      fittingTomorrowItems.push(
+        namedItem(dress, booking, booking.customerName ? t("alert.fitName", { name: booking.customerName }) : t("alert.fitTomorrowNote"), {
+          phone,
+          reminderText: fittingReminderText(booking, dress.name),
+        }),
       );
     }
 
@@ -166,12 +217,9 @@ export function dailyAlerts(dresses: Dress[], bookings: Booking[], today = today
     const dress = byId.get(booking.dressId);
     if (!dress) continue;
     cancelledItems.push(
-      namedItem(
-        dress,
-        booking,
-        t("alert.cancelledOn", { date: formatDate(booking.cancelledAt || booking.bookedAt) }),
-        booking.id,
-      ),
+      namedItem(dress, booking, t("alert.cancelledOn", { date: formatDate(booking.cancelledAt || booking.bookedAt) }), {
+        itemKey: booking.id,
+      }),
     );
   }
 
@@ -184,6 +232,8 @@ export function dailyAlerts(dresses: Dress[], bookings: Booking[], today = today
       overdueItems[0] ? `${overdueItems[0].note}${overdueItems[0].customerName ? ` — ${overdueItems[0].customerName}` : ""}` : "",
     ),
     buildAlert("return-today", returnTodayItems, "red", "returnToday", returnTodayItems[0]?.note),
+    buildAlert("fitting-today", fittingTodayItems, "wine", "fittingToday", fittingTodayItems[0]?.note),
+    buildAlert("fitting-tomorrow", fittingTomorrowItems, "blue", "fittingTomorrow", fittingTomorrowItems[0]?.note),
     buildAlert("cleaning", cleaningItems, "red", "clean", t("alert.clean.detail")),
     buildAlert("pickup-today", pickupTodayItems, "yellow", "pickup", pickupTodayItems[0]?.note),
     buildAlert("prep", prepItems, "wine", "prep", prepItems[0]?.note),

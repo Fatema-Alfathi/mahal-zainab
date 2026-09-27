@@ -343,3 +343,30 @@ html.dark .text-\[\#2a0c12\],
 html.dark .text-\[\#2a0505\] {
   color: #f5ebe0;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .invoice-print-root,
+  .invoice-print-root * {
+    visibility: visible;
+  }
+
+  .invoice-print-root {
+    position: absolute;
+    inset: 0;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+    box-shadow: none;
+    border: none;
+    background: white;
+    color: black;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

@@ -9,12 +9,14 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
+import { buildMonthReportText, downloadTextFile, monthReportFilename, snapshotFromState } from "@/lib/shopBackup";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { ownerHistory, type HistoryRow } from "@/lib/ownerSnapshot";
 import { cn, formatCurrency, formatSignedCurrency, monthNameShortAr } from "@/lib/format";
 
 export function OwnerHistory() {
-  const { bookings, fixedExpenses, variableExpenses } = useShop();
+  const shop = useShop();
+  const { bookings, fixedExpenses, variableExpenses } = shop;
   const { t, locale } = useLanguage();
   const history = useMemo(
     () => ownerHistory(bookings, fixedExpenses, variableExpenses),
@@ -181,7 +183,8 @@ export function OwnerHistory() {
                       </span>
                     ) : null}
                   </span>
-                  <span className="text-xs text-[var(--salla-muted)] sm:text-sm">
+                  <span className="inline-flex flex-wrap items-center gap-2 text-xs text-[var(--salla-muted)] sm:text-sm">
+                    <span>
                     دخل{" "}
                     <span className="font-semibold tabular-nums text-[var(--salla-primary)]">
                       {formatCurrency(row.income)}
@@ -198,6 +201,19 @@ export function OwnerHistory() {
                     </span>
                     {" · "}
                     <span className="tabular-nums text-[var(--foreground)]">{row.bookings} حجز</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        downloadTextFile(
+                          monthReportFilename(row.key),
+                          buildMonthReportText(row.key, snapshotFromState(shop)),
+                        )
+                      }
+                      className="rounded-lg border border-[var(--salla-border)] bg-[var(--salla-surface)] px-2 py-1 text-[11px] font-medium text-[var(--foreground)] hover:bg-[var(--salla-soft)]"
+                    >
+                      {t("files.report")}
+                    </button>
                   </span>
                 </li>
               );

@@ -393,6 +393,8 @@ function booking(
     returnDate?: string;
     cancelledAt?: string;
     bookedByEmployeeId?: string;
+    payments?: Booking["payments"];
+    fittingDate?: string;
   },
 ): Booking {
   const customer = CUSTOMER_BY_NAME[customerName];
@@ -416,7 +418,7 @@ function booking(
     returnDate: extra?.returnDate ?? endDate,
     needsFitting,
     needsAlterations,
-    fittingDate: needsFitting ? fittingDateForPickup(startDate) : "",
+    fittingDate: extra?.fittingDate ?? (needsFitting ? fittingDateForPickup(startDate) : ""),
     subtotal: extra?.discount?.subtotal ?? total,
     discountType: extra?.discount?.type ?? "none",
     discountValue: extra?.discount?.value ?? 0,
@@ -430,6 +432,11 @@ function booking(
     status,
     cancelledAt: extra?.cancelledAt ?? (status === "cancelled" ? extra?.bookedAt ?? startDate : ""),
     bookedByEmployeeId: extra?.bookedByEmployeeId ?? "",
+    payments:
+      extra?.payments ??
+      (depositPaid > 0 && status !== "cancelled"
+        ? [{ id: `${id}-pay`, paidAt: extra?.bookedAt ?? startDate, amount: depositPaid }]
+        : []),
   };
 }
 
@@ -496,6 +503,7 @@ export const INITIAL_BOOKINGS: Booking[] = assignInvoiceNumbers([
     remainingAmount: 36,
     needsAlterations: true,
     bookedAt: "2026-09-04",
+    fittingDate: "2026-09-27",
     bookedByEmployeeId: "emp-hind",
   }),
   booking("book-16", "dress-yal-070", "شهد العلوي", "2026-09-14", "2026-09-16", 84, "active", {

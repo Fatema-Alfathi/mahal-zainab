@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { DailyAlerts } from "@/components/DailyAlerts";
+import { ShopFilesPanel } from "@/components/ShopFilesPanel";
 import { GovernmentRecords } from "@/components/GovernmentRecords";
 import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
@@ -70,6 +71,8 @@ export function OwnerSnapshot() {
       </div>
 
       <DailyAlerts />
+
+      <ShopFilesPanel />
 
       <GovernmentRecords />
 

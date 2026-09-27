@@ -52,6 +52,7 @@ import {
   writeStoredEmployees,
 } from "@/lib/employees";
 import { suggestInvoiceNumber } from "@/lib/invoices";
+import { parseShopBackup, readStoredShop, snapshotFromState, writeStoredShop, type ShopSnapshot } from "@/lib/shopBackup";
 import { isSalaryExpense, isStandardMonthlyExpense, normalizeExpenseAmount } from "@/lib/monthlyExpenses";
 import { normalizeGovernmentRecordDraft } from "@/lib/governmentRecords";
 import {
@@ -128,6 +129,7 @@ type Action =
   | { type: "pickup-dress"; dressId: string }
   | { type: "return-dress"; dressId: string }
   | { type: "cancel-booking"; bookingId: string }
+  | { type: "record-payment"; bookingId: string; amount: number }
   | { type: "complete-maintenance"; dressId: string }
   | { type: "add-variable-expense"; expense: Omit<VariableExpense, "id"> }
   | { type: "update-fixed-expense"; expenseId: string; amount: number }
@@ -135,7 +137,8 @@ type Action =
   | { type: "delete-fixed-expense"; expenseId: string }
   | { type: "add-dress"; draft: DressCatalogDraft }
   | { type: "update-dress"; dressId: string; draft: DressCatalogDraft }
-  | { type: "delete-dress"; dressId: string };
+  | { type: "delete-dress"; dressId: string }
+  | { type: "hydrate-shop"; snapshot: ShopSnapshot };
 
 function shopReducer(state: ShopState, action: Action): ShopState {
   switch (action.type) {
@@ -242,6 +245,10 @@ function shopReducer(state: ShopState, action: Action): ShopState {
             status: "active",
             cancelledAt: "",
             bookedByEmployeeId: state.role === "employee" ? state.employeeId : "",
+            payments:
+              payment.depositPaid > 0
+                ? [{ id: crypto.randomUUID(), paidAt: todayIso(), amount: payment.depositPaid }]
+                : [],
           },
           ...state.bookings,
         ],
@@ -274,6 +281,20 @@ function shopReducer(state: ShopState, action: Action): ShopState {
         bookings: state.bookings.map((booking) =>
           booking.customerId === action.customerId ? { ...booking, customerName: draft.name } : booking,
         ),
+      };
+    }
+
+    case "hydrate-shop": {
+      return {
+        ...state,
+        dresses: action.snapshot.dresses,
+        customers: action.snapshot.customers,
+        employees: action.snapshot.employees,
+        governmentRecords: action.snapshot.governmentRecords,
+        fixedExpenses: action.snapshot.fixedExpenses,
+        variableExpenses: action.snapshot.variableExpenses,
+        bookings: action.snapshot.bookings,
+        discountPolicy: action.snapshot.discountPolicy,
       };
     }
 
@@ -371,6 +392,25 @@ function shopReducer(state: ShopState, action: Action): ShopState {
           booking.dressId === action.dressId && booking.status === "active"
             ? { ...booking, handoverDate: booking.handoverDate || todayIso() }
             : booking,
+        ),
+      };
+    }
+
+    case "record-payment": {
+      const booking = state.bookings.find((item) => item.id === action.bookingId);
+      const amount = roundMoney(action.amount);
+      if (!booking || booking.status !== "active" || amount <= 0 || amount > booking.remainingAmount) return state;
+      return {
+        ...state,
+        bookings: state.bookings.map((item) =>
+          item.id === action.bookingId
+            ? {
+                ...item,
+                depositPaid: roundMoney(item.depositPaid + amount),
+                remainingAmount: roundMoney(item.remainingAmount - amount),
+                payments: [...item.payments, { id: crypto.randomUUID(), paidAt: todayIso(), amount }],
+              }
+            : item,
         ),
       };
     }
@@ -662,6 +702,7 @@ interface ShopContextValue extends ShopState {
   pickupDress: (dressId: string) => void;
   returnDress: (dressId: string) => void;
   cancelBooking: (bookingId: string) => void;
+  recordPayment: (bookingId: string, amount: number) => boolean;
   completeMaintenance: (dressId: string) => void;
   addVariableExpense: (expense: Omit<VariableExpense, "id">) => void;
   updateFixedExpense: (expenseId: string, amount: number) => boolean;
@@ -670,6 +711,7 @@ interface ShopContextValue extends ShopState {
   addDress: (draft: DressCatalogDraft) => boolean;
   updateDress: (dressId: string, draft: DressCatalogDraft) => boolean;
   deleteDress: (dressId: string) => boolean;
+  restoreShop: (raw: unknown) => boolean;
 }
 
 const ShopContext = createContext<ShopContextValue | null>(null);
@@ -678,13 +720,16 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(shopReducer, initialState);
   const [authReady, setAuthReady] = useState(false);
   const [rosterReady, setRosterReady] = useState(false);
+  const [shopReady, setShopReady] = useState(false);
   const [passwords, setPasswords] = useState<PasswordStore>(defaultPasswordStore);
 
   useEffect(() => {
     setPasswords(readPasswords());
+    const storedShop = readStoredShop();
+    if (storedShop) dispatch({ type: "hydrate-shop", snapshot: storedShop });
     const storedEmployees = readStoredEmployees();
     if (storedEmployees) dispatch({ type: "hydrate-employees", employees: storedEmployees });
-    const roster = storedEmployees ?? initialState.employees;
+    const roster = storedEmployees ?? storedShop?.employees ?? initialState.employees;
     const saved = readSession();
     if (saved?.role === "owner") {
       dispatch({ type: "sign-in", session: saved });
@@ -697,6 +742,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       }
     }
     setRosterReady(true);
+    setShopReady(true);
     setAuthReady(true);
   }, []);
 
@@ -704,6 +750,21 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     if (!rosterReady) return;
     writeStoredEmployees(state.employees);
   }, [rosterReady, state.employees]);
+
+  useEffect(() => {
+    if (!shopReady) return;
+    writeStoredShop(snapshotFromState(state));
+  }, [
+    shopReady,
+    state.dresses,
+    state.customers,
+    state.employees,
+    state.governmentRecords,
+    state.fixedExpenses,
+    state.variableExpenses,
+    state.bookings,
+    state.discountPolicy,
+  ]);
 
   const signIn = useCallback((username: string, password: string) => {
     const session = verifyLogin(state.employees, username, password, passwords);
@@ -942,6 +1003,17 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "cancel-booking", bookingId });
   }, []);
 
+  const recordPayment = useCallback(
+    (bookingId: string, amount: number) => {
+      const booking = state.bookings.find((item) => item.id === bookingId);
+      const next = roundMoney(amount);
+      if (!booking || booking.status !== "active" || next <= 0 || next > booking.remainingAmount) return false;
+      dispatch({ type: "record-payment", bookingId, amount: next });
+      return true;
+    },
+    [state.bookings],
+  );
+
   const completeMaintenance = useCallback((dressId: string) => {
     dispatch({ type: "complete-maintenance", dressId });
   }, []);
@@ -1002,6 +1074,19 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     [state.dresses],
   );
 
+  const restoreShop = useCallback(
+    (raw: unknown) => {
+      if (state.role !== "owner" || !state.signedIn) return false;
+      const snapshot = parseShopBackup(raw);
+      if (!snapshot) return false;
+      dispatch({ type: "hydrate-shop", snapshot });
+      writeStoredEmployees(snapshot.employees);
+      writeStoredShop(snapshot);
+      return true;
+    },
+    [state.role, state.signedIn],
+  );
+
   const deleteDress = useCallback(
     (dressId: string) => {
       const dress = state.dresses.find((item) => item.id === dressId);
@@ -1043,6 +1128,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       pickupDress,
       returnDress,
       cancelBooking,
+      recordPayment,
       completeMaintenance,
       addVariableExpense,
       updateFixedExpense,
@@ -1051,6 +1137,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       addDress,
       updateDress,
       deleteDress,
+      restoreShop,
     }),
     [
       state,
@@ -1076,6 +1163,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       pickupDress,
       returnDress,
       cancelBooking,
+      recordPayment,
       completeMaintenance,
       addVariableExpense,
       updateFixedExpense,
@@ -1084,6 +1172,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       addDress,
       updateDress,
       deleteDress,
+      restoreShop,
     ],
   );
 
