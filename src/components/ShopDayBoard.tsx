@@ -82,7 +82,6 @@ export function ShopDayBoard() {
       <div className="mb-5">
         <p className="text-sm text-[var(--salla-muted)]">{t("cal.shopKicker")}</p>
         <h1 className="mt-1 text-3xl font-medium text-[var(--foreground)]">{heading}</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--salla-muted)]">{t("cal.shopLead")}</p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,22rem)]">

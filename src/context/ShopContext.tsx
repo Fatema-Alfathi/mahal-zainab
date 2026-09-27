@@ -97,21 +97,25 @@ type Action =
       type: "create-booking";
       dressId: string;
       customerId?: string;
+      newCustomerId?: string;
+      customerNumber?: string;
       customerName: string;
       phone?: string;
       eventDate?: string;
+      notes?: string;
       startDate: string;
       endDate: string;
       pickupDate?: string;
       handoverDate?: string;
       returnDate?: string;
+      fittingDate?: string;
       discountType: DiscountType;
       discountValue: number;
       depositPaid: number;
       needsAlterations: boolean;
       needsFitting: boolean;
     }
-  | { type: "add-customer"; draft: CustomerDraft }
+  | { type: "add-customer"; customerId: string; draft: CustomerDraft }
   | { type: "update-customer"; customerId: string; draft: CustomerDraft }
   | { type: "hydrate-employees"; employees: ShopState["employees"] }
   | { type: "add-employee"; employeeId: string; draft: EmployeeDraft }
@@ -167,19 +171,22 @@ function shopReducer(state: ShopState, action: Action): ShopState {
       );
       const payment = settleDeposit(total, action.depositPaid);
       const startsLater = action.startDate > todayIso();
-      const fitting = resolveFitting(action.needsAlterations, action.needsFitting, action.startDate);
+      const wantsFitting = action.needsFitting || Boolean(action.fittingDate?.trim());
+      const fitting = resolveFitting(action.needsAlterations, wantsFitting, action.pickupDate || action.startDate);
       const selected = action.customerId
         ? state.customers.find((item) => item.id === action.customerId)
         : matchCustomer(state.customers, action.customerName, action.phone);
+      const requestedNumber = action.customerNumber?.trim() ?? "";
+      if (!selected && requestedNumber && isCustomerNumberTaken(state.customers, requestedNumber)) return state;
       const customer =
         selected ??
         {
-          id: crypto.randomUUID(),
-          number: suggestCustomerNumber(state.customers),
+          id: action.newCustomerId || crypto.randomUUID(),
+          number: requestedNumber || suggestCustomerNumber(state.customers),
           name: action.customerName.trim(),
           phone: (action.phone ?? "").trim(),
           eventDate: action.eventDate ?? "",
-          notes: "",
+          notes: action.notes?.trim() ?? "",
         };
       const customers = selected
         ? state.customers.map((item) =>
@@ -221,7 +228,7 @@ function shopReducer(state: ShopState, action: Action): ShopState {
             returnDate: action.returnDate || action.endDate,
             needsFitting: fitting.needsFitting,
             needsAlterations: fitting.needsAlterations,
-            fittingDate: fitting.fittingDate,
+            fittingDate: action.fittingDate?.trim() || fitting.fittingDate,
             subtotal,
             discountType: authorized.discountType,
             discountValue: authorized.discountValue,
@@ -234,6 +241,7 @@ function shopReducer(state: ShopState, action: Action): ShopState {
             insuranceReturned: false,
             status: "active",
             cancelledAt: "",
+            bookedByEmployeeId: state.role === "employee" ? state.employeeId : "",
           },
           ...state.bookings,
         ],
@@ -248,7 +256,7 @@ function shopReducer(state: ShopState, action: Action): ShopState {
         ...state,
         customers: [
           {
-            id: crypto.randomUUID(),
+            id: action.customerId,
             ...draft,
           },
           ...state.customers,
@@ -612,21 +620,25 @@ interface ShopContextValue extends ShopState {
   createBooking: (input: {
     dressId: string;
     customerId?: string;
+    newCustomerId?: string;
+    customerNumber?: string;
     customerName: string;
     phone?: string;
     eventDate?: string;
+    notes?: string;
     startDate: string;
     endDate: string;
     pickupDate?: string;
     handoverDate?: string;
     returnDate?: string;
+    fittingDate?: string;
     discountType: DiscountType;
     discountValue: number;
     depositPaid: number;
     needsAlterations: boolean;
     needsFitting: boolean;
   }) => void;
-  addCustomer: (draft: CustomerDraft) => boolean;
+  addCustomer: (draft: CustomerDraft) => string | false;
   updateCustomer: (customerId: string, draft: CustomerDraft) => boolean;
   addEmployee: (draft: EmployeeDraft, password?: string) => string | false;
   updateEmployee: (employeeId: string, draft: EmployeeDraft) => boolean;
@@ -735,14 +747,18 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     (input: {
       dressId: string;
       customerId?: string;
+      newCustomerId?: string;
+      customerNumber?: string;
       customerName: string;
       phone?: string;
       eventDate?: string;
+      notes?: string;
       startDate: string;
       endDate: string;
       pickupDate?: string;
       handoverDate?: string;
       returnDate?: string;
+      fittingDate?: string;
       discountType: DiscountType;
       discountValue: number;
       depositPaid: number;
@@ -759,8 +775,9 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       const normalized = normalizeCustomerDraft(draft);
       if (!normalized || isCustomerNumberTaken(state.customers, normalized.number)) return false;
       if (matchCustomer(state.customers, normalized.name, normalized.phone)) return false;
-      dispatch({ type: "add-customer", draft: normalized });
-      return true;
+      const customerId = crypto.randomUUID();
+      dispatch({ type: "add-customer", customerId, draft: normalized });
+      return customerId;
     },
     [state.customers],
   );

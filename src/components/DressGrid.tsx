@@ -96,7 +96,6 @@ export function DressGrid() {
           <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-3xl">
             {t("floor.title")}
           </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--salla-muted)]">{t("floor.lead")}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link

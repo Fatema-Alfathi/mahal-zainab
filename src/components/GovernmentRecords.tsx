@@ -18,7 +18,7 @@ const STATUS_STYLES = {
   overdue: "shop-tint-red",
   today: "shop-tint-yellow",
   soon: "shop-tint-yellow",
-  ok: "bg-emerald-50 ring-1 ring-emerald-200",
+  ok: "shop-tint-green",
 } as const;
 
 const STATUS_BADGE = {
@@ -47,9 +47,9 @@ export function GovernmentRecords() {
     <section className="dash-panel rounded-3xl p-5" aria-label={t("gov.aria")}>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-medium text-rose-400">{t("gov.kicker")}</p>
-          <h2 className="mt-1 text-lg text-rose-900">{t("gov.title")}</h2>
-          <p className="mt-1 text-xs text-rose-400">{t("gov.lead")}</p>
+          <p className="text-xs font-medium text-[var(--salla-muted)]">{t("gov.kicker")}</p>
+          <h2 className="mt-1 text-lg text-[var(--foreground)]">{t("gov.title")}</h2>
+          <p className="mt-1 text-xs text-[var(--salla-muted)]">{t("gov.lead")}</p>
         </div>
         <button
           type="button"
@@ -68,7 +68,7 @@ export function GovernmentRecords() {
       </dl>
 
       {rows.length === 0 ? (
-        <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{t("gov.empty")}</p>
+        <p className="rounded-2xl bg-[var(--salla-soft)] px-4 py-3 text-sm text-[var(--salla-muted)]">{t("gov.empty")}</p>
       ) : (
         <ul className="space-y-2">
           {rows.map((record) => {
@@ -78,14 +78,14 @@ export function GovernmentRecords() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <FileBadge className="h-4 w-4 text-rose-700" aria-hidden />
-                      <p className="text-sm font-medium text-rose-900">{record.name}</p>
-                      <span className="rounded-full bg-white/80 px-2 py-0.5 text-[11px] text-rose-700">
+                      <FileBadge className="h-4 w-4 text-[var(--salla-primary)]" aria-hidden />
+                      <p className="text-sm font-medium text-[var(--foreground)]">{record.name}</p>
+                      <span className="rounded-full bg-[color-mix(in_srgb,var(--foreground)_10%,transparent)] px-2 py-0.5 text-[11px] text-[var(--foreground)] ring-1 ring-[color-mix(in_srgb,var(--foreground)_14%,transparent)]">
                         {GOVERNMENT_KIND_LABELS[record.kind]}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs text-rose-600">{t("gov.renewal", { date: formatDate(record.renewalDate) })}</p>
-                    {record.notes ? <p className="mt-1 text-xs leading-5 text-rose-500">{record.notes}</p> : null}
+                    <p className="mt-1 text-xs text-[var(--salla-muted)]">{t("gov.renewal", { date: formatDate(record.renewalDate) })}</p>
+                    {record.notes ? <p className="mt-1 text-xs leading-5 text-[var(--salla-muted)]">{record.notes}</p> : null}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className={cn("rounded-full px-2.5 py-1 text-xs font-medium", STATUS_BADGE[status])}>
@@ -94,7 +94,7 @@ export function GovernmentRecords() {
                     <button
                       type="button"
                       onClick={() => setEditor({ mode: "edit", record })}
-                      className="rounded-full bg-white p-1.5 text-rose-700 hover:bg-rose-50"
+                      className="rounded-full bg-[color-mix(in_srgb,var(--foreground)_10%,transparent)] p-1.5 text-[var(--salla-primary)] ring-1 ring-[color-mix(in_srgb,var(--foreground)_14%,transparent)] hover:bg-[color-mix(in_srgb,var(--foreground)_16%,transparent)]"
                       aria-label={t("gov.editTitle", { name: record.name })}
                     >
                       <Pencil className="h-3.5 w-3.5" aria-hidden />
@@ -102,7 +102,7 @@ export function GovernmentRecords() {
                     <button
                       type="button"
                       onClick={() => setPendingDelete(record)}
-                      className="rounded-full bg-white p-1.5 text-red-600 hover:bg-red-50"
+                      className="rounded-full bg-[color-mix(in_srgb,var(--foreground)_10%,transparent)] p-1.5 text-[var(--salla-danger)] ring-1 ring-[color-mix(in_srgb,var(--foreground)_14%,transparent)] hover:bg-[color-mix(in_srgb,var(--foreground)_16%,transparent)]"
                       aria-label={t("gov.deleteTitle", { name: record.name })}
                     >
                       <Trash2 className="h-3.5 w-3.5" aria-hidden />
@@ -129,13 +129,13 @@ export function GovernmentRecords() {
       ) : null}
 
       {pendingDelete ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
           <button type="button" className="absolute inset-0 cursor-default" aria-label={t("cancel")} onClick={() => setPendingDelete(null)} />
           <div className="shop-card relative w-full max-w-md rounded-3xl p-6">
-            <h3 className="text-xl text-rose-900">{t("gov.deleteTitle", { name: pendingDelete.name })}</h3>
-            <p className="mt-2 text-sm leading-6 text-rose-600">{t("gov.deleteBody")}</p>
+            <h3 className="text-xl text-[var(--foreground)]">{t("gov.deleteTitle", { name: pendingDelete.name })}</h3>
+            <p className="mt-2 text-sm leading-6 text-[var(--salla-muted)]">{t("gov.deleteBody")}</p>
             <div className="mt-5 flex flex-wrap justify-end gap-2">
-              <button type="button" onClick={() => setPendingDelete(null)} className="rounded-2xl bg-rose-50 px-4 py-2 text-sm text-rose-800">
+              <button type="button" onClick={() => setPendingDelete(null)} className="rounded-2xl bg-[var(--salla-soft)] px-4 py-2 text-sm text-[var(--foreground)]">
                 {t("floor.undo")}
               </button>
               <button
@@ -215,18 +215,18 @@ function RecordForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
       <button type="button" className="absolute inset-0 cursor-default" aria-label={t("dresses.closeForm")} onClick={onClose} />
       <div className="shop-card relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl p-6">
         <div className="mb-4 flex items-start justify-between gap-3">
-          <h3 className="text-2xl text-rose-900">{title}</h3>
-          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label={t("close")}>
+          <h3 className="text-2xl text-[var(--foreground)]">{title}</h3>
+          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-[var(--salla-muted)] hover:bg-[var(--salla-soft)]" aria-label={t("close")}>
             <X className="h-4 w-4" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <p className="mb-2 text-sm text-rose-700">{t("gov.kind")}</p>
+            <p className="mb-2 text-sm text-[var(--foreground)]">{t("gov.kind")}</p>
             <div className="flex flex-wrap gap-1.5">
               {GOVERNMENT_RECORD_KINDS.map((kind) => (
                 <button
@@ -234,7 +234,9 @@ function RecordForm({
                   type="button"
                   onClick={() => applyKind(kind)}
                   className={
-                    draft.kind === kind ? "shop-btn rounded-full px-3 py-1 text-xs" : "rounded-full bg-rose-50 px-3 py-1 text-xs text-rose-700 hover:bg-rose-100"
+                    draft.kind === kind
+                      ? "shop-btn rounded-full px-3 py-1 text-xs"
+                      : "rounded-full bg-[var(--salla-soft)] px-3 py-1 text-xs text-[var(--foreground)] hover:bg-[var(--salla-border)]"
                   }
                 >
                   {GOVERNMENT_KIND_LABELS[kind]}
@@ -243,36 +245,36 @@ function RecordForm({
             </div>
           </div>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">{t("gov.name")}</span>
+            <span className="mb-1 block text-[var(--foreground)]">{t("gov.name")}</span>
             <input
               value={draft.name}
               onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+              className="w-full rounded-2xl border-0 bg-[var(--salla-soft)] px-3 py-2.5 text-[var(--foreground)] outline-none ring-[var(--salla-border)] focus:ring-2"
               placeholder={t("gov.namePh")}
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">{t("gov.date")}</span>
+            <span className="mb-1 block text-[var(--foreground)]">{t("gov.date")}</span>
             <input
               type="date"
               value={draft.renewalDate}
               onChange={(event) => setDraft((current) => ({ ...current, renewalDate: event.target.value }))}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+              className="w-full rounded-2xl border-0 bg-[var(--salla-soft)] px-3 py-2.5 text-[var(--foreground)] outline-none ring-[var(--salla-border)] focus:ring-2"
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">{t("gov.note")}</span>
+            <span className="mb-1 block text-[var(--foreground)]">{t("gov.note")}</span>
             <textarea
               value={draft.notes}
               onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
               rows={3}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+              className="w-full rounded-2xl border-0 bg-[var(--salla-soft)] px-3 py-2.5 text-[var(--foreground)] outline-none ring-[var(--salla-border)] focus:ring-2"
               placeholder={t("gov.notePh")}
             />
           </label>
-          {error ? <p className="text-sm text-red-600">{t(error)}</p> : null}
+          {error ? <p className="text-sm text-[var(--salla-danger)]">{t(error)}</p> : null}
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-2xl bg-rose-50 px-4 py-2 text-sm text-rose-800">
+            <button type="button" onClick={onClose} className="rounded-2xl bg-[var(--salla-soft)] px-4 py-2 text-sm text-[var(--foreground)]">
               {t("floor.undo")}
             </button>
             <button type="submit" className="shop-btn rounded-2xl px-4 py-2 text-sm">

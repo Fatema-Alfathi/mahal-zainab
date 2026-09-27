@@ -28,7 +28,8 @@ import {
   suggestEmployeeNumber,
 } from "@/lib/employees";
 import { MIN_PASSWORD_LENGTH } from "@/lib/passwords";
-import { cn, formatCurrency, formatDate } from "@/lib/format";
+import { employeeMonthBookingCount, staffBookingCountLabel, staffMonthBookingRows } from "@/lib/staffBookings";
+import { cn, formatCurrency, formatDate, monthNameAr, todayIso } from "@/lib/format";
 import { jobTitleLabel } from "@/lib/labels";
 import { EMPLOYEE_JOB_TITLES, type Employee, type EmployeeDraft } from "@/types";
 
@@ -36,7 +37,7 @@ const fieldClass =
   "w-full rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/70 px-3 py-2.5 outline-none transition focus:border-[var(--salla-primary)] focus:bg-[var(--salla-surface)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--salla-primary)_20%,transparent)]";
 
 export function EmployeeManager() {
-  const { employees, addEmployee, updateEmployee, deleteEmployee, changeStaffPassword } = useShop();
+  const { employees, bookings, addEmployee, updateEmployee, deleteEmployee, changeStaffPassword } = useShop();
   const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [editor, setEditor] = useState<{ mode: "add" } | { mode: "edit"; employee: Employee } | null>(null);
@@ -55,6 +56,9 @@ export function EmployeeManager() {
   const selected = employees.find((employee) => employee.id === openId) ?? null;
   const working = activeEmployees(employees);
   const salaryTotal = monthlySalaryTotal(employees);
+  const monthLabel = monthNameAr(todayIso());
+  const monthRows = useMemo(() => staffMonthBookingRows(employees, bookings), [bookings, employees]);
+  const selectedMonthCount = selected ? employeeMonthBookingCount(bookings, selected.id) : 0;
 
   return (
     <section className="space-y-5">
@@ -82,6 +86,23 @@ export function EmployeeManager() {
         <StatCard label="كل الملفات" value={String(employees.length)} icon={Users} tone="primary" />
         <StatCard label="رواتب الشهر" value={formatCurrency(salaryTotal)} icon={Wallet} tone="primary" />
       </dl>
+
+      <section className="dash-panel rounded-2xl p-5" aria-label={t("staff.monthBookings", { month: monthLabel })}>
+        <h2 className="text-lg font-semibold text-[var(--foreground)]">{t("staff.monthBookings", { month: monthLabel })}</h2>
+        <ul className="mt-3 divide-y divide-[var(--salla-border)]">
+          {monthRows.map(({ employee, count }) => (
+            <li key={employee.id} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-[var(--foreground)]">{employee.name}</p>
+                <p className="mt-0.5 text-xs text-[var(--salla-muted)]">{employee.jobTitle}</p>
+              </div>
+              <span className="shrink-0 tabular-nums text-sm font-semibold text-[var(--salla-primary)]">
+                {staffBookingCountLabel(count)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {notice ? (
         <p className="rounded-xl border border-[color-mix(in_srgb,var(--salla-success)_30%,var(--salla-border))] bg-[color-mix(in_srgb,var(--salla-success)_10%,transparent)] px-4 py-2.5 text-sm text-[var(--salla-success)]">
@@ -148,6 +169,8 @@ export function EmployeeManager() {
                           )}
                         >
                           {employee.jobTitle} · {formatCurrency(employee.salary)}
+                          {" · "}
+                          {staffBookingCountLabel(employeeMonthBookingCount(bookings, employee.id))}
                         </p>
                         {!employee.active ? (
                           <p
@@ -215,11 +238,17 @@ export function EmployeeManager() {
               </div>
             </div>
 
-            <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-6">
+            <div className="grid gap-3 p-5 sm:grid-cols-3 sm:p-6">
               <div className="rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/40 px-4 py-3">
                 <p className="text-xs text-[var(--salla-muted)]">راتب الشهر</p>
                 <p className="mt-1 text-xl font-semibold tabular-nums text-[var(--salla-primary)]">
                   {formatCurrency(selected.salary)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/40 px-4 py-3">
+                <p className="text-xs text-[var(--salla-muted)]">{t("staff.monthBookings", { month: monthLabel })}</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-[var(--salla-primary)]">
+                  {staffBookingCountLabel(selectedMonthCount)}
                 </p>
               </div>
               <div className="rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/40 px-4 py-3">
@@ -234,7 +263,7 @@ export function EmployeeManager() {
                 </p>
               </div>
               {selected.notes ? (
-                <div className="flex gap-2 rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/40 px-4 py-3 sm:col-span-2">
+                <div className="flex gap-2 rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/40 px-4 py-3 sm:col-span-3">
                   <StickyNote className="mt-0.5 h-4 w-4 shrink-0 text-[var(--salla-muted)]" aria-hidden />
                   <p className="text-sm leading-6 text-[var(--foreground)]">{selected.notes}</p>
                 </div>

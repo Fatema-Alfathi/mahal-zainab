@@ -21,9 +21,6 @@ export function DiscountPolicyPanel() {
       <div className="border-b border-[var(--salla-border)] px-5 py-5 sm:px-6">
         <p className="text-sm font-medium text-[var(--salla-primary)]">قرارك أنتِ</p>
         <h3 className="mt-1 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">خصم الموظفات</h3>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--salla-muted)]">
-          اختاري يسمحون يعطون خصم ولا لا. إذا سمحتِ، الرقم ثابت وما يقدرون يغيّرونه.
-        </p>
       </div>
 
       <div className="space-y-4 p-5 sm:p-6">

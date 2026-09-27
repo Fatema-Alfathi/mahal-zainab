@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { BellRing, CalendarDays, HandHeart, RotateCcw, Shirt, Sparkles } from "lucide-react";
+import { Ban, BellRing, CalendarDays, HandHeart, RotateCcw, Shirt, Sparkles } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
 import { dailyAlertCountLabel, dailyAlerts, dailyAlertTotal, type DailyAlert, type DailyAlertKind } from "@/lib/dailyAlerts";
 import { useLanguage } from "@/i18n/LanguageProvider";
@@ -15,6 +15,7 @@ const KIND_ICON: Record<DailyAlertKind, typeof BellRing> = {
   "pickup-today": HandHeart,
   prep: Shirt,
   "booking-tomorrow": CalendarDays,
+  cancelled: Ban,
 };
 
 export function DailyAlerts({ compact = false }: { compact?: boolean }) {
@@ -84,9 +85,9 @@ function AlertRow({ alert }: { alert: DailyAlert }) {
         {alert.items.length > 1 ? (
           <ul className="mt-2 space-y-1">
             {alert.items.map((item) => (
-              <li key={`${alert.id}-${item.dressId}`}>
+              <li key={`${alert.id}-${item.itemKey ?? item.dressId}`}>
                 <Link
-                  href={`/calendar/?dress=${item.dressId}`}
+                  href={alert.kind === "cancelled" ? "/customers/" : `/calendar/?dress=${item.dressId}`}
                   className="text-xs text-[var(--salla-primary)] hover:underline"
                 >
                   {item.customerName ? `${item.dressName} — ${item.customerName}` : item.dressName}
@@ -103,7 +104,7 @@ function AlertRow({ alert }: { alert: DailyAlert }) {
   if (single) {
     return (
       <li>
-        <Link href={`/calendar/?dress=${single.dressId}`} className={cn("block rounded-2xl px-3 py-3", toneClass)}>
+        <Link href={alert.kind === "cancelled" ? "/customers/" : `/calendar/?dress=${single.dressId}`} className={cn("block rounded-2xl px-3 py-3", toneClass)}>
           {content}
         </Link>
       </li>

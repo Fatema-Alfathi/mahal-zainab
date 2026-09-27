@@ -1,3 +1,4 @@
+import { cancelledBookings } from "@/lib/customers";
 import { dressNeedsAlteration } from "@/lib/dressCatalog";
 import { t } from "@/i18n/t";
 import { joinArabic } from "@/lib/labels";
@@ -10,7 +11,8 @@ export type DailyAlertKind =
   | "cleaning"
   | "pickup-today"
   | "prep"
-  | "booking-tomorrow";
+  | "booking-tomorrow"
+  | "cancelled";
 
 export type DailyAlertTone = "red" | "yellow" | "blue" | "wine";
 
@@ -19,6 +21,7 @@ export type DailyAlertItem = {
   dressName: string;
   customerName: string;
   note: string;
+  itemKey?: string;
 };
 
 export type DailyAlert = {
@@ -46,12 +49,13 @@ function activeBookings(bookings: Booking[]): Booking[] {
   return bookings.filter((booking) => booking.status === "active");
 }
 
-function namedItem(dress: Dress, booking?: Booking, note = ""): DailyAlertItem {
+function namedItem(dress: Dress, booking?: Booking, note = "", itemKey?: string): DailyAlertItem {
   return {
     dressId: dress.id,
     dressName: dress.name,
     customerName: booking?.customerName ?? "",
     note,
+    itemKey,
   };
 }
 
@@ -64,7 +68,7 @@ function namesLine(items: DailyAlertItem[]): string {
 function dressesCountPhrase(
   count: number,
   named: string | undefined,
-  kind: "overdue" | "returnToday" | "clean" | "pickup" | "prep" | "tomorrow",
+  kind: "overdue" | "returnToday" | "clean" | "pickup" | "prep" | "tomorrow" | "cancelled",
 ): string {
   if (count === 1 && named) return `${named} ${t(`alert.${kind}.one`)}`;
   if (count === 1) return t("alert.dressWord", { phrase: t(`alert.${kind}.one`) });
@@ -89,7 +93,7 @@ function buildAlert(
   kind: DailyAlertKind,
   items: DailyAlertItem[],
   tone: DailyAlertTone,
-  phraseKind: "overdue" | "returnToday" | "clean" | "pickup" | "prep" | "tomorrow",
+  phraseKind: "overdue" | "returnToday" | "clean" | "pickup" | "prep" | "tomorrow" | "cancelled",
   detailForOne?: string,
   title?: string,
 ): DailyAlert | null {
@@ -157,6 +161,20 @@ export function dailyAlerts(dresses: Dress[], bookings: Booking[], today = today
     }
   }
 
+  const cancelledItems: DailyAlertItem[] = [];
+  for (const booking of cancelledBookings(bookings)) {
+    const dress = byId.get(booking.dressId);
+    if (!dress) continue;
+    cancelledItems.push(
+      namedItem(
+        dress,
+        booking,
+        t("alert.cancelledOn", { date: formatDate(booking.cancelledAt || booking.bookedAt) }),
+        booking.id,
+      ),
+    );
+  }
+
   const alerts = [
     buildAlert(
       "return-overdue",
@@ -176,6 +194,15 @@ export function dailyAlerts(dresses: Dress[], bookings: Booking[], today = today
       "tomorrow",
       tomorrowItems[0] ? (tomorrowItems[0].customerName ? t("alert.forName", { name: tomorrowItems[0].customerName }) : t("alert.pickupTomorrow")) : "",
       tomorrowItems.length === 1 ? t("alert.tomorrowNamed", { name: tomorrowItems[0].dressName }) : undefined,
+    ),
+    buildAlert(
+      "cancelled",
+      cancelledItems,
+      "red",
+      "cancelled",
+      cancelledItems[0]
+        ? `${cancelledItems[0].note}${cancelledItems[0].customerName ? ` — ${cancelledItems[0].customerName}` : ""}`
+        : "",
     ),
   ];
 

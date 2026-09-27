@@ -21,20 +21,7 @@ export const DRESS_SIZES = [
   "52",
 ] as const;
 export type DressSize = (typeof DRESS_SIZES)[number];
-export const DRESS_CATEGORIES = [
-  "wedding",
-  "evening",
-  "soft",
-  "engagement",
-  "henna",
-  "graduation",
-  "contract",
-  "reception",
-  "photoshoot",
-  "traditional",
-  "bridesmaid",
-  "dinner",
-] as const;
+export const DRESS_CATEGORIES = ["wedding", "henna", "evening"] as const;
 export type DressCategory = (typeof DRESS_CATEGORIES)[number];
 export const DRESS_COLORS = [
   "أبيض",
@@ -241,6 +228,7 @@ export interface Booking {
   insuranceReturned: boolean;
   status: BookingStatus;
   cancelledAt: string;
+  bookedByEmployeeId: string;
 }
 
 export interface ShopState {
