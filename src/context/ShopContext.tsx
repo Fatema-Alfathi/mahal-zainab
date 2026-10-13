@@ -25,16 +25,6 @@ import {
   type PasswordStore,
 } from "@/lib/passwords";
 import {
-  INITIAL_BOOKINGS,
-  INITIAL_CUSTOMERS,
-  INITIAL_DRESSES,
-  INITIAL_DISCOUNT_POLICY,
-  INITIAL_EMPLOYEES,
-  INITIAL_FIXED_EXPENSES,
-  INITIAL_GOVERNMENT_RECORDS,
-  INITIAL_VARIABLE_EXPENSES,
-} from "@/data/mockData";
-import {
   isCustomerNumberTaken,
   matchCustomer,
   normalizeCustomerDraft,
@@ -109,21 +99,21 @@ interface ShopContextValue extends ShopState {
   }) => void;
   addCustomer: (draft: CustomerDraft) => string | false;
   updateCustomer: (customerId: string, draft: CustomerDraft) => boolean;
-  addEmployee: (draft: EmployeeDraft, password?: string) => string | false;
+  addEmployee: (draft: EmployeeDraft, password?: string) => Promise<string | false>;
   updateEmployee: (employeeId: string, draft: EmployeeDraft) => boolean;
   deleteEmployee: (employeeId: string) => boolean;
   addStaffAccount: (
     name: string,
     password: string,
-  ) => "ok" | "forbidden" | "name-required" | "owner-name" | "name-taken" | "too-short";
+  ) => Promise<"ok" | "forbidden" | "name-required" | "owner-name" | "name-taken" | "too-short">;
   renameEmployee: (
     employeeId: string,
     name: string,
   ) => "ok" | "forbidden" | "name-required" | "owner-name" | "name-taken";
   ownerLoginPassword: string;
   staffLoginPassword: (employeeId: string) => string;
-  changeOwnerPassword: (current: string, next: string) => "ok" | "forbidden" | "wrong-current" | "too-short";
-  changeStaffPassword: (employeeId: string, next: string) => "ok" | "forbidden" | "too-short";
+  changeOwnerPassword: (current: string, next: string) => Promise<"ok" | "forbidden" | "wrong-current" | "too-short">;
+  changeStaffPassword: (employeeId: string, next: string) => Promise<"ok" | "forbidden" | "too-short">;
   addGovernmentRecord: (draft: GovernmentRecordDraft) => boolean;
   updateGovernmentRecord: (recordId: string, draft: GovernmentRecordDraft) => boolean;
   deleteGovernmentRecord: (recordId: string) => boolean;
@@ -156,36 +146,60 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const backendRef = useRef<"unknown" | "local" | "supabase">("unknown");
   const saveSeq = useRef(0);
 
-  const commit = useCallback((action: Action) => {
+  const persist = useCallback(async (action: Action) => {
     dispatch(action);
-    if (backendRef.current !== "supabase") return;
+    if (backendRef.current !== "supabase") return true;
     const id = ++saveSeq.current;
     setSyncError(false);
-    void (async () => {
-      try {
-        const res = await fetch("/api/shop/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action, today: todayIso() }),
-        });
-        if (id !== saveSeq.current) return;
-        if (!res.ok) {
-          setSyncError(true);
-          const fresh = await fetch("/api/shop/");
-          if (fresh.ok && id === saveSeq.current) {
-            const body = (await fresh.json()) as { data: ShopSnapshot };
-            dispatch({ type: "hydrate-shop", snapshot: body.data });
-          }
-          return;
+    try {
+      const res = await fetch("/api/shop/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, today: todayIso() }),
+      });
+      if (id !== saveSeq.current) return res.ok;
+      if (!res.ok) {
+        setSyncError(true);
+        const fresh = await fetch("/api/shop/");
+        if (fresh.ok && id === saveSeq.current) {
+          const body = (await fresh.json()) as { data: ShopSnapshot };
+          dispatch({ type: "hydrate-shop", snapshot: body.data });
         }
-        const body = (await res.json()) as { data: ShopSnapshot };
-        if (id !== saveSeq.current) return;
-        dispatch({ type: "hydrate-shop", snapshot: body.data });
-      } catch {
-        if (id === saveSeq.current) setSyncError(true);
+        return false;
       }
-    })();
+      const body = (await res.json()) as { data: ShopSnapshot };
+      if (id === saveSeq.current) dispatch({ type: "hydrate-shop", snapshot: body.data });
+      return true;
+    } catch {
+      if (id === saveSeq.current) setSyncError(true);
+      return false;
+    }
   }, []);
+
+  const commit = useCallback(
+    (action: Action) => {
+      void persist(action);
+    },
+    [persist],
+  );
+
+  const saveStaffPassword = useCallback(async (employeeId: string, password: string) => {
+    if (backendRef.current !== "supabase") {
+      const result = setStaffPasswordInStore(passwords, employeeId, password);
+      if (result === "too-short") return "too-short" as const;
+      writePasswords(result);
+      setPasswords(result);
+      return "ok" as const;
+    }
+    const res = await fetch("/api/auth/staff-password/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ employeeId, password }),
+    });
+    if (res.status === 400) return "too-short" as const;
+    if (!res.ok) return "forbidden" as const;
+    return "ok" as const;
+  }, [passwords]);
 
   useEffect(() => {
     let cancelled = false;
@@ -310,28 +324,36 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   }, [passwords, state.employees]);
 
   const changeOwnerPassword = useCallback(
-    (current: string, next: string) => {
-      if (state.role !== "owner" || !state.signedIn) return "forbidden";
+    async (current: string, next: string) => {
+      if (state.role !== "owner" || !state.signedIn) return "forbidden" as const;
+      if (backendRef.current === "supabase") {
+        const res = await fetch("/api/auth/password/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ current, next }),
+        });
+        if (res.ok) return "ok" as const;
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
+        if (body?.error === "wrong-current") return "wrong-current" as const;
+        if (body?.error === "too-short") return "too-short" as const;
+        return "forbidden" as const;
+      }
       const result = setOwnerPasswordInStore(passwords, current, next);
       if (result === "wrong-current" || result === "too-short") return result;
       writePasswords(result);
       setPasswords(result);
-      return "ok";
+      return "ok" as const;
     },
     [passwords, state.role, state.signedIn],
   );
 
   const changeStaffPassword = useCallback(
-    (employeeId: string, next: string) => {
-      if (state.role !== "owner" || !state.signedIn) return "forbidden";
-      if (!state.employees.some((item) => item.id === employeeId)) return "forbidden";
-      const result = setStaffPasswordInStore(passwords, employeeId, next);
-      if (result === "too-short") return result;
-      writePasswords(result);
-      setPasswords(result);
-      return "ok";
+    async (employeeId: string, next: string) => {
+      if (state.role !== "owner" || !state.signedIn) return "forbidden" as const;
+      if (!state.employees.some((item) => item.id === employeeId)) return "forbidden" as const;
+      return saveStaffPassword(employeeId, next);
     },
-    [passwords, state.employees, state.role, state.signedIn],
+    [saveStaffPassword, state.employees, state.role, state.signedIn],
   );
 
   const signOut = useCallback(() => {
@@ -393,23 +415,23 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   );
 
   const addEmployee = useCallback(
-    (draft: EmployeeDraft, password?: string) => {
+    async (draft: EmployeeDraft, password?: string) => {
       if (state.role !== "owner") return false;
       const normalized = normalizeEmployeeDraft(draft);
       if (!normalized || isEmployeeNumberTaken(state.employees, normalized.number)) return false;
       if (isEmployeePhoneTaken(state.employees, normalized.phone)) return false;
       if (employeeLoginNameError(state.employees, normalized.name)) return false;
       const employeeId = crypto.randomUUID();
-      if (password !== undefined) {
-        const nextPasswords = setStaffPasswordInStore(passwords, employeeId, password);
-        if (nextPasswords === "too-short") return false;
-        writePasswords(nextPasswords);
-        setPasswords(nextPasswords);
+      if (password !== undefined && password.trim() && sanitizePassword(password) === null) return false;
+      const saved = await persist({ type: "add-employee", employeeId, draft: normalized });
+      if (!saved) return false;
+      if (password !== undefined && password.trim()) {
+        const result = await saveStaffPassword(employeeId, password);
+        if (result !== "ok") return false;
       }
-      commit({ type: "add-employee", employeeId, draft: normalized });
       return employeeId;
     },
-    [passwords, state.employees, state.role, commit],
+    [persist, saveStaffPassword, state.employees, state.role],
   );
 
   const updateEmployee = useCallback(
@@ -428,16 +450,13 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   );
 
   const addStaffAccount = useCallback(
-    (name: string, password: string): "ok" | "forbidden" | "name-required" | "owner-name" | "name-taken" | "too-short" => {
-      if (state.role !== "owner" || !state.signedIn) return "forbidden";
+    async (name: string, password: string) => {
+      if (state.role !== "owner" || !state.signedIn) return "forbidden" as const;
       const nameError = employeeLoginNameError(state.employees, name);
       if (nameError) return nameError;
-      const sanitized = sanitizePassword(password);
-      if (!sanitized) return "too-short";
+      if (!sanitizePassword(password)) return "too-short" as const;
       const employeeId = crypto.randomUUID();
-      const nextPasswords = setStaffPasswordInStore(passwords, employeeId, sanitized);
-      if (nextPasswords === "too-short") return "too-short";
-      dispatch({
+      const saved = await persist({
         type: "add-employee",
         employeeId,
         draft: {
@@ -451,11 +470,13 @@ export function ShopProvider({ children }: { children: ReactNode }) {
           notes: "",
         },
       });
-      writePasswords(nextPasswords);
-      setPasswords(nextPasswords);
-      return "ok";
+      if (!saved) return "forbidden" as const;
+      const result = await saveStaffPassword(employeeId, password);
+      if (result === "too-short") return "too-short" as const;
+      if (result !== "ok") return "forbidden" as const;
+      return "ok" as const;
     },
-    [passwords, state.employees, state.role, state.signedIn],
+    [persist, saveStaffPassword, state.employees, state.role, state.signedIn],
   );
 
   const renameEmployee = useCallback(
@@ -467,14 +488,14 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       if (nameError) return nameError;
       const nextName = name.trim();
       if (nextName === current.name) return "ok";
-      dispatch({
+      commit({
         type: "update-employee",
         employeeId,
         draft: { ...current, name: nextName },
       });
       return "ok";
     },
-    [state.employees, state.role, state.signedIn],
+    [commit, state.employees, state.role, state.signedIn],
   );
 
   const deleteEmployee = useCallback(

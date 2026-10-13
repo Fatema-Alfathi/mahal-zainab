@@ -80,8 +80,6 @@ function loginNameMessage(
 export function PasswordManager() {
   const {
     employees,
-    ownerLoginPassword,
-    staffLoginPassword,
     changeOwnerPassword,
     changeStaffPassword,
     addStaffAccount,
@@ -104,12 +102,12 @@ export function PasswordManager() {
     [employees],
   );
 
-  function saveOwner() {
+  async function saveOwner() {
     if (ownerNext.trim() !== ownerConfirm.trim()) {
       setOwnerMessage({ tone: "err", text: t("pass.mismatch") });
       return;
     }
-    const result = changeOwnerPassword(ownerCurrent, ownerNext);
+    const result = await changeOwnerPassword(ownerCurrent, ownerNext);
     if (result === "ok") {
       setOwnerCurrent("");
       setOwnerNext("");
@@ -124,8 +122,8 @@ export function PasswordManager() {
     setOwnerMessage({ tone: "err", text: t("pass.tooShort", { n: String(MIN_PASSWORD_LENGTH) }) });
   }
 
-  function addStaff() {
-    const result = addStaffAccount(newName, newPassword);
+  async function addStaff() {
+    const result = await addStaffAccount(newName, newPassword);
     if (result === "ok") {
       const name = newName.trim();
       setNewName("");
@@ -144,7 +142,7 @@ export function PasswordManager() {
     setAddMessage({ tone: "err", text: loginNameMessage(t, result) });
   }
 
-  function saveStaff(employeeId: string, fallbackName: string) {
+  async function saveStaff(employeeId: string, fallbackName: string) {
     const nextName = (nameDrafts[employeeId] ?? fallbackName).trim();
     const nameResult = renameEmployee(employeeId, nextName);
     if (nameResult !== "ok") {
@@ -158,7 +156,7 @@ export function PasswordManager() {
 
     const nextPassword = staffDrafts[employeeId] ?? "";
     if (nextPassword.trim()) {
-      const passwordResult = changeStaffPassword(employeeId, nextPassword);
+      const passwordResult = await changeStaffPassword(employeeId, nextPassword);
       if (passwordResult !== "ok") {
         setStaffMessage({
           id: employeeId,
@@ -192,9 +190,7 @@ export function PasswordManager() {
             <KeyRound className="h-4 w-4 text-[var(--salla-primary)]" aria-hidden />
             <h4 className="text-base font-semibold text-[var(--foreground)]">{t("pass.owner")}</h4>
           </div>
-          <p className="text-xs text-[var(--salla-muted)]">
-            {t("pass.ownerHint")} {t("pass.currentValue")} {ownerLoginPassword}
-          </p>
+          <p className="text-xs text-[var(--salla-muted)]">{t("pass.ownerHint")}</p>
           <div className="grid gap-3 sm:grid-cols-3">
             <PasswordField
               label={t("pass.current")}
@@ -286,8 +282,7 @@ export function PasswordManager() {
                   className="rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/40 p-4"
                 >
                   <p className="mb-3 text-xs text-[var(--salla-muted)]">
-                    {employee.active ? t("staff.active") : t("staff.inactive")} · {t("pass.currentValue")}{" "}
-                    {staffLoginPassword(employee.id)}
+                    {employee.active ? t("staff.active") : t("staff.inactive")}
                   </p>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <label className="block text-sm">

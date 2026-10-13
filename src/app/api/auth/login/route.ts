@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   const password = typeof body?.password === "string" ? body.password : "";
   try {
     const data = await loadShop();
-    const session = authenticate(data, username, password);
+    const session = await authenticate(data, username, password);
     if (!session) {
       return NextResponse.json({ error: "invalid_login" }, { status: 401 });
     }

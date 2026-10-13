@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { clearAuthCookie, readAuthSession } from "@/lib/sessionCookie";
+import { removeStaffPassword } from "@/lib/shopAuth";
 import { loadShop, plausibleShopToday, saveShopAction, sessionAllows } from "@/lib/shopStore";
 import { supabaseConfigured } from "@/lib/supabaseAdmin";
 import { todayIso } from "@/lib/format";
@@ -47,6 +48,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
     const data = await saveShopAction(session, action, today);
+    if (action.type === "delete-employee" && !data.employees.some((item) => item.id === action.employeeId)) {
+      await removeStaffPassword(action.employeeId);
+    }
     return NextResponse.json({ data });
   } catch (error) {
     console.error("shop save failed", error instanceof Error ? error.message : "unknown");

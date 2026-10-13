@@ -1,9 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { verifyLogin, type AuthSession } from "@/lib/auth";
+import { findEmployeeForLogin, isOwnerLogin, type AuthSession } from "@/lib/auth";
+import { blankShop } from "@/lib/blankShop";
 import { todayIso, withShopToday } from "@/lib/format";
 import { assignInvoiceNumbers } from "@/lib/invoices";
 import { parseShopBackup, snapshotFromState, type ShopSnapshot } from "@/lib/shopBackup";
-import { initialState, shopReducer, type Action } from "@/lib/shopReducer";
+import { shopReducer, type Action } from "@/lib/shopReducer";
+import { ownerPasswordMatches, staffPasswordMatches } from "@/lib/shopAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { Booking, ShopState } from "@/types";
 
@@ -12,7 +14,7 @@ const BLOCKED_ACTIONS = new Set(["sign-in", "sign-out", "hydrate-employees"]);
 type ShopRow = { version: number; payload: ShopSnapshot };
 
 export function seedShop(): ShopSnapshot {
-  return snapshotFromState(initialState);
+  return blankShop();
 }
 
 export function normalizeSnapshot(value: unknown): ShopSnapshot | null {
@@ -111,6 +113,18 @@ export async function saveShopAction(session: AuthSession, action: Action, today
   throw new Error("shop_state version conflict");
 }
 
-export function authenticate(data: ShopSnapshot, username: string, password: string): AuthSession | null {
-  return verifyLogin(data.employees, username, password);
+export async function authenticate(
+  data: ShopSnapshot,
+  username: string,
+  password: string,
+): Promise<AuthSession | null> {
+  const pass = password.trim();
+  if (!pass) return null;
+  if (isOwnerLogin(username)) {
+    if (!(await ownerPasswordMatches(pass))) return null;
+    return { role: "owner", name: "المالكة", employeeId: "" };
+  }
+  const employee = findEmployeeForLogin(data.employees, username);
+  if (!employee || !(await staffPasswordMatches(employee.id, pass))) return null;
+  return { role: "employee", name: employee.name, employeeId: employee.id };
 }
