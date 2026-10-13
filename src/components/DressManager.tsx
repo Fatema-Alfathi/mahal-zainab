@@ -7,6 +7,7 @@ import { BookingDateList } from "@/components/BookingDateList";
 import { DressCalendarPanel } from "@/components/DressBookingCalendar";
 import { DressGallery } from "@/components/DressGallery";
 import { DressPhoto } from "@/components/DressPhoto";
+import { DressPhotoField } from "@/components/DressPhotoField";
 import { CategoryFilter, type CategoryFilterValue } from "@/components/CategoryFilter";
 import { CategoryPicker } from "@/components/CategoryPicker";
 import { ColorFilter, type ColorFilterValue } from "@/components/ColorFilter";
@@ -26,7 +27,6 @@ import {
   isSameVariantTaken,
   matchesDressQuery,
   measurementLine,
-  padImageSlots,
   sizeLabel,
   suggestBarcode,
 } from "@/lib/dressCatalog";
@@ -57,7 +57,7 @@ const EMPTY_DRAFT: DressCatalogDraft = {
   color: "أبيض",
   styleId: "",
   measurements: {},
-  images: ["", "", "", ""],
+  images: [],
   purchaseDate: "",
   rentalPricePerDay: 20,
   purchasePrice: 0,
@@ -79,7 +79,7 @@ function draftFromDress(dress: Dress): DressCatalogDraft {
     color: dress.color,
     styleId: dress.styleId,
     measurements: dress.measurements,
-    images: padImageSlots(dress.images),
+    images: dress.images.filter((url) => url.trim()),
     purchaseDate: dress.purchaseDate,
     rentalPricePerDay: dress.rentalPricePerDay,
     purchasePrice: dress.purchasePrice,
@@ -305,7 +305,7 @@ export function DressManager() {
           title={editor.mode === "add" ? t("dresses.addTitle") : t("dresses.editTitle", { name: editor.dress.name })}
           initialDraft={
             editor.mode === "add"
-              ? { ...EMPTY_DRAFT, barcode: suggestBarcode(dresses), images: padImageSlots([]) }
+              ? { ...EMPTY_DRAFT, barcode: suggestBarcode(dresses), images: [] }
               : draftFromDress(editor.dress)
           }
           excludeId={editor.mode === "edit" ? editor.dress.id : undefined}
@@ -355,14 +355,6 @@ function DressFormDialog({
   const preview = useMemo(() => draft.images.find((url) => /^https?:\/\//i.test(url.trim())), [draft.images]);
   const editing = dresses.find((item) => item.id === excludeId);
   const cleaningLocked = editing?.status === "reserved" || editing?.status === "rented";
-
-  function updateImage(index: number, value: string) {
-    setDraft((current) => {
-      const images = [...current.images];
-      images[index] = value;
-      return { ...current, images };
-    });
-  }
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -524,7 +516,7 @@ function DressFormDialog({
                   shippingCost: source.shippingCost,
                   customsCost: source.customsCost,
                   insuranceAmount: source.insuranceAmount,
-                  images: padImageSlots(source.images.length > 0 ? source.images : current.images),
+                  images: (source.images.length > 0 ? source.images : current.images).filter((url) => url.trim()),
                 }));
               }}
               className="w-full rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/70 px-3 py-2.5 text-[var(--foreground)]"
@@ -673,19 +665,10 @@ function DressFormDialog({
               {t("dresses.needsAlt")}
             </label>
           </div>
-          {[0, 1, 2, 3].map((index) => (
-            <label key={index} className="block text-sm">
-              <span className="mb-1 block text-[var(--foreground)]">{t("dresses.photo", { n: index + 1 })}</span>
-              <input
-                type="url"
-                value={draft.images[index] ?? ""}
-                onChange={(event) => updateImage(index, event.target.value)}
-                placeholder="https://"
-                className="w-full rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/70 px-3 py-2.5 outline-none focus:border-[var(--salla-primary)] focus:bg-[var(--salla-surface)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--salla-primary)_20%,transparent)]"
-                dir="ltr"
-              />
-            </label>
-          ))}
+          <DressPhotoField
+            images={draft.images}
+            onChange={(images) => setDraft((current) => ({ ...current, images }))}
+          />
           {error ? <p className="text-sm text-[var(--foreground)]">{t(error)}</p> : null}
           <div className="flex flex-wrap justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="rounded-2xl px-4 py-2 text-sm text-[var(--salla-muted)] hover:bg-[var(--salla-soft)]">
