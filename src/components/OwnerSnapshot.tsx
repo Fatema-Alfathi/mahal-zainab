@@ -53,12 +53,28 @@ export function OwnerSnapshot() {
             <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-3xl">
               {t("brand")}
             </h2>
-            <p className="mt-2 text-sm text-[var(--salla-muted)]" suppressHydrationWarning>
+            <p
+              className={cn(
+                "mt-2 text-sm",
+                snap.monthProfit > 0 && "text-[var(--salla-success)]",
+                snap.monthProfit < 0 && "text-[var(--salla-danger)]",
+                snap.monthProfit === 0 && "text-[var(--salla-muted)]",
+              )}
+              suppressHydrationWarning
+            >
               {formatDateLong(todayIso())}
               {" · "}
-              {snap.monthProfit >= 0
-                ? t("owner.profitCovered", { month: snap.thisMonthLabel })
-                : t("owner.expensesHigher", { month: snap.thisMonthLabel })}
+              {snap.monthProfit > 0
+                ? t("owner.profitCovered", {
+                    month: snap.thisMonthLabel,
+                    amount: formatSignedCurrency(snap.monthProfit),
+                  })
+                : snap.monthProfit < 0
+                  ? t("owner.expensesHigher", {
+                      month: snap.thisMonthLabel,
+                      amount: formatSignedCurrency(snap.monthProfit),
+                    })
+                  : t("owner.profitEven", { month: snap.thisMonthLabel })}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -98,11 +114,17 @@ export function OwnerSnapshot() {
         <Kpi
           label={t("owner.profit")}
           value={formatSignedCurrency(snap.monthProfit)}
-          hint={snap.monthProfit >= 0 ? t("owner.afterCosts") : t("owner.costsHigherNow")}
+          hint={
+            snap.monthProfit > 0
+              ? t("owner.afterCosts")
+              : snap.monthProfit < 0
+                ? t("owner.costsHigherNow")
+                : t("owner.profitEvenHint")
+          }
           icon={TrendingUp}
           change={snap.comparison.profit.change}
-          accent={snap.monthProfit >= 0 ? "success" : "danger"}
-          emphasize={snap.monthProfit >= 0 ? "good" : "bad"}
+          accent={snap.monthProfit > 0 ? "success" : snap.monthProfit < 0 ? "danger" : "primary"}
+          emphasize={snap.monthProfit > 0 ? "good" : snap.monthProfit < 0 ? "bad" : undefined}
         />
         <Kpi
           label={t("owner.bookings")}
