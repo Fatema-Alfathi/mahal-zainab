@@ -2,6 +2,8 @@ export const ar: Record<string, string> = {
   brand: "بوتيك YAL",
   tagline: "تأجير فساتين الزفاف والسهرات",
   loading: "تحميل…",
+  "load.error": "ما قدرنا نحمّل بيانات البوتيك من سوبابيس. تأكدي من الاتصال وحاولي مرة ثانية.",
+  "sync.error": "ما انحفظ التغيير في سوبابيس. البيانات الظاهرة رجعت لآخر نسخة محفوظة.",
   arabic: "عربي",
   english: "English",
   "lang.aria": "اللغة",

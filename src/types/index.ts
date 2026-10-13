@@ -194,11 +194,7 @@ export interface Booking {
   cancelledAt: string;
 }
 
-export interface ShopState {
-  role: UserRole;
-  signedIn: boolean;
-  sessionName: string;
-  employeeId: string;
+export interface PersistedShop {
   dresses: Dress[];
   customers: Customer[];
   employees: Employee[];
@@ -207,6 +203,13 @@ export interface ShopState {
   variableExpenses: VariableExpense[];
   bookings: Booking[];
   discountPolicy: EmployeeDiscountPolicy;
+}
+
+export interface ShopState extends PersistedShop {
+  role: UserRole;
+  signedIn: boolean;
+  sessionName: string;
+  employeeId: string;
 }
 
 export const FITTING_LEAD_DAYS = 5;

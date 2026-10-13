@@ -44,8 +44,20 @@ export function monthNameShortAr(iso: string): string {
   return t(`monthShort.${month || 1}`);
 }
 
+let shopTodayOverride: string | null = null;
+
+export function withShopToday<T>(today: string, run: () => T): T {
+  const previous = shopTodayOverride;
+  shopTodayOverride = today;
+  try {
+    return run();
+  } finally {
+    shopTodayOverride = previous;
+  }
+}
+
 export function todayIso(): string {
-  return toIsoDate(new Date());
+  return shopTodayOverride ?? toIsoDate(new Date());
 }
 
 export function toIsoDate(date: Date): string {

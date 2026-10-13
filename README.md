@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# بوتيك YAL
 
-## Getting Started
+نظام إدارة محل زينب لتأجير فساتين الزفاف والسهرات. الفساتين، الحجوزات، الزبائن، والموظفات تُحفظ في Supabase عندما تُضبط مفاتيح السيرفر. بدون المفاتيح يبقى التشغيل المحلي على البيانات التجريبية في المتصفح.
 
-First, run the development server:
+الموقع المنشور: https://yal-boutique.vercel.app/
+
+## التشغيل محلياً
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ثم افتحي الرابط الذي يظهر في الطرفية.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+دخول المالكة: اسم المستخدم `yal` وكلمة المرور `yal`.
+دخول الموظفة: اسمها أو رقمها وكلمة المرور `1234`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ربط Supabase
 
-## Learn More
+1. من لوحة Supabase افتحي SQL Editor والصقي محتوى `supabase/migrations/20261013103000_shop_state.sql` ثم نفّذيه. الجدول `shop_state` مقفل بـ Row Level Security، وما فيه سياسة للزوار. مفتاح السر فقط يقدر يقرأ ويكتب، بعد ما السيرفر يتأكد من جلسة الموظفة.
+2. انسخي رابط المشروع ومفتاح السر (`sb_secret_...`) من Settings → API Keys.
+3. ضعي هذه المتغيرات على Vercel (Environment Variables)، بدون بادئة `NEXT_PUBLIC_`:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+SUPABASE_SECRET_KEY=sb_secret_...
+SESSION_SECRET=سلسلة-عشوائية-16-حرفاً-على-الأقل
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+مثال الأسماء موجود في `.env.example`.
+4. أعيدي نشر الموقع على Vercel. النشر لازم يكون تطبيق Next.js على السيرفر، مو تصدير ثابت. لا تضبطي `GITHUB_PAGES=true` على Vercel، لأن التصدير الثابت ما يشغّل مسارات الحفظ.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+أول دخول بعد الربط ينسخ بيانات البوتيك التجريبية إلى الصف الوحيد في `shop_state`. بعدين أي حجز أو تعديل ينحفظ في نفس الصف، ويظهر لكل الأجهزة.
 
-## Deploy on Vercel
+## Run locally
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm install
+npm run dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Owner login is username `yal` and password `yal`. Staff use their name or number and password `1234`.

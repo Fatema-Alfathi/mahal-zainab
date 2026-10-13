@@ -15,9 +15,9 @@ export function LoginScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
 
-  function onSubmit(event: FormEvent) {
+  async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    const ok = signIn(username, password);
+    const ok = await signIn(username, password);
     if (!ok) {
       setError(true);
       return;
