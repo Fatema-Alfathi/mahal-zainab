@@ -702,7 +702,7 @@ export const en: Record<string, string> = {
 
   "pass.kicker": "Sign-in",
   "pass.title": "Passwords",
-  "pass.lead": "Add a staff member with her name and password, or change a name and password. The change is saved on this device and is required next time they sign in.",
+  "pass.lead": "Change the owner password, or add a staff name and password and edit them later. The change is saved and works on any device.",
   "pass.owner": "Owner password",
   "pass.ownerHint": "Enter the current password before changing it.",
   "pass.current": "Current password",
