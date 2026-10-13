@@ -131,6 +131,7 @@ interface ShopContextValue extends ShopState {
   updateDress: (dressId: string, draft: DressCatalogDraft) => boolean;
   deleteDress: (dressId: string) => boolean;
   restoreShop: (raw: unknown) => boolean;
+  restoreDailyBackup: (date: string) => Promise<boolean>;
 }
 
 const ShopContext = createContext<ShopContextValue | null>(null);
@@ -646,6 +647,24 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     [state.role, state.signedIn, commit],
   );
 
+  const restoreDailyBackup = useCallback(
+    async (date: string) => {
+      if (state.role !== "owner" || !state.signedIn || backendRef.current !== "supabase") return false;
+      const res = await fetch("/api/shop/backups/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, today: todayIso() }),
+      });
+      if (!res.ok) return false;
+      const body = (await res.json()) as { data: ShopSnapshot };
+      dispatch({ type: "hydrate-shop", snapshot: body.data });
+      writeStoredEmployees(body.data.employees);
+      writeStoredShop(body.data);
+      return true;
+    },
+    [state.role, state.signedIn],
+  );
+
   const deleteDress = useCallback(
     (dressId: string) => {
       const dress = state.dresses.find((item) => item.id === dressId);
@@ -699,6 +718,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       updateDress,
       deleteDress,
       restoreShop,
+      restoreDailyBackup,
     }),
     [
       state,
@@ -736,6 +756,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       updateDress,
       deleteDress,
       restoreShop,
+      restoreDailyBackup,
     ],
   );
 
