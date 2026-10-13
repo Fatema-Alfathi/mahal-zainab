@@ -6,6 +6,7 @@ import { assignInvoiceNumbers } from "@/lib/invoices";
 import { parseShopBackup, snapshotFromState, type ShopSnapshot } from "@/lib/shopBackup";
 import { shopReducer, type Action } from "@/lib/shopReducer";
 import { ownerPasswordMatches, staffPasswordMatches } from "@/lib/shopAuth";
+import { keepDailyBackup, readDailyBackup } from "@/lib/shopBackups";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { Booking, ShopState } from "@/types";
 
@@ -95,6 +96,7 @@ export async function saveShopAction(session: AuthSession, action: Action, today
       if (!row) throw new Error("shop_state missing");
     }
     const next = applyShopAction(row.payload, session, action, today);
+    await keepDailyBackup(client, today, row.version, row.payload);
     const { data, error } = await client
       .from("shop_state")
       .update({
@@ -111,6 +113,13 @@ export async function saveShopAction(session: AuthSession, action: Action, today
     if (payload) return payload;
   }
   throw new Error("shop_state version conflict");
+}
+
+export async function restoreDailyBackup(session: AuthSession, date: string, today: string): Promise<ShopSnapshot> {
+  if (session.role !== "owner") throw new Error("forbidden");
+  const snapshot = await readDailyBackup(supabaseAdmin(), date);
+  if (!snapshot) throw new Error("missing");
+  return saveShopAction(session, { type: "hydrate-shop", snapshot }, today);
 }
 
 export async function authenticate(
