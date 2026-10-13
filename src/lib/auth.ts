@@ -34,6 +34,32 @@ function digits(value: string): string {
   return value.replace(/\D/g, "");
 }
 
+export function isOwnerLogin(username: string): boolean {
+  const user = compactLoginName(username);
+  return Boolean(user) && OWNER_ALIASES.some((alias) => compactLoginName(alias) === user);
+}
+
+export function findEmployeeForLogin(employees: Employee[], username: string): Employee | null {
+  const user = compactLoginName(username);
+  if (!user) return null;
+  return (
+    employees.find((item) => {
+      if (!item.active) return false;
+      const name = compactLoginName(item.name);
+      const number = compactLoginName(item.number);
+      const phone = digits(item.phone);
+      const typedPhone = digits(username);
+      return (
+        name === user ||
+        name.startsWith(user) ||
+        number === user ||
+        number.replace(/-/g, "") === user ||
+        (typedPhone.length >= 8 && phone === typedPhone)
+      );
+    }) ?? null
+  );
+}
+
 export function verifyLogin(
   employees: Employee[],
   username: string,
@@ -44,24 +70,11 @@ export function verifyLogin(
   const pass = password.trim();
   if (!user || !pass) return null;
 
-  if (OWNER_ALIASES.some((alias) => compactLoginName(alias) === user) && passwordMatches(pass, ownerPassword(store))) {
+  if (isOwnerLogin(username) && passwordMatches(pass, ownerPassword(store))) {
     return { role: "owner", name: "المالكة", employeeId: "" };
   }
 
-  const employee = employees.find((item) => {
-    if (!item.active) return false;
-    const name = compactLoginName(item.name);
-    const number = compactLoginName(item.number);
-    const phone = digits(item.phone);
-    const typedPhone = digits(username);
-    return (
-      name === user ||
-      name.startsWith(user) ||
-      number === user ||
-      number.replace(/-/g, "") === user ||
-      (typedPhone.length >= 8 && phone === typedPhone)
-    );
-  });
+  const employee = findEmployeeForLogin(employees, username);
   if (!employee) return null;
   if (!passwordMatches(pass, staffPassword(store, employee.id))) return null;
   return { role: "employee", name: employee.name, employeeId: employee.id };

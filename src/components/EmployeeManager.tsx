@@ -327,9 +327,9 @@ export function EmployeeManager() {
           }
           excludeId={editor.mode === "edit" ? editor.employee.id : undefined}
           onClose={() => setEditor(null)}
-          onSave={(draft, password) => {
+          onSave={async (draft, password) => {
             if (editor.mode === "add") {
-              const id = addEmployee(draft, password);
+              const id = await addEmployee(draft, password);
               if (!id) return false;
               setOpenId(id);
               setNotice("staff.added");
@@ -338,7 +338,7 @@ export function EmployeeManager() {
             const ok = updateEmployee(editor.employee.id, draft);
             if (!ok) return false;
             if (password.trim()) {
-              const passwordResult = changeStaffPassword(editor.employee.id, password);
+              const passwordResult = await changeStaffPassword(editor.employee.id, password);
               if (passwordResult !== "ok") return false;
             }
             setNotice("staff.saved");
@@ -426,7 +426,7 @@ function EmployeeFormDialog({
   initialDraft: EmployeeDraft;
   excludeId?: string;
   onClose: () => void;
-  onSave: (draft: EmployeeDraft, password: string) => boolean;
+  onSave: (draft: EmployeeDraft, password: string) => boolean | Promise<boolean>;
 }) {
   const { employees } = useShop();
   const { t } = useLanguage();
@@ -435,7 +435,7 @@ function EmployeeFormDialog({
   const [error, setError] = useState("");
   const isNew = !excludeId;
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const nameError = employeeLoginNameError(employees, draft.name, excludeId);
     if (nameError === "name-required") {
@@ -483,7 +483,7 @@ function EmployeeFormDialog({
       setError("pass.tooShort");
       return;
     }
-    if (!onSave(draft, password)) {
+    if (!(await onSave(draft, password))) {
       setError("staff.saveFail");
       return;
     }

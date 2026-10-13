@@ -1,14 +1,5 @@
 import type { AuthSession } from "@/lib/auth";
-import {
-  INITIAL_BOOKINGS,
-  INITIAL_CUSTOMERS,
-  INITIAL_DRESSES,
-  INITIAL_DISCOUNT_POLICY,
-  INITIAL_EMPLOYEES,
-  INITIAL_FIXED_EXPENSES,
-  INITIAL_GOVERNMENT_RECORDS,
-  INITIAL_VARIABLE_EXPENSES,
-} from "@/data/mockData";
+import { blankShop } from "@/lib/blankShop";
 import {
   isCustomerNumberTaken,
   matchCustomer,
@@ -615,12 +606,5 @@ export const initialState: ShopState = {
   signedIn: false,
   sessionName: "",
   employeeId: "",
-  dresses: INITIAL_DRESSES,
-  customers: INITIAL_CUSTOMERS,
-  employees: INITIAL_EMPLOYEES,
-  governmentRecords: INITIAL_GOVERNMENT_RECORDS,
-  fixedExpenses: INITIAL_FIXED_EXPENSES,
-  variableExpenses: INITIAL_VARIABLE_EXPENSES,
-  bookings: INITIAL_BOOKINGS,
-  discountPolicy: INITIAL_DISCOUNT_POLICY,
+  ...blankShop(),
 };

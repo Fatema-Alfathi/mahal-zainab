@@ -31,8 +31,8 @@ export const ar: Record<string, string> = {
   "login.hidePassword": "إخفاء كلمة السر",
   "login.submit": "دخول",
   "login.error": "كلمة السر غلط.",
-  "login.hintOwner": "المالكة أول مرة: yal — تغيّرينها من الموظفات",
-  "login.hintStaff": "الموظفة تختار اسمها وتكتب كلمة سرها",
+  "login.hintOwner": "اختاري المالكة أو اسم الموظفة، ثم اكتبي كلمة السر.",
+  "login.hintStaff": "اختاري المالكة أو اسم الموظفة، ثم اكتبي كلمة السر.",
 
   "nav.pages": "صفحات البوتيك",
   "nav.dashboard": "لوحة التحكم",

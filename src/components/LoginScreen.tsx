@@ -111,11 +111,7 @@ export function LoginScreen() {
           </button>
         </form>
 
-        <p className="mt-5 text-center text-xs leading-6 text-[var(--salla-muted)]">
-          {t("login.hintOwner")}
-          <br />
-          {t("login.hintStaff")}
-        </p>
+        <p className="mt-5 text-center text-xs leading-6 text-[var(--salla-muted)]">{t("login.hintStaff")}</p>
       </section>
     </div>
   );
