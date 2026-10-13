@@ -6,7 +6,7 @@ import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
 
 export function AuthGate({ children }: { children: ReactNode }) {
-  const { authReady, signedIn } = useShop();
+  const { authReady, signedIn, loadError, syncError } = useShop();
   const { t } = useLanguage();
 
   if (!authReady) {
@@ -17,6 +17,25 @@ export function AuthGate({ children }: { children: ReactNode }) {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="flex min-h-full items-center justify-center bg-[var(--salla-bg)] px-5 py-12">
+        <p className="max-w-md text-center text-sm leading-7 text-red-800" role="alert">
+          {t("load.error")}
+        </p>
+      </div>
+    );
+  }
+
   if (!signedIn) return <LoginScreen />;
-  return children;
+  return (
+    <>
+      {syncError ? (
+        <p className="bg-red-50 px-4 py-2 text-center text-sm text-red-800" role="alert">
+          {t("sync.error")}
+        </p>
+      ) : null}
+      {children}
+    </>
+  );
 }

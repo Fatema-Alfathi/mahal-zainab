@@ -2,6 +2,8 @@ export const en: Record<string, string> = {
   brand: "YAL Boutique",
   tagline: "Wedding dress rentals",
   loading: "Loading…",
+  "load.error": "The boutique data could not be loaded from Supabase. Check the connection and try again.",
+  "sync.error": "That change was not saved to Supabase. The screen was restored to the last saved copy.",
   arabic: "عربي",
   english: "English",
   "lang.aria": "Language",

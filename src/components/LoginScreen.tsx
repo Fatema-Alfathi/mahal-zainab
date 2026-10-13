@@ -28,9 +28,9 @@ export function LoginScreen() {
     [employees],
   );
 
-  function onSubmit(event: FormEvent) {
+  async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    const ok = signIn(username, password);
+    const ok = await signIn(username, password);
     if (!ok) {
       setError(true);
       return;
