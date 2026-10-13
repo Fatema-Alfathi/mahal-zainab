@@ -121,7 +121,9 @@ export async function authenticate(
   const pass = password.trim();
   if (!pass) return null;
   if (isOwnerLogin(username)) {
-    if (!(await ownerPasswordMatches(pass))) return null;
+    const folded = pass.toLowerCase();
+    const ok = (await ownerPasswordMatches(pass)) || (folded !== pass && (await ownerPasswordMatches(folded)));
+    if (!ok) return null;
     return { role: "owner", name: "المالكة", employeeId: "" };
   }
   const employee = findEmployeeForLogin(data.employees, username);
