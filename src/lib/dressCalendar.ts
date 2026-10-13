@@ -1,4 +1,4 @@
-import { bookingDateLine } from "@/lib/dressCatalog";
+import { bookingScheduleRows } from "@/lib/bookingDates";
 import { t } from "@/i18n/t";
 import { isIsoInRange, startOfMonthIso, weekdaySatIndex } from "@/lib/format";
 import type { Booking, Dress } from "@/types";
@@ -17,6 +17,7 @@ export function dressBookingHistory(bookings: Booking[], dressId: string): Booki
 
 export function bookingCoversDate(booking: Booking, date: string): boolean {
   if (booking.status === "cancelled") return false;
+  if (booking.fittingDate === date) return true;
   return isIsoInRange(date, booking.startDate, booking.endDate);
 }
 
@@ -50,7 +51,11 @@ export function bookingRecordLabel(booking: Booking, dress: Dress): string {
 
 export function bookingRecordLine(booking: Booking, dress: Dress): string {
   const who = booking.customerName ? ` — ${booking.customerName}` : "";
-  return `${bookingRecordLabel(booking, dress)} ${bookingDateLine(booking)}${who}`;
+  const invoice = booking.invoiceNumber ? `${booking.invoiceNumber} · ` : "";
+  const dates = bookingScheduleRows(booking)
+    .map((row) => `${row.label} ${row.value}`)
+    .join(" · ");
+  return `${invoice}${bookingRecordLabel(booking, dress)}${who}${dates ? ` · ${dates}` : ""}`;
 }
 
 export function nearestBookingDate(bookings: Booking[], dressId: string, today: string): string {

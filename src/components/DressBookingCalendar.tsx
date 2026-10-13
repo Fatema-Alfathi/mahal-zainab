@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { BookingDateList } from "@/components/BookingDateList";
 import { DressPhoto } from "@/components/DressPhoto";
 import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import {
   bookingRecordLabel,
-  bookingRecordLine,
   dressBookingHistory,
   markDressDay,
   monthCells,
@@ -70,21 +70,21 @@ export function DressBookingCalendar() {
   return (
     <section>
       <div className="mb-6" id="dress-calendar">
-        <p className="text-sm text-rose-400">{t("cal.oneDress")}</p>
-        <h2 className="mt-1 text-2xl font-medium text-rose-900">{t("cal.dressTitle")}</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">{t("cal.dressLead")}</p>
+        <p className="text-sm text-[var(--salla-muted)]">{t("cal.oneDress")}</p>
+        <h2 className="mt-1 text-2xl font-medium text-[var(--foreground)]">{t("cal.dressTitle")}</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--salla-muted)]">{t("cal.dressLead")}</p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)]">
-        <aside className="shop-card rounded-3xl p-4">
+        <aside className="dash-panel rounded-2xl p-4">
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">{t("cal.pickDress")}</span>
+            <span className="mb-1 block text-[var(--foreground)]">{t("cal.pickDress")}</span>
             <input
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={t("cal.searchPh")}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 text-sm outline-none ring-rose-200 focus:ring-2"
+              className="w-full rounded-2xl border-0 bg-[var(--salla-soft)] px-3 py-2.5 text-sm outline-none ring-[var(--salla-border)] focus:ring-2"
               aria-label={t("cal.searchAria")}
             />
           </label>
@@ -96,7 +96,7 @@ export function DressBookingCalendar() {
           ) : null}
           <ul className="mt-3 max-h-[28rem] space-y-2 overflow-y-auto">
             {visibleDresses.length === 0 ? (
-              <li className="px-2 py-6 text-center text-sm text-rose-400">{t("cal.noDress")}</li>
+              <li className="px-2 py-6 text-center text-sm text-[var(--salla-muted)]">{t("cal.noDress")}</li>
             ) : (
               visibleDresses.map((dress) => {
                 const display = dressDisplay(dress);
@@ -108,7 +108,7 @@ export function DressBookingCalendar() {
                       onClick={() => selectDress(dress)}
                       className={cn(
                         "flex w-full items-center gap-3 rounded-2xl p-2 text-start",
-                        active ? "bg-[#8b1530] text-white" : "bg-rose-50 text-rose-900 hover:bg-rose-100",
+                        active ? "bg-[var(--salla-primary)] text-white" : "bg-[var(--salla-soft)] text-[var(--foreground)] hover:bg-[var(--salla-soft)]",
                       )}
                     >
                       <div className="h-14 w-11 shrink-0 overflow-hidden rounded-xl">
@@ -120,7 +120,7 @@ export function DressBookingCalendar() {
                       </div>
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-medium">{dress.name}</span>
-                        <span className={cn("mt-0.5 block text-xs", active ? "text-white/80" : "text-rose-400")} dir="ltr">
+                        <span className={cn("mt-0.5 block text-xs", active ? "text-white/80" : "text-[var(--salla-muted)]")} dir="ltr">
                           {dress.barcode}
                         </span>
                         <span className={cn("mt-0.5 block text-xs", active ? "text-white/80" : "text-rose-500")}>
@@ -138,7 +138,7 @@ export function DressBookingCalendar() {
         {selected ? (
           <DressCalendarPanel key={selected.id} dress={selected} bookings={bookings} />
         ) : (
-          <p className="shop-card rounded-3xl px-4 py-10 text-center text-sm text-rose-400">{t("cal.addFirst")}</p>
+          <p className="dash-panel rounded-2xl px-4 py-10 text-center text-sm text-[var(--salla-muted)]">{t("cal.addFirst")}</p>
         )}
       </div>
     </section>
@@ -160,28 +160,28 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
 
   return (
     <div className="space-y-4">
-      <div className="shop-card rounded-3xl p-4 sm:p-5">
+      <div className="dash-panel rounded-2xl p-4 sm:p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs text-rose-400" dir="ltr">
+            <p className="text-xs text-[var(--salla-muted)]" dir="ltr">
               {dress.barcode}
             </p>
-            <h2 className="mt-1 text-xl text-rose-900">{dress.name}</h2>
+            <h2 className="mt-1 text-xl text-[var(--foreground)]">{dress.name}</h2>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setMonthIso((current) => shiftMonthsIso(current, -1))}
-              className="rounded-full p-2 text-rose-700 hover:bg-rose-50"
+              className="rounded-full p-2 text-[var(--foreground)] hover:bg-[var(--salla-soft)]"
               aria-label={t("previousMonth")}
             >
               <PrevIcon className="h-5 w-5" aria-hidden />
             </button>
-            <p className="min-w-36 text-center text-sm font-medium text-rose-900">{monthYearLabel(monthIso)}</p>
+            <p className="min-w-36 text-center text-sm font-medium text-[var(--foreground)]">{monthYearLabel(monthIso)}</p>
             <button
               type="button"
               onClick={() => setMonthIso((current) => shiftMonthsIso(current, 1))}
-              className="rounded-full p-2 text-rose-700 hover:bg-rose-50"
+              className="rounded-full p-2 text-[var(--foreground)] hover:bg-[var(--salla-soft)]"
               aria-label={t("nextMonth")}
             >
               <NextIcon className="h-5 w-5" aria-hidden />
@@ -192,7 +192,7 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
                 setMonthIso(startOfMonthIso(today));
                 setPickedDate(today);
               }}
-              className="rounded-2xl bg-rose-50 px-3 py-1.5 text-xs text-rose-800 hover:bg-rose-100"
+              className="rounded-2xl bg-[var(--salla-soft)] px-3 py-1.5 text-xs text-[var(--foreground)] hover:bg-[var(--salla-soft)]"
             >
               {t("today")}
             </button>
@@ -205,7 +205,7 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
           <Legend tone="past" label={t("booking.past")} />
         </div>
 
-        <div className="grid grid-cols-7 gap-1 text-center text-xs text-rose-400">
+        <div className="grid grid-cols-7 gap-1 text-center text-xs text-[var(--salla-muted)]">
           {weekdayLabels.map((day) => (
             <div key={day} className="py-1 font-medium">
               {day}
@@ -227,12 +227,12 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
                 onClick={() => setPickedDate(date)}
                 className={cn(
                   "min-h-12 rounded-2xl px-1 py-1.5 text-sm",
-                  mark === "none" && "bg-rose-50/80 text-rose-900 hover:bg-rose-100",
+                  mark === "none" && "bg-[var(--salla-soft)]/80 text-[var(--foreground)] hover:bg-[var(--salla-soft)]",
                   mark === "upcoming" && "bg-sky-600 text-white",
                   mark === "out" && "bg-yellow-400 text-yellow-950",
-                  mark === "past" && "bg-[#8b1530] text-white",
-                  isToday && "ring-2 ring-[#d4a017] ring-offset-1",
-                  isPicked && "outline outline-2 outline-offset-1 outline-rose-900",
+                  mark === "past" && "bg-[var(--salla-primary)] text-white",
+                  isToday && "ring-2 ring-[var(--salla-secondary)] ring-offset-1",
+                  isPicked && "outline outline-2 outline-offset-1 outline-[var(--salla-primary)]",
                 )}
                 aria-label={
                   guest
@@ -247,9 +247,9 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
         </div>
       </div>
 
-      <div className="shop-card rounded-3xl p-4 sm:p-5">
-        <div className="flex items-center gap-2 text-rose-900">
-          <CalendarDays className="h-5 w-5 text-rose-400" aria-hidden />
+      <div className="dash-panel rounded-2xl p-4 sm:p-5">
+        <div className="flex items-center gap-2 text-[var(--foreground)]">
+          <CalendarDays className="h-5 w-5 text-[var(--salla-muted)]" aria-hidden />
           <h3 className="text-lg">{formatDate(pickedDate)}</h3>
         </div>
         {pickedMark.bookings.length === 0 ? (
@@ -257,18 +257,23 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
         ) : (
           <ul className="mt-3 space-y-2">
             {pickedMark.bookings.map((booking) => (
-              <li key={booking.id} className="rounded-2xl bg-rose-50 px-3 py-3 text-sm text-rose-900">
-                {bookingRecordLine(booking, dress)}
+              <li key={booking.id} className="rounded-2xl bg-[var(--salla-soft)] px-3 py-3 text-sm text-[var(--foreground)]">
+                <p>
+                  {booking.invoiceNumber ? `${booking.invoiceNumber} · ` : ""}
+                  {bookingRecordLabel(booking, dress)}
+                  {booking.customerName ? ` — ${booking.customerName}` : ""}
+                </p>
+                <BookingDateList booking={booking} />
               </li>
             ))}
           </ul>
         )}
       </div>
 
-      <div className="shop-card rounded-3xl p-4 sm:p-5">
-        <h3 className="text-lg text-rose-900">{t("cal.allBookings", { name: dress.name })}</h3>
+      <div className="dash-panel rounded-2xl p-4 sm:p-5">
+        <h3 className="text-lg text-[var(--foreground)]">{t("cal.allBookings", { name: dress.name })}</h3>
         {history.length === 0 ? (
-          <p className="mt-3 text-sm text-rose-400">{t("cal.neverBooked")}</p>
+          <p className="mt-3 text-sm text-[var(--salla-muted)]">{t("cal.neverBooked")}</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {history.map((booking) => (
@@ -279,9 +284,14 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
                     setMonthIso(startOfMonthIso(booking.startDate));
                     setPickedDate(booking.startDate);
                   }}
-                  className="w-full rounded-2xl bg-rose-50 px-3 py-3 text-start text-sm text-rose-900 hover:bg-rose-100"
+                  className="w-full rounded-2xl bg-[var(--salla-soft)] px-3 py-3 text-start text-sm text-[var(--foreground)] hover:bg-[var(--salla-soft)]"
                 >
-                  {bookingRecordLine(booking, dress)}
+                  <p>
+                    {booking.invoiceNumber ? `${booking.invoiceNumber} · ` : ""}
+                    {bookingRecordLabel(booking, dress)}
+                    {booking.customerName ? ` — ${booking.customerName}` : ""}
+                  </p>
+                  <BookingDateList booking={booking} />
                 </button>
               </li>
             ))}
@@ -300,7 +310,7 @@ function Legend({ tone, label }: { tone: "upcoming" | "out" | "past"; label: str
           "h-3 w-3 rounded-full",
           tone === "upcoming" && "bg-sky-600",
           tone === "out" && "bg-yellow-400",
-          tone === "past" && "bg-[#8b1530]",
+          tone === "past" && "bg-[var(--salla-primary)]",
         )}
       />
       {label}

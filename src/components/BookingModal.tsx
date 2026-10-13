@@ -10,6 +10,7 @@ import { useLanguage } from "@/i18n/LanguageProvider";
 import { categoryLabel, dressDisplay, measurementLine, sizeLabel } from "@/lib/dressCatalog";
 import { fittingDateForPickup } from "@/lib/customers";
 import { applyBookingDiscount, calculateBookingSubtotal, rentalDayCount } from "@/lib/finance";
+import { suggestInvoiceNumber } from "@/lib/invoices";
 import { formatCurrency, formatDate, todayIso } from "@/lib/format";
 import { DISCOUNT_TYPE_LABELS, authorizedDiscountLabel, colorLabel, daysLabel, discountLabel } from "@/lib/labels";
 import type { DiscountType, Dress } from "@/types";
@@ -25,7 +26,8 @@ export function BookingModal({
   onClose: () => void;
   onSwitchDress?: (dress: Dress) => void;
 }) {
-  const { dresses, customers, isOwner, createBooking, discountPolicy } = useShop();
+  const { dresses, customers, bookings, isOwner, createBooking, discountPolicy } = useShop();
+  const nextInvoice = useMemo(() => suggestInvoiceNumber(bookings), [bookings]);
   const { t } = useLanguage();
   const presentation = dressDisplay(dress);
   const [customerId, setCustomerId] = useState("");
@@ -129,7 +131,7 @@ export function BookingModal({
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="text-xs text-rose-400">
-              {t("book.new")} · {categoryLabel(dress.category)} · {colorLabel(dress.color)} · {sizeLabel(dress.size)}
+              {t("book.new")} · {t("book.invoice")} {nextInvoice} · {categoryLabel(dress.category)} · {colorLabel(dress.color)} · {sizeLabel(dress.size)}
             </p>
             <h3 id="booking-title" className="mt-1 text-2xl text-rose-900">
               {t("book.title", { name: dress.name })}
@@ -167,6 +169,11 @@ export function BookingModal({
           </div>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
+          <p className="rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-800">
+            <span className="block text-xs text-rose-400">{t("book.invoice")}</span>
+            <span className="mt-0.5 block font-medium tabular-nums">{nextInvoice}</span>
+            <span className="mt-0.5 block text-xs text-rose-400">{t("book.invoiceHint")}</span>
+          </p>
           <label className="block text-sm">
             <span className="mb-1 block text-rose-700">{t("book.existing")}</span>
             <select

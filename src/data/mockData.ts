@@ -1,4 +1,5 @@
 import { fittingDateForPickup } from "@/lib/customers";
+import { assignInvoiceNumbers } from "@/lib/invoices";
 import type { Booking, Customer, Dress, Employee, EmployeeDiscountPolicy, FixedExpense, GovernmentRecord, VariableExpense } from "@/types";
 
 export const INITIAL_DISCOUNT_POLICY: EmployeeDiscountPolicy = {
@@ -13,7 +14,7 @@ const DRESS_CATALOG = [
     name: "فستان أورورا الحريري",
     barcode: "ZNB-AUR-001",
     size: "S",
-    category: "soft",
+    category: "evening",
     color: "عاجي",
     styleId: "style-aurora",
     measurements: { bust: 88, waist: 68, hips: 94, length: 148 },
@@ -28,7 +29,7 @@ const DRESS_CATALOG = [
     name: "فستان سيليست العاجي المطرز",
     barcode: "ZNB-CEL-002",
     size: "M",
-    category: "engagement",
+    category: "henna",
     color: "عاجي",
     styleId: "style-celeste",
     measurements: { bust: 92, waist: 72, hips: 98, length: 150 },
@@ -58,7 +59,7 @@ const DRESS_CATALOG = [
     name: "فستان زهرة الشمبانيا",
     barcode: "ZNB-ZHR-004",
     size: "XS",
-    category: "soft",
+    category: "evening",
     color: "شمبانيا",
     styleId: "style-zahra",
     measurements: { bust: 84, waist: 64, hips: 90, length: 145 },
@@ -103,7 +104,7 @@ const DRESS_CATALOG = [
     name: "فستان أورورا الحريري",
     barcode: "ZNB-AUR-007",
     size: "M",
-    category: "soft",
+    category: "evening",
     color: "وردي",
     styleId: "style-aurora",
     measurements: { bust: 92, waist: 72, hips: 98, length: 148 },
@@ -391,6 +392,9 @@ function booking(
     eventDate?: string;
     returnDate?: string;
     cancelledAt?: string;
+    bookedByEmployeeId?: string;
+    payments?: Booking["payments"];
+    fittingDate?: string;
   },
 ): Booking {
   const customer = CUSTOMER_BY_NAME[customerName];
@@ -401,6 +405,7 @@ function booking(
   const needsFitting = needsAlterations || (extra?.needsFitting ?? false);
   return {
     id,
+    invoiceNumber: "",
     dressId,
     customerId: customer?.id ?? "",
     customerName,
@@ -413,7 +418,7 @@ function booking(
     returnDate: extra?.returnDate ?? endDate,
     needsFitting,
     needsAlterations,
-    fittingDate: needsFitting ? fittingDateForPickup(startDate) : "",
+    fittingDate: extra?.fittingDate ?? (needsFitting ? fittingDateForPickup(startDate) : ""),
     subtotal: extra?.discount?.subtotal ?? total,
     discountType: extra?.discount?.type ?? "none",
     discountValue: extra?.discount?.value ?? 0,
@@ -426,10 +431,16 @@ function booking(
     insuranceReturned: status === "completed" || status === "cancelled",
     status,
     cancelledAt: extra?.cancelledAt ?? (status === "cancelled" ? extra?.bookedAt ?? startDate : ""),
+    bookedByEmployeeId: extra?.bookedByEmployeeId ?? "",
+    payments:
+      extra?.payments ??
+      (depositPaid > 0 && status !== "cancelled"
+        ? [{ id: `${id}-pay`, paidAt: extra?.bookedAt ?? startDate, amount: depositPaid }]
+        : []),
   };
 }
 
-export const INITIAL_BOOKINGS: Booking[] = [
+export const INITIAL_BOOKINGS: Booking[] = assignInvoiceNumbers([
   booking("book-2025-1", "dress-aurora", "منى الكندي", "2025-10-10", "2025-10-12", 54, "completed"),
   booking("book-2025-2", "dress-noor", "أسماء البلوشي", "2025-11-15", "2025-11-18", 140, "completed"),
   booking("book-2025-3", "dress-sultana", "رقية الزدجالي", "2025-11-22", "2025-11-24", 84, "completed"),
@@ -471,6 +482,7 @@ export const INITIAL_BOOKINGS: Booking[] = [
     bookedAt: "2026-08-22",
     handoverDate: "2026-09-01",
     returnDate: "2026-09-20",
+    bookedByEmployeeId: "emp-maryam",
   }),
   booking("book-13", "dress-sultana", "رانيا محمود", "2026-09-02", "2026-09-14", 168, "active", {
     depositPaid: 70,
@@ -479,34 +491,41 @@ export const INITIAL_BOOKINGS: Booking[] = [
     bookedAt: "2026-08-20",
     handoverDate: "2026-09-02",
     returnDate: "2026-09-14",
+    bookedByEmployeeId: "emp-hind",
   }),
   booking("book-14", "dress-aurora", "هند سالم", "2026-09-08", "2026-09-08", 18, "completed", {
     depositPaid: 18,
     remainingAmount: 0,
+    bookedByEmployeeId: "emp-maryam",
   }),
   booking("book-15", "dress-layla", "جواهر ناصر", "2026-09-18", "2026-09-20", 56, "active", {
     depositPaid: 20,
     remainingAmount: 36,
     needsAlterations: true,
     bookedAt: "2026-09-04",
+    fittingDate: "2026-09-27",
+    bookedByEmployeeId: "emp-hind",
   }),
   booking("book-16", "dress-yal-070", "شهد العلوي", "2026-09-14", "2026-09-16", 84, "active", {
     depositPaid: 30,
     remainingAmount: 54,
     bookedAt: "2026-09-10",
     pickupDate: "2026-09-14",
+    bookedByEmployeeId: "emp-maryam",
   }),
   booking("book-cancel-1", "dress-aurora-blush", "لين قريشي", "2026-08-21", "2026-08-23", 54, "cancelled", {
     bookedAt: "2026-08-12",
     cancelledAt: "2026-08-18",
     depositPaid: 0,
+    bookedByEmployeeId: "emp-maryam",
   }),
   booking("book-cancel-2", "dress-noor-gold", "أميرة صالح", "2026-09-12", "2026-09-14", 70, "cancelled", {
     bookedAt: "2026-09-02",
     cancelledAt: "2026-09-08",
     depositPaid: 0,
+    bookedByEmployeeId: "emp-hind",
   }),
-];
+]);
 
 export const DRESS_PRESENTATION: Record<
   string,

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Providers } from "@/app/providers";
+import { assetPath } from "@/lib/assetPath";
 import "./globals.css";
 
 const thmanyah = localFont({
@@ -37,10 +38,10 @@ const thmanyah = localFont({
 
 export const metadata: Metadata = {
   title: "YAL Boutique · بوتيك YAL",
-  description: "Boutique management for YAL wedding and evening dress rentals.",
+  description: "Boutique management for YAL wedding dress rentals.",
   icons: {
-    icon: "/yal-logo.jpg",
-    apple: "/yal-logo.jpg",
+    icon: assetPath("/yal-logo.jpg"),
+    apple: assetPath("/yal-logo.jpg"),
   },
 };
 
@@ -54,8 +55,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className={`${thmanyah.variable} ${thmanyah.className} h-full antialiased`}>
-      <body className="min-h-full font-sans text-[#2a0c12]">
+    <html lang="ar" dir="rtl" className={`${thmanyah.variable} ${thmanyah.className} h-full antialiased`} suppressHydrationWarning>
+      <body className="min-h-full bg-[var(--salla-bg)] font-sans text-[var(--foreground)]">
         <Providers>{children}</Providers>
       </body>
     </html>

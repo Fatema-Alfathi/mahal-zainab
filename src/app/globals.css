@@ -1,34 +1,61 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --yal-burgundy: #8b1530;
-  --yal-burgundy-deep: #6e1024;
-  --yal-gold: #d4a017;
-  --yal-ivory: #fff8ee;
-  --background: #fff4e8;
+  /* YAL logo identity: burgundy + champagne gold */
+  --salla-primary: #6e1024;
+  --salla-primary-hover: #540d1c;
+  --salla-secondary: #d4b896;
+  --salla-secondary-text: #2a0505;
+  --salla-success: #1f7a4d;
+  --salla-danger: #c0392b;
+  --salla-bg: #faf6f2;
+  --salla-surface: #fffbf8;
+  --salla-soft: #f3ebe3;
+  --salla-border: #e6d9ce;
+  --salla-muted: #8a6f68;
+  --background: #faf6f2;
   --foreground: #2a0c12;
 }
 
-@theme inline {
+html.dark {
+  --salla-primary: #e5d5c0;
+  --salla-primary-hover: #f0e4d4;
+  --salla-secondary: #8b1530;
+  --salla-secondary-text: #e5d5c0;
+  --salla-success: #3dba78;
+  --salla-danger: #e57373;
+  --salla-bg: #200000;
+  --salla-surface: #2e0a0a;
+  --salla-soft: #3a1212;
+  --salla-border: #4a2020;
+  --salla-muted: #e0c9b0;
+  --background: #200000;
+  --foreground: #fffbf8;
+}
+
+/* Use @theme (not inline) so html.dark can remapp --color-rose-* for contrast */
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-thmanyah);
   --font-serif: var(--font-thmanyah);
-  --color-rose-50: #fff6ef;
-  --color-rose-100: #fde7d6;
-  --color-rose-200: #f0c48a;
-  --color-rose-300: #c45a5a;
-  --color-rose-400: #9b2a3c;
-  --color-rose-500: #8b1530;
-  --color-rose-600: #7a122a;
-  --color-rose-700: #6e1024;
-  --color-rose-800: #540d1c;
-  --color-rose-900: #2a0c12;
-  --color-rose-950: #1a070c;
-  --color-pink-50: #fff6ef;
-  --color-pink-100: #fde7d6;
-  --color-pink-200: #f0c48a;
-  --color-pink-300: #d4a017;
+  --color-rose-50: #faf6f2;
+  --color-rose-100: #f3ebe3;
+  --color-rose-200: #e6d9ce;
+  --color-rose-300: #c4a99a;
+  --color-rose-400: #8a6f68;
+  --color-rose-500: #6e1024;
+  --color-rose-600: #540d1c;
+  --color-rose-700: #3a0a14;
+  --color-rose-800: #2a0c12;
+  --color-rose-900: #2a0505;
+  --color-rose-950: #140202;
+  --color-pink-50: #faf6f2;
+  --color-pink-100: #f3ebe3;
+  --color-pink-200: #e6d9ce;
+  --color-pink-300: #d4b896;
   --color-pink-800: #6e1024;
 }
 
@@ -36,17 +63,31 @@ html {
   color-scheme: light;
 }
 
+html.dark {
+  color-scheme: dark;
+  /* Light text / soft surfaces on deep burgundy */
+  --color-rose-50: #3a1212;
+  --color-rose-100: #4a1a1a;
+  --color-rose-200: #5c2828;
+  --color-rose-300: #d4b896;
+  --color-rose-400: #e0c9b0;
+  --color-rose-500: #ead7c4;
+  --color-rose-600: #f0e4d4;
+  --color-rose-700: #f5ebe0;
+  --color-rose-800: #faf6f2;
+  --color-rose-900: #fffbf8;
+  --color-rose-950: #ffffff;
+  --color-pink-50: #3a1212;
+  --color-pink-100: #4a1a1a;
+  --color-pink-200: #5c2828;
+  --color-pink-300: #d4b896;
+  --color-pink-800: #ead7c4;
+}
+
 body {
   color: var(--foreground);
   font-family: var(--font-thmanyah), ui-sans-serif, system-ui, sans-serif;
-  background-color: #fff4e8;
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' viewBox='0 0 88 88'%3E%3Cpath fill='none' stroke='%238b1530' stroke-opacity='0.08' stroke-width='1.1' d='M44 10 L66 44 L44 78 L22 44 Z'/%3E%3C/svg%3E"),
-    radial-gradient(ellipse 55% 36% at 100% 0%, rgba(139, 21, 48, 0.14) 0%, transparent 58%),
-    radial-gradient(ellipse 45% 32% at 0% 8%, rgba(22, 163, 74, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse 40% 30% at 100% 100%, rgba(220, 38, 38, 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 34% at 0% 100%, rgba(234, 179, 8, 0.18) 0%, transparent 52%);
-  background-attachment: fixed;
+  background-color: var(--salla-bg);
 }
 
 .font-serif {
@@ -54,41 +95,49 @@ body {
 }
 
 .shop-header {
-  background: #6e1024;
-  border-bottom: 4px solid #d4a017;
+  background: var(--salla-surface);
+  border-bottom: 1px solid var(--salla-border);
 }
 
 .shop-card {
-  background: #ffffff;
-  border: 2px solid #8b1530;
-  box-shadow: 0 10px 0 #d4a017;
+  background: var(--salla-surface);
+  border: 1px solid var(--salla-border);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+html.dark .shop-card {
+  box-shadow: none;
 }
 
 .shop-soft {
-  background: #fff0d6;
+  background: var(--salla-soft);
 }
 
 .shop-btn {
-  background: #8b1530;
-  color: #fff8ee;
+  background: var(--salla-primary);
+  color: #ffffff;
+}
+
+html.dark .shop-btn {
+  color: #200000;
 }
 
 .shop-btn:hover {
-  background: #a31839;
+  background: var(--salla-primary-hover);
 }
 
 .shop-btn-gold {
-  background: #d4a017;
-  color: #2a0c12;
+  background: var(--salla-secondary);
+  color: var(--salla-secondary-text);
 }
 
 .shop-btn-gold:hover {
-  background: #e0b122;
+  filter: brightness(0.95);
 }
 
 .shop-btn-violet {
   background: #540d1c;
-  color: #fff8ee;
+  color: #fffbf8;
 }
 
 .shop-btn-violet:hover {
@@ -96,75 +145,228 @@ body {
 }
 
 .shop-btn-green {
-  background: #15803d;
+  background: var(--salla-success);
   color: #fff;
 }
 
 .shop-btn-green:hover {
-  background: #16a34a;
+  background: #009a4d;
 }
 
 .shop-btn-red {
-  background: #dc2626;
+  background: var(--salla-danger);
   color: #fff;
 }
 
 .shop-btn-red:hover {
-  background: #ef4444;
+  background: #e03a41;
 }
 
 .shop-btn-yellow {
-  background: #eab308;
+  background: #f59e0b;
   color: #1c1400;
 }
 
 .shop-btn-yellow:hover {
-  background: #facc15;
+  background: #fbbf24;
 }
 
 .shop-btn-blue {
-  background: #2563eb;
+  background: #0284c7;
   color: #fff;
 }
 
 .shop-btn-blue:hover {
-  background: #3b82f6;
+  background: #0ea5e9;
 }
 
 .shop-tint-green {
   background: #ecfdf5;
-  border: 2px solid #16a34a;
-  box-shadow: 0 8px 0 #86efac;
+  border: 1px solid #a7f3d0;
+  box-shadow: none;
 }
 
 .shop-tint-red {
   background: #fef2f2;
-  border: 2px solid #dc2626;
-  box-shadow: 0 8px 0 #fca5a5;
+  border: 1px solid #fecaca;
+  box-shadow: none;
 }
 
 .shop-tint-yellow {
-  background: #fefce8;
-  border: 2px solid #ca8a04;
-  box-shadow: 0 8px 0 #fde047;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  box-shadow: none;
 }
 
 .shop-tint-blue {
-  background: #eff6ff;
-  border: 2px solid #2563eb;
-  box-shadow: 0 8px 0 #93c5fd;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  box-shadow: none;
+}
+
+.shop-tint-violet {
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  box-shadow: none;
+}
+
+html.dark .shop-tint-green {
+  background: #14352a;
+  border-color: #1f6b4a;
+}
+
+html.dark .shop-tint-red {
+  background: #3a1d1f;
+  border-color: #7a3035;
+}
+
+html.dark .shop-tint-yellow {
+  background: #3a3118;
+  border-color: #7a6528;
+}
+
+html.dark .shop-tint-blue {
+  background: #1a2d3a;
+  border-color: #2a5570;
+}
+
+html.dark .shop-tint-violet {
+  background: #2a1f3d;
+  border-color: #5b3d7a;
 }
 
 .dash-panel {
-  background: #ffffff;
-  border: 2px solid #8b1530;
-  box-shadow: 0 10px 0 #d4a017;
+  background: var(--salla-surface);
+  border: 1px solid var(--salla-border);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+html.dark .dash-panel {
+  box-shadow: none;
 }
 
 .dash-hero,
 .dash-panel.dash-hero {
-  background: #6e1024;
-  border: 2px solid #d4a017;
-  box-shadow: 0 10px 0 #d4a017;
-  color: #fff8ee;
+  background: var(--salla-surface);
+  border: 1px solid var(--salla-border);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  color: var(--foreground);
+}
+
+.shell-sidebar {
+  background: var(--salla-surface);
+  border-inline-end: 1px solid var(--salla-border);
+}
+
+.shell-nav-active {
+  background: var(--salla-primary);
+  color: #ffffff;
+  font-weight: 600;
+  border: 1px solid var(--salla-primary);
+}
+
+html.dark .shell-nav-active {
+  background: var(--salla-primary);
+  color: #200000;
+  border-color: var(--salla-primary);
+}
+
+.shell-nav-idle {
+  background: var(--salla-surface);
+  color: #2a0c12;
+  border: 1px solid var(--salla-border);
+  opacity: 1;
+}
+
+html.dark .shell-nav-idle {
+  background: var(--salla-soft);
+  color: #f5ebe0;
+  border-color: var(--salla-border);
+}
+
+.shell-nav-idle:hover {
+  background: var(--salla-soft);
+  color: var(--salla-primary);
+  border-color: var(--salla-primary);
+  opacity: 1;
+}
+
+/* Dark-mode readability for leftover slate / rose utilities */
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
+html.dark .text-rose-950,
+html.dark .text-rose-900,
+html.dark .text-rose-800,
+html.dark .text-rose-700 {
+  color: #fffbf8;
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500,
+html.dark .text-slate-400,
+html.dark .text-rose-600,
+html.dark .text-rose-500,
+html.dark .text-rose-400,
+html.dark .text-rose-300 {
+  color: #e0c9b0;
+}
+
+html.dark .bg-slate-100,
+html.dark .bg-slate-50,
+html.dark .bg-rose-100,
+html.dark .bg-rose-50,
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-rose-100:hover,
+html.dark .hover\:bg-rose-50:hover {
+  background-color: var(--salla-soft);
+}
+
+html.dark .ring-slate-200,
+html.dark .ring-slate-100,
+html.dark .ring-rose-200,
+html.dark .ring-rose-100 {
+  --tw-ring-color: var(--salla-border);
+}
+
+html.dark .outline-rose-900,
+html.dark .outline-rose-800 {
+  outline-color: #e5d5c0;
+}
+
+html.dark .bg-white {
+  background-color: var(--salla-surface);
+}
+
+html.dark .text-\[\#2a0c12\],
+html.dark .text-\[\#2a0505\] {
+  color: #f5ebe0;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .invoice-print-root,
+  .invoice-print-root * {
+    visibility: visible;
+  }
+
+  .invoice-print-root {
+    position: absolute;
+    inset: 0;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+    box-shadow: none;
+    border: none;
+    background: white;
+    color: black;
+  }
+
+  .no-print {
+    display: none !important;
+  }
 }

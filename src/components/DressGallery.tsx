@@ -68,7 +68,7 @@ export function DressGallery({
           </div>
         ))}
       </div>
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-rose-950/70 via-rose-900/10 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
       {count > 1 ? (
         <>
           <button

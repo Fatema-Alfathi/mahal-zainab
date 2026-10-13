@@ -23,7 +23,10 @@ export function ReturnDialog({ dress, onClose }: { dress: Dress; onClose: () => 
       <div role="dialog" aria-modal="true" aria-labelledby="return-title" className="shop-card relative w-full max-w-md rounded-3xl p-6">
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <p className="text-xs text-rose-400">{t("return.kicker")}</p>
+            <p className="text-xs text-rose-400">
+              {t("return.kicker")}
+              {activeBooking?.invoiceNumber ? ` · ${t("customers.invoice")} ${activeBooking.invoiceNumber}` : ""}
+            </p>
             <h3 id="return-title" className="mt-1 text-2xl text-rose-900">
               {t("return.recordTitle", { name: dress.name })}
             </h3>

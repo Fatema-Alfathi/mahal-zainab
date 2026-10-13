@@ -1,21 +1,56 @@
 export type DressStatus = "available" | "reserved" | "rented" | "maintenance";
-export const DRESS_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"] as const;
+export const DRESS_SIZES = [
+  "XXS",
+  "XS",
+  "S",
+  "M",
+  "L",
+  "XL",
+  "2XL",
+  "3XL",
+  "4XL",
+  "5XL",
+  "36",
+  "38",
+  "40",
+  "42",
+  "44",
+  "46",
+  "48",
+  "50",
+  "52",
+] as const;
 export type DressSize = (typeof DRESS_SIZES)[number];
-export const DRESS_CATEGORIES = ["wedding", "evening", "soft", "engagement", "henna", "graduation"] as const;
+export const DRESS_CATEGORIES = ["wedding", "henna", "evening"] as const;
 export type DressCategory = (typeof DRESS_CATEGORIES)[number];
 export const DRESS_COLORS = [
   "أبيض",
   "عاجي",
+  "سكري",
+  "شمبانيا",
   "ذهبي",
   "فضي",
+  "نحاسي",
   "وردي",
+  "مشمشي",
+  "مرجاني",
   "أحمر",
-  "أسود",
-  "أزرق",
-  "أخضر",
-  "بنفسجي",
-  "شمبانيا",
   "خمري",
+  "عنابي",
+  "أسود",
+  "كحلي",
+  "أزرق",
+  "تركواز",
+  "أخضر",
+  "فستقي",
+  "نعناعي",
+  "زيتي",
+  "بنفسجي",
+  "ليلكي",
+  "بيج",
+  "نود",
+  "بني",
+  "رمادي",
 ] as const;
 export type DressColor = (typeof DRESS_COLORS)[number];
 
@@ -33,6 +68,12 @@ export type VariableExpenseCategory =
   | "Utility Bills"
   | "Other";
 export type BookingStatus = "active" | "completed" | "cancelled";
+
+export interface BookingPayment {
+  id: string;
+  paidAt: string;
+  amount: number;
+}
 export type DiscountType = "none" | "percent" | "amount";
 export type AuthorizedDiscountType = Exclude<DiscountType, "none">;
 export type UserRole = "owner" | "employee";
@@ -167,6 +208,7 @@ export type EmployeeDraft = {
 
 export interface Booking {
   id: string;
+  invoiceNumber: string;
   dressId: string;
   customerId: string;
   customerName: string;
@@ -192,9 +234,15 @@ export interface Booking {
   insuranceReturned: boolean;
   status: BookingStatus;
   cancelledAt: string;
+  bookedByEmployeeId: string;
+  payments: BookingPayment[];
 }
 
-export interface PersistedShop {
+export interface ShopState {
+  role: UserRole;
+  signedIn: boolean;
+  sessionName: string;
+  employeeId: string;
   dresses: Dress[];
   customers: Customer[];
   employees: Employee[];
@@ -203,13 +251,6 @@ export interface PersistedShop {
   variableExpenses: VariableExpense[];
   bookings: Booking[];
   discountPolicy: EmployeeDiscountPolicy;
-}
-
-export interface ShopState extends PersistedShop {
-  role: UserRole;
-  signedIn: boolean;
-  sessionName: string;
-  employeeId: string;
 }
 
 export const FITTING_LEAD_DAYS = 5;

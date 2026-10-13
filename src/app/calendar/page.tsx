@@ -1,26 +1,25 @@
 "use client";
 
 import { Suspense } from "react";
-import { BoutiqueHeader } from "@/components/BoutiqueHeader";
+import { AppShell } from "@/components/AppShell";
 import { DressBookingCalendar } from "@/components/DressBookingCalendar";
 import { ShopDayBoard } from "@/components/ShopDayBoard";
 import { useLanguage } from "@/i18n/LanguageProvider";
 
 function CalendarFallback() {
   const { t } = useLanguage();
-  return <p className="text-sm text-rose-400">{t("cal.loading")}</p>;
+  return <p className="text-sm text-[var(--salla-muted)]">{t("cal.loading")}</p>;
 }
 
 export default function CalendarPage() {
   return (
-    <div className="min-h-full text-[#2a0c12]">
-      <BoutiqueHeader active="calendar" />
-      <main className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
+    <AppShell active="calendar">
+      <div className="space-y-6">
         <ShopDayBoard />
         <Suspense fallback={<CalendarFallback />}>
           <DressBookingCalendar />
         </Suspense>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

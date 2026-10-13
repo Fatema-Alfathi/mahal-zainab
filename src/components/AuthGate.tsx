@@ -11,15 +11,15 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
   if (!authReady) {
     return (
-      <div className="flex min-h-full items-center justify-center px-5 py-12">
-        <p className="text-sm text-rose-400">{t("loading")}</p>
+      <div className="flex min-h-full items-center justify-center bg-[var(--salla-bg)] px-5 py-12">
+        <p className="text-sm text-[var(--salla-muted)]">{t("loading")}</p>
       </div>
     );
   }
 
   if (loadError) {
     return (
-      <div className="flex min-h-full items-center justify-center px-5 py-12">
+      <div className="flex min-h-full items-center justify-center bg-[var(--salla-bg)] px-5 py-12">
         <p className="max-w-md text-center text-sm leading-7 text-red-800" role="alert">
           {t("load.error")}
         </p>

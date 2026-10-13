@@ -1,8 +1,8 @@
 "use client";
 
+import { DressSelect } from "@/components/DressSelect";
 import { DRESS_CATEGORY_LABELS } from "@/lib/labels";
 import { useLanguage } from "@/i18n/LanguageProvider";
-import { cn } from "@/lib/format";
 import { DRESS_CATEGORIES, type DressCategory } from "@/types";
 
 export function CategoryPicker({
@@ -14,23 +14,17 @@ export function CategoryPicker({
 }) {
   const { t } = useLanguage();
   return (
-    <fieldset>
-      <legend className="mb-2 text-sm text-rose-700">{t("filter.category")}</legend>
-      <div className="flex flex-wrap gap-2">
-        {DRESS_CATEGORIES.map((category) => (
-          <button
-            key={category}
-            type="button"
-            onClick={() => onChange(category)}
-            className={cn(
-              "rounded-full px-3 py-1.5 text-sm",
-              value === category ? "shop-btn" : "bg-rose-50 text-rose-500 hover:bg-rose-100",
-            )}
-          >
-            {DRESS_CATEGORY_LABELS[category]}
-          </button>
-        ))}
-      </div>
-    </fieldset>
+    <DressSelect
+      label={t("filter.category")}
+      ariaLabel={t("filter.categoryAria")}
+      value={value}
+      onChange={(next) => onChange(next as DressCategory)}
+    >
+      {DRESS_CATEGORIES.map((category) => (
+        <option key={category} value={category}>
+          {DRESS_CATEGORY_LABELS[category]}
+        </option>
+      ))}
+    </DressSelect>
   );
 }

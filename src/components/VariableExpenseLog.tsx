@@ -1,12 +1,15 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Receipt } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { formatCurrency, formatDate, todayIso } from "@/lib/format";
 import { categoryExpenseLabel } from "@/lib/labels";
 import { VARIABLE_EXPENSE_CATEGORIES, type VariableExpenseCategory } from "@/types";
+
+const fieldClass =
+  "w-full rounded-xl border border-[var(--salla-border)] bg-[var(--salla-surface)] px-3 py-2.5 text-[var(--foreground)] outline-none transition focus:border-[var(--salla-primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--salla-primary)_20%,transparent)]";
 
 export function VariableExpenseLog() {
   const { variableExpenses, dresses, addVariableExpense } = useShop();
@@ -18,66 +21,92 @@ export function VariableExpenseLog() {
     [variableExpenses],
   );
   const visible = showAll ? rows : rows.slice(0, 5);
+  const totalVisible = visible.reduce((sum, item) => sum + item.amount, 0);
 
   return (
-    <section className="shop-card rounded-3xl p-6">
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm text-rose-400">{t("var.kicker")}</p>
-          <h3 className="mt-1 text-2xl font-medium text-rose-900">{t("var.title")}</h3>
-          <p className="mt-2 text-sm leading-7 text-rose-600/80">{t("var.lead")}</p>
+    <section className="dash-panel overflow-hidden rounded-2xl">
+      <div className="border-b border-[var(--salla-border)] px-5 py-5 sm:px-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-[var(--salla-primary)]">بتاريخ اليوم</p>
+            <h3 className="mt-1 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">مصروف ليوم معيّن</h3>
+            <p className="mt-2 text-sm leading-6 text-[var(--salla-muted)]">
+              إذا طلع مبلغ يوم معيّن مثل تنظيف فستان بعد التأجير، اكتبيه هنا.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setOpen((value) => !value)}
+            className="shop-btn inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
+          >
+            <Plus className="h-4 w-4" aria-hidden />
+            إضافة مصروف
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => setOpen((value) => !value)}
-          className="shop-btn inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm"
-        >
-          <Plus className="h-4 w-4" aria-hidden />
-          {t("var.add")}
-        </button>
       </div>
-      {open ? (
-        <AddExpenseForm
-          dresses={dresses}
-          onSubmit={(expense) => {
-            addVariableExpense(expense);
-            setOpen(false);
-          }}
-          onCancel={() => setOpen(false)}
-        />
-      ) : null}
-      {rows.length === 0 ? (
-        <p className="text-sm text-rose-400">{t("var.empty")}</p>
-      ) : (
-        <ul className="space-y-2">
-          {visible.map((expense) => {
-            const dress = dresses.find((item) => item.id === expense.associatedDressId);
-            return (
-              <li key={expense.id} className="rounded-2xl bg-rose-50/80 px-4 py-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm text-rose-900">{expense.description}</p>
-                    <p className="mt-1 text-xs text-rose-400">
+
+      <div className="p-5 sm:p-6">
+        {open ? (
+          <AddExpenseForm
+            dresses={dresses}
+            onSubmit={(expense) => {
+              addVariableExpense(expense);
+              setOpen(false);
+            }}
+            onCancel={() => setOpen(false)}
+          />
+        ) : null}
+
+        {rows.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-[var(--salla-border)] px-4 py-10 text-center text-sm text-[var(--salla-muted)]">
+            ما في مصروفات يومية مسجّلة بعد.
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {visible.map((expense) => {
+              const dress = dresses.find((item) => item.id === expense.associatedDressId);
+              return (
+                <li
+                  key={expense.id}
+                  className="flex items-start gap-3 rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/40 px-3 py-3 sm:px-4"
+                >
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--salla-primary)_10%,transparent)] text-[var(--salla-primary)]">
+                    <Receipt className="h-4 w-4" aria-hidden />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-[var(--foreground)]">{expense.description}</p>
+                    <p className="mt-1 text-xs text-[var(--salla-muted)]">
                       {categoryExpenseLabel(expense.category)} · {formatDate(expense.date)}
                       {dress ? ` · ${dress.name}` : ""}
                     </p>
                   </div>
-                  <p className="shrink-0 tabular-nums text-sm text-rose-800">{formatCurrency(expense.amount)}</p>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      {rows.length > 5 ? (
-        <button
-          type="button"
-          onClick={() => setShowAll((value) => !value)}
-          className="mt-3 text-sm text-rose-400 hover:text-rose-700"
-        >
-          {showAll ? t("var.showRecent") : t("var.showAll", { n: rows.length })}
-        </button>
-      ) : null}
+                  <p className="shrink-0 tabular-nums text-sm font-semibold text-[var(--salla-primary)]">
+                    {formatCurrency(expense.amount)}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {rows.length > 0 ? (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs text-[var(--salla-muted)]">
+              مجموع المعروض:{" "}
+              <span className="font-semibold tabular-nums text-[var(--foreground)]">{formatCurrency(totalVisible)}</span>
+            </p>
+            {rows.length > 5 ? (
+              <button
+                type="button"
+                onClick={() => setShowAll((value) => !value)}
+                className="text-sm font-medium text-[var(--salla-primary)] hover:underline"
+              >
+                {showAll ? "عرض آخر المصروفات فقط" : `عرض الكل (${rows.length})`}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }
@@ -127,13 +156,16 @@ function AddExpenseForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4 grid gap-3 rounded-2xl bg-rose-50/80 p-4">
+    <form
+      onSubmit={handleSubmit}
+      className="mb-4 grid gap-3 rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/50 p-4"
+    >
       <label className="block text-sm">
-        <span className="mb-1 block text-rose-700">{t("var.type")}</span>
+        <span className="mb-1 block text-[var(--foreground)]">{t("var.type")}</span>
         <select
           value={category}
           onChange={(event) => setCategory(event.target.value as VariableExpenseCategory)}
-          className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-rose-900"
+          className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-[var(--foreground)]"
         >
           {VARIABLE_EXPENSE_CATEGORIES.map((item) => (
             <option key={item} value={item}>
@@ -143,43 +175,43 @@ function AddExpenseForm({
         </select>
       </label>
       <label className="block text-sm">
-        <span className="mb-1 block text-rose-700">{t("var.amount")}</span>
+        <span className="mb-1 block text-[var(--foreground))">{t("var.amount")}</span>
         <input
           type="number"
           min="0"
           step="0.1"
           value={amount}
           onChange={(event) => setAmount(event.target.value)}
-          className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-rose-900"
+          className={fieldClass}
           placeholder="55"
         />
       </label>
       <label className="block text-sm">
-        <span className="mb-1 block text-rose-700">{t("var.date")}</span>
+        <span className="mb-1 block text-[var(--foreground)]">{t("var.date")}</span>
         <input
           type="date"
           value={date}
           onChange={(event) => setDate(event.target.value)}
-          className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-rose-900"
+          className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-[var(--foreground)]"
         />
       </label>
       <label className="block text-sm">
-        <span className="mb-1 block text-rose-700">{t("var.desc")}</span>
+        <span className="mb-1 block text-[var(--foreground)]">{t("var.desc")}</span>
         <input
           type="text"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
-          className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-rose-900"
+          className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-[var(--foreground)]"
           placeholder={t("var.descPh")}
         />
       </label>
       {showDressLink ? (
         <label className="block text-sm">
-          <span className="mb-1 block text-rose-700">{t("var.dress")}</span>
+          <span className="mb-1 block text-[var(--foreground)]">{t("var.dress")}</span>
           <select
             value={associatedDressId}
             onChange={(event) => setAssociatedDressId(event.target.value)}
-            className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-rose-900"
+            className="w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-[var(--foreground)]"
           >
             <option value="">{t("var.noDress")}</option>
             {dresses.map((dress) => (
@@ -190,12 +222,12 @@ function AddExpenseForm({
           </select>
         </label>
       ) : null}
-      {error ? <p className="text-sm text-rose-700">{t(error)}</p> : null}
+      {error ? <p className="text-sm text-[var(--foreground)]">{t(error)}</p> : null}
       <div className="flex gap-2">
         <button type="submit" className="shop-btn rounded-2xl px-4 py-2 text-sm">
           {t("var.save")}
         </button>
-        <button type="button" onClick={onCancel} className="rounded-2xl px-4 py-2 text-sm text-rose-400 hover:bg-white">
+        <button type="button" onClick={onCancel} className="rounded-2xl px-4 py-2 text-sm text-[var(--salla-muted)] hover:bg-white">
           {t("cancel")}
         </button>
       </div>

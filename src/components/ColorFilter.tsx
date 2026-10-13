@@ -1,9 +1,9 @@
 "use client";
 
-import { DRESS_COLORS, type DressColor } from "@/types";
+import { DressSelect } from "@/components/DressSelect";
 import { colorLabel } from "@/lib/labels";
 import { useLanguage } from "@/i18n/LanguageProvider";
-import { cn } from "@/lib/format";
+import { DRESS_COLORS, type DressColor } from "@/types";
 
 export type ColorFilterValue = "all" | DressColor;
 
@@ -16,33 +16,19 @@ export function ColorFilter({
 }) {
   const { t } = useLanguage();
   return (
-    <div role="group" aria-label={t("filter.colorAria")}>
-      <p className="mb-2 text-xs font-medium text-rose-700">{t("filter.color")}</p>
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => onChange("all")}
-          className={cn(
-            "rounded-full px-3 py-1.5 text-sm",
-            value === "all" ? "shop-btn" : "bg-white font-medium text-rose-800 ring-1 ring-rose-200 hover:bg-rose-50",
-          )}
-        >
-          {t("filter.allColors")}
-        </button>
-        {DRESS_COLORS.map((color) => (
-          <button
-            key={color}
-            type="button"
-            onClick={() => onChange(color)}
-            className={cn(
-              "rounded-full px-3 py-1.5 text-sm",
-              value === color ? "shop-btn" : "bg-white font-medium text-rose-800 ring-1 ring-rose-200 hover:bg-rose-50",
-            )}
-          >
-            {colorLabel(color)}
-          </button>
-        ))}
-      </div>
-    </div>
+    <DressSelect
+      label={t("filter.color")}
+      ariaLabel={t("filter.colorAria")}
+      value={value}
+      onChange={(next) => onChange(next as ColorFilterValue)}
+      swatch={value === "all" ? undefined : value}
+    >
+      <option value="all">{t("filter.allColors")}</option>
+      {DRESS_COLORS.map((color) => (
+        <option key={color} value={color}>
+          {colorLabel(color)}
+        </option>
+      ))}
+    </DressSelect>
   );
 }

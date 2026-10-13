@@ -1,45 +1,34 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { verifyLogin, type AuthSession } from "@/lib/auth";
 import { todayIso, withShopToday } from "@/lib/format";
+import { assignInvoiceNumbers } from "@/lib/invoices";
+import { parseShopBackup, snapshotFromState, type ShopSnapshot } from "@/lib/shopBackup";
 import { initialState, shopReducer, type Action } from "@/lib/shopReducer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import type { PersistedShop, ShopState } from "@/types";
+import type { Booking, ShopState } from "@/types";
 
-const BLOCKED_ACTIONS = new Set(["sign-in", "sign-out", "replace-data"]);
+const BLOCKED_ACTIONS = new Set(["sign-in", "sign-out", "hydrate-employees"]);
 
-type ShopRow = { version: number; payload: PersistedShop };
+type ShopRow = { version: number; payload: ShopSnapshot };
 
-export function toPersisted(state: ShopState): PersistedShop {
+export function seedShop(): ShopSnapshot {
+  return snapshotFromState(initialState);
+}
+
+export function normalizeSnapshot(value: unknown): ShopSnapshot | null {
+  const parsed = parseShopBackup(value);
+  if (!parsed) return null;
   return {
-    dresses: state.dresses,
-    customers: state.customers,
-    employees: state.employees,
-    governmentRecords: state.governmentRecords,
-    fixedExpenses: state.fixedExpenses,
-    variableExpenses: state.variableExpenses,
-    bookings: state.bookings,
-    discountPolicy: state.discountPolicy,
+    ...parsed,
+    bookings: assignInvoiceNumbers(
+      parsed.bookings.map((booking) => ({
+        ...booking,
+        invoiceNumber: booking.invoiceNumber ?? "",
+        bookedByEmployeeId: booking.bookedByEmployeeId ?? "",
+        payments: Array.isArray(booking.payments) ? booking.payments : [],
+      })) as Booking[],
+    ),
   };
-}
-
-export function seedShop(): PersistedShop {
-  return toPersisted(initialState);
-}
-
-export function isPersistedShop(value: unknown): value is PersistedShop {
-  if (!value || typeof value !== "object") return false;
-  const row = value as PersistedShop;
-  return (
-    Array.isArray(row.dresses) &&
-    Array.isArray(row.customers) &&
-    Array.isArray(row.employees) &&
-    Array.isArray(row.governmentRecords) &&
-    Array.isArray(row.fixedExpenses) &&
-    Array.isArray(row.variableExpenses) &&
-    Array.isArray(row.bookings) &&
-    Boolean(row.discountPolicy) &&
-    typeof row.discountPolicy === "object"
-  );
 }
 
 export function plausibleShopToday(today: string): boolean {
@@ -50,17 +39,17 @@ export function plausibleShopToday(today: string): boolean {
   return Math.abs(client - serverDay) <= 36 * 60 * 60 * 1000;
 }
 
-export function sessionAllows(session: AuthSession, data: PersistedShop): boolean {
+export function sessionAllows(session: AuthSession, data: ShopSnapshot): boolean {
   if (session.role === "owner") return true;
   return data.employees.some((item) => item.id === session.employeeId && item.active);
 }
 
 export function applyShopAction(
-  data: PersistedShop,
+  data: ShopSnapshot,
   session: AuthSession,
   action: Action,
   today: string,
-): PersistedShop {
+): ShopSnapshot {
   if (BLOCKED_ACTIONS.has(action.type)) return data;
   const state: ShopState = {
     ...data,
@@ -69,20 +58,20 @@ export function applyShopAction(
     sessionName: session.name,
     employeeId: session.employeeId,
   };
-  return toPersisted(withShopToday(today, () => shopReducer(state, action)));
+  const next = withShopToday(today, () => shopReducer(state, action));
+  return snapshotFromState(next);
 }
 
 async function readRow(client: SupabaseClient): Promise<ShopRow | null> {
   const { data, error } = await client.from("shop_state").select("version, payload").eq("id", 1).maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) return null;
-  if (!isPersistedShop(data.payload) || typeof data.version !== "number") {
-    throw new Error("shop_state payload is invalid");
-  }
-  return { version: data.version, payload: data.payload };
+  const payload = normalizeSnapshot(data.payload);
+  if (!payload || typeof data.version !== "number") throw new Error("shop_state payload is invalid");
+  return { version: data.version, payload };
 }
 
-export async function loadShop(): Promise<PersistedShop> {
+export async function loadShop(): Promise<ShopSnapshot> {
   const client = supabaseAdmin();
   const existing = await readRow(client);
   if (existing) return existing.payload;
@@ -94,7 +83,7 @@ export async function loadShop(): Promise<PersistedShop> {
   throw new Error(error.message);
 }
 
-export async function saveShopAction(session: AuthSession, action: Action, today: string): Promise<PersistedShop> {
+export async function saveShopAction(session: AuthSession, action: Action, today: string): Promise<ShopSnapshot> {
   const client = supabaseAdmin();
   for (let attempt = 0; attempt < 4; attempt += 1) {
     let row = await readRow(client);
@@ -116,11 +105,12 @@ export async function saveShopAction(session: AuthSession, action: Action, today
       .select("version, payload")
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (data && isPersistedShop(data.payload)) return data.payload;
+    const payload = data ? normalizeSnapshot(data.payload) : null;
+    if (payload) return payload;
   }
   throw new Error("shop_state version conflict");
 }
 
-export function authenticate(data: PersistedShop, username: string, password: string): AuthSession | null {
+export function authenticate(data: ShopSnapshot, username: string, password: string): AuthSession | null {
   return verifyLogin(data.employees, username, password);
 }

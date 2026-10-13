@@ -1,3 +1,4 @@
+import type { AuthSession } from "@/lib/auth";
 import {
   INITIAL_BOOKINGS,
   INITIAL_CUSTOMERS,
@@ -17,11 +18,13 @@ import {
 } from "@/lib/customers";
 import { isBarcodeTaken, normalizeDressDraft, statusAfterCare } from "@/lib/dressCatalog";
 import {
+  employeeLoginNameError,
   isEmployeeNumberTaken,
   isEmployeePhoneTaken,
   normalizeEmployeeDraft,
   syncSalaryExpense,
 } from "@/lib/employees";
+import { suggestInvoiceNumber } from "@/lib/invoices";
 import { isSalaryExpense, isStandardMonthlyExpense, normalizeExpenseAmount } from "@/lib/monthlyExpenses";
 import { normalizeGovernmentRecordDraft } from "@/lib/governmentRecords";
 import {
@@ -31,8 +34,8 @@ import {
   roundMoney,
   settleDeposit,
 } from "@/lib/finance";
-import type { AuthSession } from "@/lib/auth";
 import { todayIso } from "@/lib/format";
+import type { ShopSnapshot } from "@/lib/shopBackup";
 import {
   DRY_CLEANING_FEE,
   type CustomerDraft,
@@ -41,7 +44,6 @@ import {
   type EmployeeDiscountPolicy,
   type EmployeeDraft,
   type GovernmentRecordDraft,
-  type PersistedShop,
   type ShopState,
   type UserRole,
   type VariableExpense,
@@ -69,24 +71,30 @@ export type Action =
       type: "create-booking";
       dressId: string;
       customerId?: string;
+      newCustomerId?: string;
+      customerNumber?: string;
       customerName: string;
       phone?: string;
       eventDate?: string;
+      notes?: string;
       startDate: string;
       endDate: string;
       pickupDate?: string;
       handoverDate?: string;
       returnDate?: string;
+      fittingDate?: string;
       discountType: DiscountType;
       discountValue: number;
       depositPaid: number;
       needsAlterations: boolean;
       needsFitting: boolean;
     }
-  | { type: "add-customer"; draft: CustomerDraft }
+  | { type: "add-customer"; customerId: string; draft: CustomerDraft }
   | { type: "update-customer"; customerId: string; draft: CustomerDraft }
-  | { type: "add-employee"; draft: EmployeeDraft }
+  | { type: "hydrate-employees"; employees: ShopState["employees"] }
+  | { type: "add-employee"; employeeId: string; draft: EmployeeDraft }
   | { type: "update-employee"; employeeId: string; draft: EmployeeDraft }
+  | { type: "delete-employee"; employeeId: string }
   | { type: "add-government-record"; draft: GovernmentRecordDraft }
   | { type: "update-government-record"; recordId: string; draft: GovernmentRecordDraft }
   | { type: "delete-government-record"; recordId: string }
@@ -94,6 +102,7 @@ export type Action =
   | { type: "pickup-dress"; dressId: string }
   | { type: "return-dress"; dressId: string }
   | { type: "cancel-booking"; bookingId: string }
+  | { type: "record-payment"; bookingId: string; amount: number }
   | { type: "complete-maintenance"; dressId: string }
   | { type: "add-variable-expense"; expense: Omit<VariableExpense, "id"> }
   | { type: "update-fixed-expense"; expenseId: string; amount: number }
@@ -102,7 +111,7 @@ export type Action =
   | { type: "add-dress"; draft: DressCatalogDraft }
   | { type: "update-dress"; dressId: string; draft: DressCatalogDraft }
   | { type: "delete-dress"; dressId: string }
-  | { type: "replace-data"; data: PersistedShop };
+  | { type: "hydrate-shop"; snapshot: ShopSnapshot };
 
 export function shopReducer(state: ShopState, action: Action): ShopState {
   switch (action.type) {
@@ -138,19 +147,22 @@ export function shopReducer(state: ShopState, action: Action): ShopState {
       );
       const payment = settleDeposit(total, action.depositPaid);
       const startsLater = action.startDate > todayIso();
-      const fitting = resolveFitting(action.needsAlterations, action.needsFitting, action.startDate);
+      const wantsFitting = action.needsFitting || Boolean(action.fittingDate?.trim());
+      const fitting = resolveFitting(action.needsAlterations, wantsFitting, action.pickupDate || action.startDate);
       const selected = action.customerId
         ? state.customers.find((item) => item.id === action.customerId)
         : matchCustomer(state.customers, action.customerName, action.phone);
+      const requestedNumber = action.customerNumber?.trim() ?? "";
+      if (!selected && requestedNumber && isCustomerNumberTaken(state.customers, requestedNumber)) return state;
       const customer =
         selected ??
         {
-          id: crypto.randomUUID(),
-          number: suggestCustomerNumber(state.customers),
+          id: action.newCustomerId || crypto.randomUUID(),
+          number: requestedNumber || suggestCustomerNumber(state.customers),
           name: action.customerName.trim(),
           phone: (action.phone ?? "").trim(),
           eventDate: action.eventDate ?? "",
-          notes: "",
+          notes: action.notes?.trim() ?? "",
         };
       const customers = selected
         ? state.customers.map((item) =>
@@ -179,6 +191,7 @@ export function shopReducer(state: ShopState, action: Action): ShopState {
         bookings: [
           {
             id: crypto.randomUUID(),
+            invoiceNumber: suggestInvoiceNumber(state.bookings),
             dressId: action.dressId,
             customerId: customer.id,
             customerName: customer.name,
@@ -191,7 +204,7 @@ export function shopReducer(state: ShopState, action: Action): ShopState {
             returnDate: action.returnDate || action.endDate,
             needsFitting: fitting.needsFitting,
             needsAlterations: fitting.needsAlterations,
-            fittingDate: fitting.fittingDate,
+            fittingDate: action.fittingDate?.trim() || fitting.fittingDate,
             subtotal,
             discountType: authorized.discountType,
             discountValue: authorized.discountValue,
@@ -204,6 +217,11 @@ export function shopReducer(state: ShopState, action: Action): ShopState {
             insuranceReturned: false,
             status: "active",
             cancelledAt: "",
+            bookedByEmployeeId: state.role === "employee" ? state.employeeId : "",
+            payments:
+              payment.depositPaid > 0
+                ? [{ id: crypto.randomUUID(), paidAt: todayIso(), amount: payment.depositPaid }]
+                : [],
           },
           ...state.bookings,
         ],
@@ -218,7 +236,7 @@ export function shopReducer(state: ShopState, action: Action): ShopState {
         ...state,
         customers: [
           {
-            id: crypto.randomUUID(),
+            id: action.customerId,
             ...draft,
           },
           ...state.customers,
@@ -239,12 +257,35 @@ export function shopReducer(state: ShopState, action: Action): ShopState {
       };
     }
 
+    case "hydrate-shop": {
+      return {
+        ...state,
+        dresses: action.snapshot.dresses,
+        customers: action.snapshot.customers,
+        employees: action.snapshot.employees,
+        governmentRecords: action.snapshot.governmentRecords,
+        fixedExpenses: action.snapshot.fixedExpenses,
+        variableExpenses: action.snapshot.variableExpenses,
+        bookings: action.snapshot.bookings,
+        discountPolicy: action.snapshot.discountPolicy,
+      };
+    }
+
+    case "hydrate-employees": {
+      return {
+        ...state,
+        employees: action.employees,
+        fixedExpenses: syncSalaryExpense(state.fixedExpenses, action.employees),
+      };
+    }
+
     case "add-employee": {
       if (state.role !== "owner") return state;
       const draft = normalizeEmployeeDraft(action.draft);
       if (!draft || isEmployeeNumberTaken(state.employees, draft.number)) return state;
       if (isEmployeePhoneTaken(state.employees, draft.phone)) return state;
-      const employees = [{ id: crypto.randomUUID(), ...draft }, ...state.employees];
+      if (employeeLoginNameError(state.employees, draft.name)) return state;
+      const employees = [{ id: action.employeeId, ...draft }, ...state.employees];
       return {
         ...state,
         employees,
@@ -259,9 +300,21 @@ export function shopReducer(state: ShopState, action: Action): ShopState {
       if (!current || !draft) return state;
       if (isEmployeeNumberTaken(state.employees, draft.number, action.employeeId)) return state;
       if (isEmployeePhoneTaken(state.employees, draft.phone, action.employeeId)) return state;
+      if (employeeLoginNameError(state.employees, draft.name, action.employeeId)) return state;
       const employees = state.employees.map((item) =>
         item.id === action.employeeId ? { ...item, ...draft } : item,
       );
+      return {
+        ...state,
+        employees,
+        fixedExpenses: syncSalaryExpense(state.fixedExpenses, employees),
+      };
+    }
+
+    case "delete-employee": {
+      if (state.role !== "owner") return state;
+      if (!state.employees.some((item) => item.id === action.employeeId)) return state;
+      const employees = state.employees.filter((item) => item.id !== action.employeeId);
       return {
         ...state,
         employees,
@@ -312,6 +365,25 @@ export function shopReducer(state: ShopState, action: Action): ShopState {
           booking.dressId === action.dressId && booking.status === "active"
             ? { ...booking, handoverDate: booking.handoverDate || todayIso() }
             : booking,
+        ),
+      };
+    }
+
+    case "record-payment": {
+      const booking = state.bookings.find((item) => item.id === action.bookingId);
+      const amount = roundMoney(action.amount);
+      if (!booking || booking.status !== "active" || amount <= 0 || amount > booking.remainingAmount) return state;
+      return {
+        ...state,
+        bookings: state.bookings.map((item) =>
+          item.id === action.bookingId
+            ? {
+                ...item,
+                depositPaid: roundMoney(item.depositPaid + amount),
+                remainingAmount: roundMoney(item.remainingAmount - amount),
+                payments: [...item.payments, { id: crypto.randomUUID(), paidAt: todayIso(), amount }],
+              }
+            : item,
         ),
       };
     }
@@ -532,19 +604,6 @@ export function shopReducer(state: ShopState, action: Action): ShopState {
         fixedExpenses: state.fixedExpenses.filter((item) => item.id !== action.expenseId),
       };
     }
-
-    case "replace-data":
-      return {
-        ...state,
-        dresses: action.data.dresses,
-        customers: action.data.customers,
-        employees: action.data.employees,
-        governmentRecords: action.data.governmentRecords,
-        fixedExpenses: action.data.fixedExpenses,
-        variableExpenses: action.data.variableExpenses,
-        bookings: action.data.bookings,
-        discountPolicy: action.data.discountPolicy,
-      };
 
     default:
       return state;

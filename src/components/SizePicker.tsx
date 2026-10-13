@@ -1,8 +1,8 @@
 "use client";
 
-import { DRESS_SIZES, type DressSize } from "@/types";
+import { DressSelect } from "@/components/DressSelect";
 import { useLanguage } from "@/i18n/LanguageProvider";
-import { cn } from "@/lib/format";
+import { DRESS_SIZES, type DressSize } from "@/types";
 
 export function SizePicker({
   value,
@@ -13,23 +13,17 @@ export function SizePicker({
 }) {
   const { t } = useLanguage();
   return (
-    <fieldset>
-      <legend className="mb-2 text-sm text-rose-700">{t("filter.size")}</legend>
-      <div className="flex flex-wrap gap-2">
-        {DRESS_SIZES.map((size) => (
-          <button
-            key={size}
-            type="button"
-            onClick={() => onChange(size)}
-            className={cn(
-              "rounded-full px-3 py-1.5 text-sm tabular-nums",
-              value === size ? "shop-btn" : "bg-rose-50 text-rose-500 hover:bg-rose-100",
-            )}
-          >
-            {size}
-          </button>
-        ))}
-      </div>
-    </fieldset>
+    <DressSelect
+      label={t("filter.size")}
+      ariaLabel={t("filter.sizeAria")}
+      value={value}
+      onChange={(next) => onChange(next as DressSize)}
+    >
+      {DRESS_SIZES.map((size) => (
+        <option key={size} value={size}>
+          {size}
+        </option>
+      ))}
+    </DressSelect>
   );
 }

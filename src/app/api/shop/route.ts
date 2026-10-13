@@ -7,7 +7,7 @@ import type { Action } from "@/lib/shopReducer";
 
 export const runtime = "nodejs";
 
-const BLOCKED = new Set(["sign-in", "sign-out", "replace-data"]);
+const BLOCKED = new Set(["sign-in", "sign-out", "hydrate-employees"]);
 
 export async function GET() {
   if (!supabaseConfigured()) {

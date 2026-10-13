@@ -1,26 +1,47 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { Pencil, Plus, X } from "lucide-react";
+import {
+  Briefcase,
+  CalendarDays,
+  Pencil,
+  Phone,
+  Plus,
+  Trash2,
+  Search,
+  StickyNote,
+  UserRound,
+  Users,
+  Wallet,
+  X,
+} from "lucide-react";
 import { DiscountPolicyPanel } from "@/components/DiscountPolicyPanel";
+import { PasswordField, PasswordManager } from "@/components/PasswordManager";
 import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import {
   activeEmployees,
+  employeeLoginNameError,
   isEmployeeNumberTaken,
   isEmployeePhoneTaken,
   monthlySalaryTotal,
   suggestEmployeeNumber,
 } from "@/lib/employees";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { MIN_PASSWORD_LENGTH } from "@/lib/passwords";
+import { employeeMonthBookingCount, staffBookingCountLabel, staffMonthBookingRows } from "@/lib/staffBookings";
+import { cn, formatCurrency, formatDate, monthNameAr, todayIso } from "@/lib/format";
 import { jobTitleLabel } from "@/lib/labels";
 import { EMPLOYEE_JOB_TITLES, type Employee, type EmployeeDraft } from "@/types";
 
+const fieldClass =
+  "w-full rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/70 px-3 py-2.5 outline-none transition focus:border-[var(--salla-primary)] focus:bg-[var(--salla-surface)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--salla-primary)_20%,transparent)]";
+
 export function EmployeeManager() {
-  const { employees, addEmployee, updateEmployee } = useShop();
+  const { employees, bookings, addEmployee, updateEmployee, deleteEmployee, changeStaffPassword } = useShop();
   const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [editor, setEditor] = useState<{ mode: "add" } | { mode: "edit"; employee: Employee } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Employee | null>(null);
   const [openId, setOpenId] = useState<string | null>(employees[0]?.id ?? null);
   const [notice, setNotice] = useState("");
 
@@ -35,13 +56,16 @@ export function EmployeeManager() {
   const selected = employees.find((employee) => employee.id === openId) ?? null;
   const working = activeEmployees(employees);
   const salaryTotal = monthlySalaryTotal(employees);
+  const monthLabel = monthNameAr(todayIso());
+  const monthRows = useMemo(() => staffMonthBookingRows(employees, bookings), [bookings, employees]);
+  const selectedMonthCount = selected ? employeeMonthBookingCount(bookings, selected.id) : 0;
 
   return (
     <section className="space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm text-rose-400">{t("staff.kicker")}</p>
-          <h1 className="mt-1 font-serif text-3xl text-rose-900">{t("staff.title")}</h1>
+          <p className="text-sm text-[var(--salla-muted)]">{t("staff.kicker")}</p>
+          <h1 className="mt-1 font-serif text-3xl text-[var(--foreground)]">{t("staff.title")}</h1>
           <p className="mt-2 max-w-2xl text-sm leading-7 text-rose-600/80">{t("staff.lead")}</p>
         </div>
         <button
@@ -50,7 +74,7 @@ export function EmployeeManager() {
             setNotice("");
             setEditor({ mode: "add" });
           }}
-          className="shop-btn inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm"
+          className="shop-btn inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
         >
           <Plus className="h-4 w-4" aria-hidden />
           {t("staff.add")}
@@ -58,34 +82,58 @@ export function EmployeeManager() {
       </div>
 
       <dl className="grid gap-3 sm:grid-cols-3">
-        <div className="dash-panel rounded-3xl p-4">
-          <dt className="text-xs text-rose-400">{t("staff.working")}</dt>
-          <dd className="mt-1 text-2xl tabular-nums text-rose-900">{working.length}</dd>
-        </div>
-        <div className="dash-panel rounded-3xl p-4">
-          <dt className="text-xs text-rose-400">{t("staff.files")}</dt>
-          <dd className="mt-1 text-2xl tabular-nums text-rose-900">{employees.length}</dd>
-        </div>
-        <div className="dash-panel rounded-3xl p-4">
-          <dt className="text-xs text-rose-400">{t("staff.salaries")}</dt>
-          <dd className="mt-1 text-2xl tabular-nums text-rose-900">{formatCurrency(salaryTotal)}</dd>
-        </div>
+        <StatCard label="عاملات الآن" value={String(working.length)} icon={UserRound} tone="success" />
+        <StatCard label="كل الملفات" value={String(employees.length)} icon={Users} tone="primary" />
+        <StatCard label="رواتب الشهر" value={formatCurrency(salaryTotal)} icon={Wallet} tone="primary" />
       </dl>
 
-      {notice ? <p className="text-sm text-emerald-600">{t(notice)}</p> : null}
+      <section className="dash-panel rounded-2xl p-5" aria-label={t("staff.monthBookings", { month: monthLabel })}>
+        <h2 className="text-lg font-semibold text-[var(--foreground)]">{t("staff.monthBookings", { month: monthLabel })}</h2>
+        <ul className="mt-3 divide-y divide-[var(--salla-border)]">
+          {monthRows.map(({ employee, count }) => (
+            <li key={employee.id} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-[var(--foreground)]">{employee.name}</p>
+                <p className="mt-0.5 text-xs text-[var(--salla-muted)]">{employee.jobTitle}</p>
+              </div>
+              <span className="shrink-0 tabular-nums text-sm font-semibold text-[var(--salla-primary)]">
+                {staffBookingCountLabel(count)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
-      <div className="grid gap-5 xl:grid-cols-[20rem_1fr]">
-        <div className="dash-panel rounded-3xl p-4">
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t("staff.searchPh")}
-            className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 text-sm outline-none ring-rose-200 focus:ring-2"
-          />
-          <ul className="mt-3 max-h-[32rem] space-y-1 overflow-y-auto">
+      {notice ? (
+        <p className="rounded-xl border border-[color-mix(in_srgb,var(--salla-success)_30%,var(--salla-border))] bg-[color-mix(in_srgb,var(--salla-success)_10%,transparent)] px-4 py-2.5 text-sm text-[var(--salla-success)]">
+          {t(notice)}
+        </p>
+      ) : null}
+
+      <div className="grid gap-4 xl:grid-cols-[22rem_minmax(0,1fr)]">
+        <aside className="dash-panel flex max-h-[40rem] flex-col overflow-hidden rounded-2xl xl:max-h-[calc(100vh-16rem)]">
+          <div className="border-b border-[var(--salla-border)] p-4">
+            <div className="relative">
+              <Search
+                className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--salla-muted)]"
+                aria-hidden
+              />
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="ابحثي بالاسم أو المهمة أو الهاتف"
+                className="w-full rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/70 py-2.5 pe-3 ps-10 text-sm outline-none focus:border-[var(--salla-primary)] focus:bg-[var(--salla-surface)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--salla-primary)_20%,transparent)]"
+              />
+            </div>
+            <p className="mt-2 text-xs text-[var(--salla-muted)]">
+              {visible.length} من {employees.length} موظفة
+            </p>
+          </div>
+
+          <ul className="flex-1 space-y-1 overflow-y-auto p-2">
             {visible.length === 0 ? (
-              <li className="px-2 py-6 text-center text-sm text-rose-300">{t("staff.empty")}</li>
+              <li className="px-3 py-10 text-center text-sm text-[var(--salla-muted)]">ما في موظفة بهالبحث.</li>
             ) : null}
             {visible.map((employee) => {
               const active = employee.id === selected?.id;
@@ -94,58 +142,162 @@ export function EmployeeManager() {
                   <button
                     type="button"
                     onClick={() => setOpenId(employee.id)}
-                    className={`w-full rounded-2xl px-3 py-2.5 text-right ${active ? "shop-btn" : "hover:bg-rose-50"}`}
+                    className={cn(
+                      "w-full rounded-xl px-3 py-3 text-right transition",
+                      active
+                        ? "bg-[var(--salla-primary)] text-white shadow-sm dark:text-[#200000]"
+                        : "hover:bg-[var(--salla-soft)]",
+                    )}
                   >
-                    <p className="text-sm">{employee.name}</p>
-                    <p className={`mt-0.5 text-xs ${active ? "text-white/80" : "text-rose-400"}`}>
-                      {jobTitleLabel(employee.jobTitle)} · {formatCurrency(employee.salary)}
-                      {employee.active ? "" : ` · ${t("staff.inactive")}`}
-                    </p>
+                    <div className="flex items-start gap-3">
+                      <span
+                        className={cn(
+                          "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+                          active
+                            ? "bg-white/20 text-white dark:bg-black/10 dark:text-[#200000]"
+                            : "bg-[var(--salla-soft)] text-[var(--salla-primary)]",
+                        )}
+                      >
+                        {initials(employee.name)}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{employee.name}</p>
+                        <p
+                          className={cn(
+                            "mt-0.5 truncate text-xs",
+                            active ? "text-white/80 dark:text-[#200000]/70" : "text-[var(--salla-muted)]",
+                          )}
+                        >
+                          {employee.jobTitle} · {formatCurrency(employee.salary)}
+                          {" · "}
+                          {staffBookingCountLabel(employeeMonthBookingCount(bookings, employee.id))}
+                        </p>
+                        {!employee.active ? (
+                          <p
+                            className={cn(
+                              "mt-1 text-[11px]",
+                              active ? "text-white/70 dark:text-[#200000]/60" : "text-[var(--salla-danger)]",
+                            )}
+                          >
+                            تركت العمل
+                          </p>
+                        ) : null}
+                      </span>
+                    </div>
                   </button>
                 </li>
               );
             })}
           </ul>
-        </div>
+        </aside>
 
         {selected ? (
-          <article className="dash-panel rounded-3xl p-5 sm:p-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="text-xs text-rose-400">{t("staff.number", { number: selected.number })}</p>
-                <h2 className="mt-1 text-2xl text-rose-900">{selected.name}</h2>
-                <p className="mt-2 text-sm leading-7 text-rose-600">
-                  {jobTitleLabel(selected.jobTitle)} · {t("staff.phone")}: {selected.phone}
-                  {selected.startDate ? ` · ${t("staff.joined", { date: formatDate(selected.startDate) })}` : ""}
-                </p>
-                <p className="mt-2 text-sm text-rose-800">
-                  {t("staff.salary")}{" "}
-                  <span className="tabular-nums text-rose-900">{formatCurrency(selected.salary)}</span>
-                  <span className={`ms-2 text-xs ${selected.active ? "text-emerald-600" : "text-rose-400"}`}>
-                    {selected.active ? t("staff.active") : t("staff.inactive")}
+          <article className="dash-panel overflow-hidden rounded-2xl">
+            <div className="border-b border-[var(--salla-border)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--salla-primary)_7%,var(--salla-surface)),var(--salla-surface)_60%)] px-5 py-5 sm:px-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-start gap-4">
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--salla-primary)_12%,transparent)] text-lg font-semibold text-[var(--salla-primary)]">
+                    {initials(selected.name)}
                   </span>
-                </p>
-                {selected.notes ? <p className="mt-2 text-sm leading-7 text-rose-500">{selected.notes}</p> : null}
+                  <div>
+                    <p className="text-xs font-medium text-[var(--salla-muted)]">رقم الموظفة {selected.number}</p>
+                    <h2 className="mt-1 text-2xl font-semibold text-[var(--foreground)]">{selected.name}</h2>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      <InfoPill icon={Briefcase}>{selected.jobTitle}</InfoPill>
+                      <InfoPill icon={Phone}>{selected.phone}</InfoPill>
+                      {selected.startDate ? (
+                        <InfoPill icon={CalendarDays}>التحقت {formatDate(selected.startDate)}</InfoPill>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 self-start">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNotice("");
+                      setEditor({ mode: "edit", employee: selected });
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--salla-border)] bg-[var(--salla-surface)] px-3 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--salla-soft)]"
+                  >
+                    <Pencil className="h-3.5 w-3.5 text-[var(--salla-primary)]" aria-hidden />
+                    {t("staff.editFile")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNotice("");
+                      setPendingDelete(selected);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[color-mix(in_srgb,var(--salla-danger)_30%,var(--salla-border))] bg-[var(--salla-surface)] px-3 py-2 text-sm font-medium text-[var(--salla-danger)] hover:bg-[color-mix(in_srgb,var(--salla-danger)_8%,var(--salla-surface))]"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                    {t("staff.delete")}
+                  </button>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setNotice("");
-                  setEditor({ mode: "edit", employee: selected });
-                }}
-                className="shop-soft inline-flex items-center gap-1.5 rounded-2xl px-3 py-2 text-sm text-rose-700"
-              >
-                <Pencil className="h-3.5 w-3.5" aria-hidden />
-                {t("staff.editFile")}
-              </button>
+            </div>
+
+            <div className="grid gap-3 p-5 sm:grid-cols-3 sm:p-6">
+              <div className="rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/40 px-4 py-3">
+                <p className="text-xs text-[var(--salla-muted)]">راتب الشهر</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-[var(--salla-primary)]">
+                  {formatCurrency(selected.salary)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/40 px-4 py-3">
+                <p className="text-xs text-[var(--salla-muted)]">{t("staff.monthBookings", { month: monthLabel })}</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-[var(--salla-primary)]">
+                  {staffBookingCountLabel(selectedMonthCount)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/40 px-4 py-3">
+                <p className="text-xs text-[var(--salla-muted)]">الحالة</p>
+                <p
+                  className={cn(
+                    "mt-1 text-sm font-semibold",
+                    selected.active ? "text-[var(--salla-success)]" : "text-[var(--salla-danger)]",
+                  )}
+                >
+                  {selected.active ? "تعمل الآن" : "تركت العمل"}
+                </p>
+              </div>
+              {selected.notes ? (
+                <div className="flex gap-2 rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/40 px-4 py-3 sm:col-span-3">
+                  <StickyNote className="mt-0.5 h-4 w-4 shrink-0 text-[var(--salla-muted)]" aria-hidden />
+                  <p className="text-sm leading-6 text-[var(--foreground)]">{selected.notes}</p>
+                </div>
+              ) : null}
             </div>
           </article>
         ) : (
-          <p className="dash-panel rounded-3xl px-4 py-10 text-center text-sm text-rose-300">{t("staff.pick")}</p>
+          <div className="dash-panel flex items-center justify-center rounded-2xl px-4 py-16 text-sm text-[var(--salla-muted)]">
+            اختاري موظفة من القائمة.
+          </div>
         )}
       </div>
 
+      <PasswordManager />
+
       <DiscountPolicyPanel />
+
+      {pendingDelete ? (
+        <ConfirmDeleteEmployeeDialog
+          name={pendingDelete.name}
+          onClose={() => setPendingDelete(null)}
+          onConfirm={() => {
+            const removedId = pendingDelete.id;
+            const ok = deleteEmployee(removedId);
+            setPendingDelete(null);
+            if (!ok) return;
+            setOpenId((current) => {
+              if (current !== removedId) return current;
+              return employees.find((item) => item.id !== removedId)?.id ?? null;
+            });
+            setNotice("staff.deleted");
+          }}
+        />
+      ) : null}
 
       {editor ? (
         <EmployeeFormDialog
@@ -175,16 +327,91 @@ export function EmployeeManager() {
           }
           excludeId={editor.mode === "edit" ? editor.employee.id : undefined}
           onClose={() => setEditor(null)}
-          onSave={(draft) => {
-            const ok =
-              editor.mode === "add" ? addEmployee(draft) : updateEmployee(editor.employee.id, draft);
+          onSave={(draft, password) => {
+            if (editor.mode === "add") {
+              const id = addEmployee(draft, password);
+              if (!id) return false;
+              setOpenId(id);
+              setNotice("staff.added");
+              return true;
+            }
+            const ok = updateEmployee(editor.employee.id, draft);
             if (!ok) return false;
-            setNotice(editor.mode === "add" ? "staff.added" : "staff.saved");
+            if (password.trim()) {
+              const passwordResult = changeStaffPassword(editor.employee.id, password);
+              if (passwordResult !== "ok") return false;
+            }
+            setNotice("staff.saved");
             return true;
           }}
         />
       ) : null}
     </section>
+  );
+}
+
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "؟";
+  if (parts.length === 1) return parts[0].slice(0, 1);
+  return `${parts[0].slice(0, 1)}${parts[1].slice(0, 1)}`;
+}
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  tone,
+}: {
+  label: string;
+  value: string;
+  icon: typeof Users;
+  tone: "success" | "primary";
+}) {
+  return (
+    <div className="dash-panel rounded-2xl p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <dt className="text-xs font-medium text-[var(--salla-muted)]">{label}</dt>
+          <dd
+            className={cn(
+              "mt-2 text-2xl font-semibold tabular-nums tracking-tight",
+              tone === "success" ? "text-[var(--salla-success)]" : "text-[var(--salla-primary)]",
+            )}
+          >
+            {value}
+          </dd>
+        </div>
+        <div
+          className={cn(
+            "flex h-9 w-9 items-center justify-center rounded-xl",
+            tone === "success"
+              ? "bg-[color-mix(in_srgb,var(--salla-success)_14%,transparent)] text-[var(--salla-success)]"
+              : "bg-[color-mix(in_srgb,var(--salla-primary)_12%,transparent)] text-[var(--salla-primary)]",
+          )}
+        >
+          <Icon className="h-4 w-4" aria-hidden />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoPill({ icon: Icon, children }: { icon: typeof Phone; children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--salla-border)] bg-[var(--salla-surface)] px-2.5 py-1 text-[var(--foreground)]">
+      <Icon className="h-3.5 w-3.5 text-[var(--salla-primary)]" aria-hidden />
+      {children}
+    </span>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block text-sm">
+      <span className="mb-1.5 block font-medium text-[var(--foreground)]">{label}</span>
+      {children}
+    </label>
   );
 }
 
@@ -199,17 +426,28 @@ function EmployeeFormDialog({
   initialDraft: EmployeeDraft;
   excludeId?: string;
   onClose: () => void;
-  onSave: (draft: EmployeeDraft) => boolean;
+  onSave: (draft: EmployeeDraft, password: string) => boolean;
 }) {
   const { employees } = useShop();
   const { t } = useLanguage();
   const [draft, setDraft] = useState<EmployeeDraft>(initialDraft);
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const isNew = !excludeId;
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!draft.name.trim()) {
+    const nameError = employeeLoginNameError(employees, draft.name, excludeId);
+    if (nameError === "name-required") {
       setError("staff.nameRequired");
+      return;
+    }
+    if (nameError === "owner-name") {
+      setError("staff.ownerName");
+      return;
+    }
+    if (nameError === "name-taken") {
+      setError("staff.nameTaken");
       return;
     }
     if (!draft.number.trim()) {
@@ -237,7 +475,15 @@ function EmployeeFormDialog({
       setError("staff.salaryMin");
       return;
     }
-    if (!onSave(draft)) {
+    if (isNew && password.trim().length < MIN_PASSWORD_LENGTH) {
+      setError("pass.tooShort");
+      return;
+    }
+    if (!isNew && password.trim() && password.trim().length < MIN_PASSWORD_LENGTH) {
+      setError("pass.tooShort");
+      return;
+    }
+    if (!onSave(draft, password)) {
       setError("staff.saveFail");
       return;
     }
@@ -245,54 +491,69 @@ function EmployeeFormDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose-950/30 p-4 sm:items-center">
-      <button type="button" className="absolute inset-0 cursor-default" aria-label={t("dresses.closeForm")} onClick={onClose} />
-      <div className="shop-card relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl p-6">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <h3 className="text-2xl text-rose-900">{title}</h3>
-          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-rose-400 hover:bg-rose-50" aria-label={t("close")}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+      <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق النموذج" onClick={onClose} />
+      <div className="dash-panel relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-2xl p-6">
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium text-[var(--salla-primary)]">ملف الموظفة</p>
+            <h3 className="mt-1 text-xl font-semibold text-[var(--foreground)]">{title}</h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-[var(--salla-muted)] hover:bg-[var(--salla-soft)]"
+            aria-label="إغلاق"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">{t("staff.fieldNumber")}</span>
+        <form onSubmit={handleSubmit} className="space-y-3.5">
+          <Field label="رقم الموظفة">
             <input
               value={draft.number}
               onChange={(event) => setDraft((current) => ({ ...current, number: event.target.value }))}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+              className={fieldClass}
             />
-          </label>
+          </Field>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">{t("staff.fieldName")}</span>
+            <span className="mb-1 block text-[var(--foreground)]">{t("staff.fieldName")}</span>
             <input
               value={draft.name}
               onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+              className={fieldClass}
             />
           </label>
+          <PasswordField
+            label={t("staff.password")}
+            value={password}
+            onChange={setPassword}
+            autoComplete="new-password"
+            hint={isNew ? t("staff.passwordHint") : t("staff.passwordKeep")}
+          />
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">{t("staff.fieldPhone")}</span>
+            <span className="mb-1 block text-[var(--foreground)]">{t("staff.fieldPhone")}</span>
             <input
               value={draft.phone}
               onChange={(event) => setDraft((current) => ({ ...current, phone: event.target.value }))}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+              className={fieldClass}
               placeholder="9xxxxxxx"
             />
           </label>
           <div>
-            <p className="mb-2 text-sm text-rose-700">{t("staff.fieldJob")}</p>
+            <p className="mb-2 text-sm text-[var(--foreground)]">{t("staff.fieldJob")}</p>
             <div className="mb-2 flex flex-wrap gap-1.5">
               {EMPLOYEE_JOB_TITLES.map((titleOption) => (
                 <button
                   key={titleOption}
                   type="button"
                   onClick={() => setDraft((current) => ({ ...current, jobTitle: titleOption }))}
-                  className={
+                  className={cn(
+                    "rounded-lg px-3 py-1.5 text-xs font-medium transition",
                     draft.jobTitle === titleOption
-                      ? "shop-btn rounded-full px-3 py-1 text-xs"
-                      : "rounded-full bg-rose-50 px-3 py-1 text-xs text-rose-700 hover:bg-rose-100"
-                  }
+                      ? "bg-[var(--salla-primary)] text-white dark:text-[#200000]"
+                      : "bg-[var(--salla-soft)] text-[var(--foreground)] hover:bg-[color-mix(in_srgb,var(--salla-primary)_10%,var(--salla-soft))]",
+                  )}
                 >
                   {jobTitleLabel(titleOption)}
                 </button>
@@ -301,56 +562,100 @@ function EmployeeFormDialog({
             <input
               value={draft.jobTitle}
               onChange={(event) => setDraft((current) => ({ ...current, jobTitle: event.target.value }))}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+              className="w-full rounded-2xl border-0 bg-[var(--salla-soft)] px-3 py-2.5 outline-none ring-[var(--salla-border)] focus:ring-2"
               placeholder={t("staff.jobPh")}
             />
           </div>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">{t("staff.fieldSalary")}</span>
+            <span className="mb-1 block text-[var(--foreground)]">{t("staff.fieldSalary")}</span>
             <input
               type="number"
               min="0"
               step="0.1"
               value={draft.salary}
               onChange={(event) => setDraft((current) => ({ ...current, salary: Number(event.target.value) }))}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+              className={fieldClass}
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">{t("staff.fieldStart")}</span>
+            <span className="mb-1 block text-[var(--foreground)]">{t("staff.fieldStart")}</span>
             <input
               type="date"
               value={draft.startDate}
               onChange={(event) => setDraft((current) => ({ ...current, startDate: event.target.value }))}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+              className={fieldClass}
             />
           </label>
-          <label className="flex items-start gap-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          <label className="flex items-start gap-3 rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/50 px-4 py-3 text-sm">
             <input
               type="checkbox"
               checked={draft.active}
               onChange={(event) => setDraft((current) => ({ ...current, active: event.target.checked }))}
-              className="mt-1 h-4 w-4 accent-rose-500"
+              className="mt-1 h-4 w-4 accent-[var(--salla-primary)]"
             />
             <span>
               <span className="block font-medium">{t("staff.active")}</span>
-              <span className="mt-1 block text-rose-400">{t("staff.activeHint")}</span>
+              <span className="mt-1 block text-[var(--salla-muted)]">{t("staff.activeHint")}</span>
             </span>
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-rose-700">{t("staff.fieldNotes")}</span>
+            <span className="mb-1 block text-[var(--foreground)]">{t("staff.fieldNotes")}</span>
             <textarea
               value={draft.notes}
               onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
               rows={3}
-              className="w-full rounded-2xl border-0 bg-rose-50 px-3 py-2.5 outline-none ring-rose-200 focus:ring-2"
+              className={fieldClass}
             />
           </label>
-          {error ? <p className="text-sm text-rose-700">{t(error)}</p> : null}
+          {error ? (
+            <p className="text-sm text-[var(--salla-danger)]">
+              {error === "pass.tooShort" ? t("pass.tooShort", { n: String(MIN_PASSWORD_LENGTH) }) : t(error)}
+            </p>
+          ) : null}
           <button type="submit" className="shop-btn w-full rounded-2xl py-2.5 text-sm">
             {t("staff.saveFile")}
           </button>
         </form>
+      </div>
+    </div>
+  );
+}
+
+export function ConfirmDeleteEmployeeDialog({
+  name,
+  onClose,
+  onConfirm,
+}: {
+  name: string;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  const { t } = useLanguage();
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+      <button type="button" className="absolute inset-0 cursor-default" aria-label={t("close")} onClick={onClose} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-staff-title"
+        className="dash-panel relative w-full max-w-md rounded-2xl p-6"
+      >
+        <h3 id="delete-staff-title" className="text-xl font-semibold text-[var(--foreground)]">
+          {t("staff.deleteTitle", { name })}
+        </h3>
+        <p className="mt-2 text-sm leading-6 text-[var(--salla-muted)]">{t("staff.deleteLead")}</p>
+        <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl px-4 py-2 text-sm text-[var(--salla-muted)] hover:bg-[var(--salla-soft)]"
+          >
+            {t("cancel")}
+          </button>
+          <button type="button" onClick={onConfirm} className="shop-btn-red rounded-xl px-4 py-2 text-sm font-medium">
+            {t("staff.deleteConfirm")}
+          </button>
+        </div>
       </div>
     </div>
   );
