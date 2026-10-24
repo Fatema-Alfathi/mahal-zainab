@@ -23,8 +23,8 @@ export const ar: Record<string, string> = {
   cm: "سم",
 
   "login.aria": "تسجيل الدخول",
-  "login.user": "الموظفة",
-  "login.userAria": "اختاري الموظفة",
+  "login.user": "اسم المستخدم",
+  "login.userAria": "اكتبي اسم المستخدم",
   "login.ownerOption": "المالكة",
   "login.password": "كلمة السر",
   "login.showPassword": "إظهار كلمة السر",
@@ -32,7 +32,7 @@ export const ar: Record<string, string> = {
   "login.submit": "دخول",
   "login.error": "كلمة السر غلط.",
   "login.hintOwner": "اختاري المالكة أو اسم الموظفة، ثم اكتبي كلمة السر.",
-  "login.hintStaff": "اختاري المالكة أو اسم الموظفة، ثم اكتبي كلمة السر.",
+  "login.hintStaff": "اكتبي «المالكة» أو اسم الموظفة، ثم اكتبي كلمة السر.",
 
   "nav.pages": "صفحات البوتيك",
   "nav.dashboard": "لوحة التحكم",

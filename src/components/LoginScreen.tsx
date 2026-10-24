@@ -1,32 +1,24 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
-import { activeEmployees } from "@/lib/employees";
-
-const OWNER_LOGIN = "مالك";
 
 const fieldClass =
   "w-full rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)] px-3 py-2.5 text-[var(--foreground)] outline-none transition focus:border-[var(--salla-primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--salla-primary)_20%,transparent)]";
 
 export function LoginScreen() {
-  const { signIn, employees } = useShop();
+  const { signIn } = useShop();
   const { t } = useLanguage();
   const router = useRouter();
-  const [username, setUsername] = useState(OWNER_LOGIN);
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(false);
-
-  const staff = useMemo(
-    () => activeEmployees(employees).sort((a, b) => a.name.localeCompare(b.name, "ar")),
-    [employees],
-  );
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -56,22 +48,20 @@ export function LoginScreen() {
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block text-sm">
               <span className="mb-1 block text-[var(--foreground)]">{t("login.user")}</span>
-              <select
+              <input
+                type="text"
                 value={username}
                 onChange={(event) => {
                   setUsername(event.target.value);
                   setError(false);
                 }}
                 aria-label={t("login.userAria")}
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
+                required
                 className={fieldClass}
-              >
-                <option value={OWNER_LOGIN}>{t("login.ownerOption")}</option>
-                {staff.map((employee) => (
-                  <option key={employee.id} value={employee.name}>
-                    {employee.name}
-                  </option>
-                ))}
-              </select>
+              />
             </label>
             <label className="block text-sm">
               <span className="mb-1 block text-[var(--foreground)]">{t("login.password")}</span>
