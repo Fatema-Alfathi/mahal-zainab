@@ -23,8 +23,8 @@ export const en: Record<string, string> = {
   cm: "cm",
 
   "login.aria": "Sign in",
-  "login.user": "Staff",
-  "login.userAria": "Choose staff",
+  "login.user": "Username",
+  "login.userAria": "Enter your username",
   "login.ownerOption": "Owner",
   "login.password": "Password",
   "login.showPassword": "Show password",
@@ -32,7 +32,7 @@ export const en: Record<string, string> = {
   "login.submit": "Sign in",
   "login.error": "The password is wrong.",
   "login.hintOwner": "Choose the owner or a staff name, then enter the password.",
-  "login.hintStaff": "Choose the owner or a staff name, then enter the password.",
+  "login.hintStaff": "Type \"owner\" or your staff name, then enter the password.",
 
   "nav.pages": "Boutique pages",
   "nav.dashboard": "Dashboard",
