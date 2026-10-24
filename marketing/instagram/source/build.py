@@ -20,20 +20,20 @@ posts=[
 ]
 CSS=(D/'style.css').read_text()
 for p in posts:
-    cats=''.join(f'<div class="card"><div class="ic">{icon(i,"#fff",60)}</div><div class="cl">{t}</div></div>' for i,t in p['cats'])
+    cats=''.join(f'<div class="card"><div class="ic">{icon(i,"#F2A7D0",60)}</div><div class="cl">{t}</div></div>' for i,t in p['cats'])
     html=f'''<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@800&family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=block" rel="stylesheet">
-<style>{CSS}</style></head><body><div class="post">
+<style>{CSS}</style></head><body><div class="post"><div class="glow"></div><div class="frame"></div>
 <div class="hero">
   <img class="blob-back" src="{p['hero'].replace('hero','back')}.png">
   <img class="photo" src="{p['hero']}.png">
-  <div class="sparks"><i></i><i></i><i></i></div>
-  <div class="c c1"></div><div class="c c2"></div><div class="c c3"></div>
+  
+  <img class="ring" src="{p['hero'].replace('hero','ring')}.png"><div class="c c1"></div><div class="c c3"></div>
   <div class="badge">{icon('map-pin','#E2559A',30)}<span>سلطنة عُمان</span></div>
 </div>
 <div class="dots"><i></i><i></i></div>
 <div class="text">
-  <div class="label"><b></b>{p['label']}</div>
+  <div class="label"><b></b><em></em>{p['label']}<em></em><b></b></div>
   <h1>{hl(p['title'])}</h1>
   <p>{hl(p['body'])}</p>
 </div>
