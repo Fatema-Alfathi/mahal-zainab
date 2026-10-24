@@ -11,6 +11,8 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { Booking, ShopState } from "@/types";
 
 const BLOCKED_ACTIONS = new Set(["sign-in", "sign-out", "hydrate-employees"]);
+// Actions that replace or reveal the whole shop. Only the owner may send them.
+const OWNER_ONLY_ACTIONS = new Set(["hydrate-shop"]);
 
 type ShopRow = { version: number; payload: ShopSnapshot };
 
@@ -47,6 +49,33 @@ export function sessionAllows(session: AuthSession, data: ShopSnapshot): boolean
   return data.employees.some((item) => item.id === session.employeeId && item.active);
 }
 
+// What a signed-in user may receive. Staff never get salaries, purchase costs,
+// expenses or permits: the screens hide them, and so must the server.
+export function visibleShop(session: AuthSession, data: ShopSnapshot): ShopSnapshot {
+  if (session.role === "owner") return data;
+  return {
+    ...data,
+    dresses: data.dresses.map((dress) => ({
+      ...dress,
+      purchaseDate: "",
+      purchasePrice: 0,
+      shippingCost: 0,
+      customsCost: 0,
+      totalMaintenanceCost: 0,
+    })),
+    employees: data.employees.map((employee) => ({
+      ...employee,
+      phone: "",
+      salary: 0,
+      startDate: "",
+      notes: "",
+    })),
+    governmentRecords: [],
+    fixedExpenses: [],
+    variableExpenses: [],
+  };
+}
+
 export function applyShopAction(
   data: ShopSnapshot,
   session: AuthSession,
@@ -54,6 +83,7 @@ export function applyShopAction(
   today: string,
 ): ShopSnapshot {
   if (BLOCKED_ACTIONS.has(action.type)) return data;
+  if (OWNER_ONLY_ACTIONS.has(action.type) && session.role !== "owner") return data;
   const state: ShopState = {
     ...data,
     role: session.role,

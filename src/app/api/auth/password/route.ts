@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readAuthSession } from "@/lib/sessionCookie";
+import { readAuthSession, writeAuthCookie } from "@/lib/sessionCookie";
 import { setOwnerPassword } from "@/lib/shopAuth";
 import { supabaseConfigured } from "@/lib/supabaseAdmin";
 
@@ -18,7 +18,11 @@ export async function POST(request: Request) {
   const next = typeof body?.next === "string" ? body.next : "";
   try {
     const result = await setOwnerPassword(current, next);
-    if (result === "ok") return NextResponse.json({ ok: true });
+    if (result === "ok") {
+      // Other devices are signed out by the new password; keep this one in.
+      await writeAuthCookie(session);
+      return NextResponse.json({ ok: true });
+    }
     return NextResponse.json({ error: result }, { status: 400 });
   } catch (error) {
     console.error("owner password change failed", error instanceof Error ? error.message : "unknown");

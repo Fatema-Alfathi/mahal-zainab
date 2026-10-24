@@ -74,7 +74,7 @@ interface ShopContextValue extends ShopState {
   loadError: boolean;
   syncError: boolean;
   isOwner: boolean;
-  signIn: (username: string, password: string) => Promise<boolean>;
+  signIn: (username: string, password: string) => Promise<"ok" | "invalid" | "locked">;
   signOut: () => void;
   createBooking: (input: {
     dressId: string;
@@ -235,26 +235,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         if (!probe.ok) throw new Error("session");
         backendRef.current = "supabase";
         clearSession();
-        const sessionBody = (await probe.json()) as {
-          session: AuthSession | null;
-          staff?: Array<{ id: string; name: string }>;
-        };
-        if (sessionBody.staff?.length) {
-          dispatch({
-            type: "hydrate-employees",
-            employees: sessionBody.staff.map((item) => ({
-              id: item.id,
-              number: "",
-              name: item.name,
-              phone: "",
-              jobTitle: "",
-              salary: 0,
-              startDate: "",
-              active: true,
-              notes: "",
-            })),
-          });
-        }
+        const sessionBody = (await probe.json()) as { session: AuthSession | null };
         if (sessionBody.session) {
           const shop = await fetch("/api/shop/");
           if (!shop.ok) throw new Error("shop");
@@ -307,21 +288,22 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
+      if (res.status === 429) return "locked" as const;
       if (res.status >= 500) {
         setLoadError(true);
-        return false;
+        return "invalid" as const;
       }
-      if (!res.ok) return false;
+      if (!res.ok) return "invalid" as const;
       const body = (await res.json()) as { session: AuthSession; data: ShopSnapshot };
       dispatch({ type: "hydrate-shop", snapshot: body.data });
       dispatch({ type: "sign-in", session: body.session });
-      return true;
+      return "ok" as const;
     }
     const session = verifyLogin(state.employees, username, password, passwords);
-    if (!session) return false;
+    if (!session) return "invalid" as const;
     writeSession(session);
     dispatch({ type: "sign-in", session });
-    return true;
+    return "ok" as const;
   }, [passwords, state.employees]);
 
   const changeOwnerPassword = useCallback(

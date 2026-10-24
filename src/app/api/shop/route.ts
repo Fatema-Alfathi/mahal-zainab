@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { clearAuthCookie, readAuthSession } from "@/lib/sessionCookie";
 import { removeStaffPassword } from "@/lib/shopAuth";
-import { loadShop, plausibleShopToday, saveShopAction, sessionAllows } from "@/lib/shopStore";
+import { loadShop, plausibleShopToday, saveShopAction, sessionAllows, visibleShop } from "@/lib/shopStore";
 import { supabaseConfigured } from "@/lib/supabaseAdmin";
 import { todayIso } from "@/lib/format";
 import type { Action } from "@/lib/shopReducer";
@@ -9,6 +9,7 @@ import type { Action } from "@/lib/shopReducer";
 export const runtime = "nodejs";
 
 const BLOCKED = new Set(["sign-in", "sign-out", "hydrate-employees"]);
+const OWNER_ONLY = new Set(["hydrate-shop"]);
 
 export async function GET() {
   if (!supabaseConfigured()) {
@@ -22,7 +23,7 @@ export async function GET() {
       await clearAuthCookie();
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
-    return NextResponse.json({ data });
+    return NextResponse.json({ data: visibleShop(session, data) });
   } catch (error) {
     console.error("shop load failed", error instanceof Error ? error.message : "unknown");
     return NextResponse.json({ error: "shop_unavailable" }, { status: 500 });
@@ -40,6 +41,9 @@ export async function POST(request: Request) {
   if (!action || typeof action !== "object" || typeof action.type !== "string" || BLOCKED.has(action.type)) {
     return NextResponse.json({ error: "invalid_action" }, { status: 400 });
   }
+  if (OWNER_ONLY.has(action.type) && session.role !== "owner") {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
   const today = typeof body?.today === "string" && plausibleShopToday(body.today) ? body.today : todayIso();
   try {
     const current = await loadShop();
@@ -51,7 +55,7 @@ export async function POST(request: Request) {
     if (action.type === "delete-employee" && !data.employees.some((item) => item.id === action.employeeId)) {
       await removeStaffPassword(action.employeeId);
     }
-    return NextResponse.json({ data });
+    return NextResponse.json({ data: visibleShop(session, data) });
   } catch (error) {
     console.error("shop save failed", error instanceof Error ? error.message : "unknown");
     return NextResponse.json({ error: "shop_unavailable" }, { status: 500 });

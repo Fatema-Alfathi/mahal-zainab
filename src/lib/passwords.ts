@@ -1,7 +1,7 @@
 export const PASSWORD_KEY = "yal-auth-passwords";
 export const DEFAULT_OWNER_PASSWORD = "yal";
 export const DEFAULT_STAFF_PASSWORD = "1234";
-export const MIN_PASSWORD_LENGTH = 3;
+export const MIN_PASSWORD_LENGTH = 6;
 
 export type PasswordStore = {
   owner: string;

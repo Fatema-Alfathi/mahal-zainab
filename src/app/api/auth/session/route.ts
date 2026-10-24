@@ -1,23 +1,20 @@
 import { NextResponse } from "next/server";
 import { readAuthSession } from "@/lib/sessionCookie";
-import { loadShop } from "@/lib/shopStore";
 import { supabaseConfigured } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
 
+// Public: tells the app whether this browser is signed in. It no longer
+// lists staff names, since the login screen has people type their own name.
 export async function GET() {
   if (!supabaseConfigured()) {
     return NextResponse.json({ error: "supabase_unconfigured" }, { status: 503 });
   }
-  const session = await readAuthSession();
   try {
-    const data = await loadShop();
-    const staff = data.employees
-      .filter((item) => item.active)
-      .map((item) => ({ id: item.id, name: item.name }));
-    return NextResponse.json({ session, staff });
+    const session = await readAuthSession();
+    return NextResponse.json({ session });
   } catch (error) {
-    console.error("session roster failed", error instanceof Error ? error.message : "unknown");
-    return NextResponse.json({ session, staff: [] });
+    console.error("session check failed", error instanceof Error ? error.message : "unknown");
+    return NextResponse.json({ error: "session_unavailable" }, { status: 500 });
   }
 }

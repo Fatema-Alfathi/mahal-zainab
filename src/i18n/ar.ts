@@ -31,6 +31,7 @@ export const ar: Record<string, string> = {
   "login.hidePassword": "إخفاء كلمة السر",
   "login.submit": "دخول",
   "login.error": "كلمة السر غلط.",
+  "login.locked": "محاولات كثيرة غلط. انتظري ربع ساعة وجربي مرة ثانية.",
   "login.hintOwner": "اختاري المالكة أو اسم الموظفة، ثم اكتبي كلمة السر.",
   "login.hintStaff": "اكتبي «المالكة» أو اسم الموظفة، ثم اكتبي كلمة السر.",
 
