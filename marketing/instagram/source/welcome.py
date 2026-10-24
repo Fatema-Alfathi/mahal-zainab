@@ -16,6 +16,9 @@ WCSS='''
 .handle b{font:700 36px 'IBM Plex Sans Arabic';color:#2E1F5E;direction:ltr}
 .handle .ig{width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 30% 25%,#4B3A8C,#2E1F5E 70%);display:flex;align-items:center;justify-content:center}
 .handle .hint{font:600 26px 'IBM Plex Sans Arabic';color:#6E6890;direction:rtl;padding-left:6px;border-left:1.5px solid #E6E3F5;padding-left:18px;margin-left:4px}
+.tags{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:22px}
+.tags span{font:600 25px 'IBM Plex Sans Arabic';color:#4B4270;background:#fff;border:1px solid rgba(213,128,182,.35);padding:8px 20px;border-radius:999px;white-space:nowrap}
+.has-tags .handle{top:1080px}
 '''
 CONF=[(150,250,26,12,'#D580B6',-30),(230,420,16,16,'#8182BE',20),(880,260,22,10,'#E2559A',35),(850,470,14,14,'#F2A7D0',0),(930,380,30,10,'#8182BE',-15),(120,520,20,9,'#F2A7D0',50),(300,200,12,12,'#E2559A',0),(780,190,12,12,'#D580B6',0)]
 def page(v):
@@ -23,7 +26,7 @@ def page(v):
     conf=''.join(f'<i class="conf" style="left:{x}px;top:{y}px;width:{w}px;height:{h}px;background:{c};transform:rotate({r}deg);{"border-radius:50%" if w==h else ""}"></i>' for x,y,w,h,c,r in CONF)
     return f'''<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@800&family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=block" rel="stylesheet">
-<style>{CSS}{WCSS}</style></head><body><div class="post"><div class="glow"></div><div class="frame"></div>
+<style>{CSS}{WCSS}</style></head><body><div class="post{' has-tags' if v.get('tags') else ''}"><div class="glow"></div><div class="frame"></div>
 <div class="dots"><i></i><i></i></div>{conf}
 <div class="w-ring"></div><div class="w-av"><div class="in">{photo}</div></div>
 <div class="w-chip">{icon(v["icon"],"#fff",34)}<span>{v["cat"]}</span></div>
@@ -32,6 +35,7 @@ def page(v):
  <div class="pre">أهلاً وسهلاً بـ</div>
  <h1>{v["name"]}</h1>
  <p>{v["desc"]}</p>
+ {('<div class="tags">'+''.join(f'<span>{t}</span>' for t in v['tags'])+'</div>') if v.get('tags') else ''}
 </div>
 <div class="handle"><div class="ig">{icon("instagram","#F2A7D0",34)}</div><b>{v["handle"]}</b><span class="hint">تابعوهم على</span></div>
 </div></body></html>'''
