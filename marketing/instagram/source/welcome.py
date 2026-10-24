@@ -20,6 +20,7 @@ WCSS='''
 .tags span{font:600 25px 'IBM Plex Sans Arabic';color:#4B4270;background:#fff;border:1px solid rgba(213,128,182,.35);padding:8px 20px;border-radius:999px;white-space:nowrap}
 .has-tags .handle{top:1080px}
 
+.w-text h1.latin{font-size:74px;direction:ltr;line-height:1.5}
 .dark .w-text .pre{color:#fff}
 .dark .w-text h1{color:#F2A7D0}
 .dark .w-text p{color:#DCD8F0}
@@ -43,7 +44,7 @@ def page(v,dark=False):
 <div class="w-text">
  <div class="label"><b></b><em></em>انضم إلى عائلة ترتيب<em></em><b></b></div>
  <div class="pre">أهلاً وسهلاً بـ</div>
- <h1>{v["name"]}</h1>
+ <h1{' class="latin"' if v.get("latin") else ''}>{v["name"]}</h1>
  <p>{v["desc"]}</p>
  {('<div class="tags">'+''.join(f'<span>{t}</span>' for t in v['tags'])+'</div>') if v.get('tags') else ''}
 </div>
