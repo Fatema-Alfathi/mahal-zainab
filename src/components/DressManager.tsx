@@ -720,7 +720,7 @@ function ConfirmDeleteDialog({
   onClose: () => void;
   onConfirm: () => void;
 }) {
-  const { t } = useLanguage();
+  useLanguage();
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
       <button type="button" className="absolute inset-0 cursor-default" aria-label="إغلاق تأكيد الحذف" onClick={onClose} />

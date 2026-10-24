@@ -6,7 +6,7 @@ import { BookingClientActions } from "@/components/BookingClientActions";
 import { BookingDateList } from "@/components/BookingDateList";
 import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
-import { bookingWeddingDate, cancelledBookings, customerBookings, isCustomerNumberTaken, matchCustomer, suggestCustomerNumber } from "@/lib/customers";
+import { cancelledBookings, customerBookings, isCustomerNumberTaken, matchCustomer, suggestCustomerNumber } from "@/lib/customers";
 import { cn, formatCurrency, formatDate, formatDateOrDash, formatSignedCurrency } from "@/lib/format";
 import { bookingStatusLabel } from "@/lib/labels";
 import type { Booking, Customer, CustomerDraft } from "@/types";

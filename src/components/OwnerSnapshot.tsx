@@ -11,7 +11,6 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import { BrandLogo } from "@/components/BrandLogo";
 import { DailyAlerts } from "@/components/DailyAlerts";
 import { ShopFilesPanel } from "@/components/ShopFilesPanel";
 import { GovernmentRecords } from "@/components/GovernmentRecords";
@@ -33,10 +32,12 @@ export function OwnerSnapshot() {
   const { t, locale } = useLanguage();
   const snap = useMemo(
     () => ownerSnapshot(dresses, bookings, fixedExpenses, variableExpenses),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- formatters read the language globally; locale re-runs them on switch
     [bookings, dresses, fixedExpenses, variableExpenses, locale],
   );
   const history = useMemo(
     () => ownerHistory(bookings, fixedExpenses, variableExpenses),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- formatters read the language globally; locale re-runs them on switch
     [bookings, fixedExpenses, variableExpenses, locale],
   );
   const recentMonths = history.months.slice(-12);
@@ -436,7 +437,7 @@ function CompareCard({
   money?: boolean;
   invert?: boolean;
 }) {
-  const { t } = useLanguage();
+  useLanguage();
   const up = change > 0.05;
   const down = change < -0.05;
   const good = invert ? down : up;

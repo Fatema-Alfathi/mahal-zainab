@@ -20,6 +20,7 @@ export function OwnerHistory() {
   const { t, locale } = useLanguage();
   const history = useMemo(
     () => ownerHistory(bookings, fixedExpenses, variableExpenses),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- formatters read the language globally; locale re-runs them on switch
     [bookings, fixedExpenses, variableExpenses, locale],
   );
   const years = history.years.map((row) => row.key);
@@ -301,7 +302,7 @@ function Highlight({
   accent: "success" | "danger" | "warn" | "info";
   icon: typeof TrendingUp;
 }) {
-  const { t } = useLanguage();
+  useLanguage();
   const value = row ? row[field] : 0;
   return (
     <div className="dash-panel rounded-2xl p-4">

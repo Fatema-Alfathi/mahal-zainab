@@ -21,6 +21,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saved = readStoredLocale();
     setCurrentLocale(saved);
+    // Read after mount on purpose: the server cannot see browser storage, so
+    // reading it during the first render would cause a hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLocaleState(saved);
   }, []);
 
