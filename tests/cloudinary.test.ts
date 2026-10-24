@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { signCloudinaryParams, uploadToCloudinary } from "@/lib/cloudinary";
+import { cloudinaryConfig, signCloudinaryParams, uploadToCloudinary } from "@/lib/cloudinary";
 
-const config = { cloudName: "demo-shop", apiKey: "123456", apiSecret: "abcd" };
+const config = { mode: "signed" as const, cloudName: "demo-shop", apiKey: "123456", apiSecret: "abcd" };
 
 test("signature matches Cloudinary's documented example", () => {
   const signature = signCloudinaryParams(
@@ -41,4 +41,44 @@ test("upload rejects a response without a Cloudinary https link", async () => {
   const fakeFetch = (async () =>
     new Response(JSON.stringify({ secure_url: "http://evil.example/a.jpg" }), { status: 200 })) as unknown as typeof fetch;
   await assert.rejects(uploadToCloudinary(new Uint8Array([1]), "image/jpeg", config, fakeFetch), /secure_url/);
+});
+
+test("unsigned preset upload sends the preset and no key or signature", async () => {
+  let seenForm: FormData | null = null;
+  const fakeFetch = (async (_url: string, init: RequestInit) => {
+    seenForm = init.body as FormData;
+    return new Response(JSON.stringify({ secure_url: "https://res.cloudinary.com/evmbwqjn/image/upload/v1/yal/dresses/b.jpg" }), { status: 200 });
+  }) as unknown as typeof fetch;
+  const url = await uploadToCloudinary(
+    new Uint8Array([0xff, 0xd8, 0xff]),
+    "image/jpeg",
+    { mode: "unsigned", cloudName: "evmbwqjn", uploadPreset: "ql9xxgqr" },
+    fakeFetch,
+  );
+  assert.equal(url, "https://res.cloudinary.com/evmbwqjn/image/upload/v1/yal/dresses/b.jpg");
+  const form = seenForm as unknown as FormData;
+  assert.equal(form.get("upload_preset"), "ql9xxgqr");
+  assert.equal(form.get("api_key"), null);
+  assert.equal(form.get("signature"), null);
+});
+
+test("config picks signed keys first, then the unsigned preset", () => {
+  const keys = ["CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET", "CLOUDINARY_UPLOAD_PRESET"];
+  const saved = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
+  try {
+    for (const k of keys) delete process.env[k];
+    assert.equal(cloudinaryConfig(), null);
+    process.env.CLOUDINARY_CLOUD_NAME = "evmbwqjn";
+    assert.equal(cloudinaryConfig(), null);
+    process.env.CLOUDINARY_UPLOAD_PRESET = "ql9xxgqr";
+    assert.deepEqual(cloudinaryConfig(), { mode: "unsigned", cloudName: "evmbwqjn", uploadPreset: "ql9xxgqr" });
+    process.env.CLOUDINARY_API_KEY = "k";
+    process.env.CLOUDINARY_API_SECRET = "s";
+    assert.equal(cloudinaryConfig()?.mode, "signed");
+  } finally {
+    for (const k of keys) {
+      if (saved[k] === undefined) delete process.env[k];
+      else process.env[k] = saved[k];
+    }
+  }
 });
