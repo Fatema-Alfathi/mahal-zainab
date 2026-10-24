@@ -1,6 +1,8 @@
 import { sanitizePassword } from "@/lib/passwords";
 import { hashPassword, verifyPassword } from "@/lib/passwordHash";
+import { passwordFingerprint } from "@/lib/sessionToken";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import type { AuthSession } from "@/lib/auth";
 
 type AuthRow = {
   owner_hash: string;
@@ -77,4 +79,13 @@ export async function staffPasswordMatches(employeeId: string, password: string)
   const hash = row?.staff_hashes[employeeId];
   if (!hash) return false;
   return verifyPassword(password, hash);
+}
+
+// Fingerprint of the password this session's user has right now, or null
+// when they have none (so the session must not be trusted).
+export async function currentPasswordFingerprint(session: AuthSession): Promise<string | null> {
+  const row = await readAuth();
+  if (!row) return null;
+  const hash = session.role === "owner" ? row.owner_hash : row.staff_hashes[session.employeeId];
+  return hash ? passwordFingerprint(hash) : null;
 }

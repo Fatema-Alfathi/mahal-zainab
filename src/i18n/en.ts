@@ -31,6 +31,7 @@ export const en: Record<string, string> = {
   "login.hidePassword": "Hide password",
   "login.submit": "Sign in",
   "login.error": "The password is wrong.",
+  "login.locked": "Too many wrong tries. Wait 15 minutes and try again.",
   "login.hintOwner": "Choose the owner or a staff name, then enter the password.",
   "login.hintStaff": "Type \"owner\" or your staff name, then enter the password.",
 

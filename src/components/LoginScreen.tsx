@@ -18,13 +18,13 @@ export function LoginScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<"" | "invalid" | "locked">("");
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    const ok = await signIn(username, password);
-    if (!ok) {
-      setError(true);
+    const result = await signIn(username, password);
+    if (result !== "ok") {
+      setError(result);
       return;
     }
     router.replace("/");
@@ -53,7 +53,7 @@ export function LoginScreen() {
                 value={username}
                 onChange={(event) => {
                   setUsername(event.target.value);
-                  setError(false);
+                  setError("");
                 }}
                 aria-label={t("login.userAria")}
                 autoComplete="username"
@@ -71,7 +71,7 @@ export function LoginScreen() {
                   value={password}
                   onChange={(event) => {
                     setPassword(event.target.value);
-                    setError(false);
+                    setError("");
                   }}
                   autoComplete="current-password"
                   className={`${fieldClass} pe-11`}
@@ -93,7 +93,7 @@ export function LoginScreen() {
               className="rounded-xl border border-[color-mix(in_srgb,var(--salla-danger)_35%,transparent)] bg-[color-mix(in_srgb,var(--salla-danger)_10%,transparent)] px-3 py-2 text-sm text-[var(--salla-danger)]"
               role="alert"
             >
-              {t("login.error")}
+              {error === "locked" ? t("login.locked") : t("login.error")}
             </p>
           ) : null}
           <button type="submit" className="shop-btn w-full rounded-xl px-4 py-3 text-sm">
