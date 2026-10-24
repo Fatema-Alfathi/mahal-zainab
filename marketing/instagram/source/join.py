@@ -17,9 +17,10 @@ JCSS='''
 .pill b{font:700 40px 'IBM Plex Sans Arabic';color:#2E1F5E;flex:1;text-align:center;direction:rtl}
 .pill .go{width:80px;height:80px;border-radius:50%;background:#E2559A;display:flex;align-items:center;justify-content:center}
 '''
-html=f'''<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+def page(extra=''):
+ return f'''<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@800&family=IBM+Plex+Sans+Arabic:wght@500;600;700&family=Montserrat:wght@800&display=block" rel="stylesheet">
-<style>{CSS}{JCSS}</style></head><body><div class="post dark">
+<style>{CSS}{JCSS}{extra}</style></head><body><div class="post dark">
 <img class="logo" src="logo-white.png"><div class="big-c"></div><div class="glow"></div><div class="frame"></div>
 <div class="dots"><i></i><i></i></div>
 <div class="j-text">
@@ -38,4 +39,21 @@ html=f'''<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <div class="share">{icon("send","#F2A7D0",30)}<span>تعرف منظم أو مغامر؟ شارك البوست معه</span></div>
 <div class="pill"><div class="go">{icon("arrow-left","#fff",40)}</div><b>راسلنا على الدايركت</b>{icon("message-circle-heart","#E2559A",50)}</div>
 </div></body></html>'''
-(D/'04-join-dark.html').write_text(html)
+(D/'04-join-dark.html').write_text(page())
+STORY='''
+html,body,.post,.post.dark{height:1920px}
+.dark .logo{top:226px}
+.dots{top:268px}
+.j-text{top:430px}
+.j-text h1{font-size:92px}
+.j-cards{top:880px;flex-direction:column;gap:32px}
+.j-card{display:grid;grid-template-columns:128px 1fr;grid-template-rows:auto auto;column-gap:32px;align-content:center;text-align:right;padding:36px 40px;min-height:200px}
+.j-card .ic{position:static;transform:none;grid-row:1 / 3;align-self:center}
+.j-card h3{font-size:40px;align-self:end}
+.j-card span{font-size:28px;align-self:start}
+.perks{top:1368px}
+.share{top:1448px}
+.pill{top:1524px}
+.dark .big-c{bottom:-380px}
+'''
+(D/'05-join-story.html').write_text(page(STORY))
