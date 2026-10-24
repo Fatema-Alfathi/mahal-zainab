@@ -68,9 +68,11 @@ export function ShopDayBoard() {
   const [monthIso, setMonthIso] = useState(() => startOfMonthIso(today));
   const [pickedDate, setPickedDate] = useState(today);
   const cells = useMemo(() => monthCells(monthIso), [monthIso]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- formatters read the language globally; locale re-runs them on switch
   const monthEvents = useMemo(() => shopMonthEvents(dresses, bookings, monthIso, today), [bookings, dresses, locale, monthIso, today]);
   const events = useMemo(
     () => shopDayEvents(dresses, bookings, pickedDate, today),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- formatters read the language globally; locale re-runs them on switch
     [bookings, dresses, locale, pickedDate, today],
   );
   const heading = pickedDate === today ? t("cal.todayWork") : t("cal.dayWork", { date: formatDate(pickedDate) });

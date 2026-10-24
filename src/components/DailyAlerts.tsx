@@ -25,6 +25,7 @@ const KIND_ICON: Record<DailyAlertKind, typeof BellRing> = {
 export function DailyAlerts({ compact = false }: { compact?: boolean }) {
   const { dresses, bookings, customers } = useShop();
   const { t, locale } = useLanguage();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- formatters read the language globally; locale re-runs them on switch
   const alerts = useMemo(() => dailyAlerts(dresses, bookings, todayIso(), customers), [bookings, customers, dresses, locale]);
   const total = dailyAlertTotal(alerts);
 

@@ -38,6 +38,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         : window.matchMedia("(prefers-color-scheme: dark)").matches
           ? "dark"
           : "light";
+    // Read after mount on purpose: the server cannot see browser storage, so
+    // reading it during the first render would cause a hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setThemeState(preferred);
     applyTheme(preferred);
   }, []);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { BookingDateList } from "@/components/BookingDateList";
@@ -44,18 +44,22 @@ export function DressBookingCalendar() {
     dresses[0] ??
     null;
 
-  useEffect(() => {
+  // Follow the link when ?dress= changes (adjusting state during render,
+  // instead of in an effect, avoids an extra render pass).
+  const [seenRequestedId, setSeenRequestedId] = useState(requestedId);
+  if (requestedId !== seenRequestedId) {
+    setSeenRequestedId(requestedId);
     if (requestedId) setDressId(requestedId);
-  }, [requestedId]);
+  }
 
-  useEffect(() => {
-    const term = query.trim();
+  function changeQuery(next: string) {
+    setQuery(next);
+    const term = next.trim();
     if (!term) return;
     const matches = dresses.filter((item) => matchesDressQuery(item, term));
-    if (matches.length === 0) return;
-    if (matches.some((item) => item.id === dressId)) return;
+    if (matches.length === 0 || matches.some((item) => item.id === dressId)) return;
     setDressId(matches[0].id);
-  }, [dressId, dresses, query]);
+  }
 
   function selectDress(dress: Dress) {
     setDressId(dress.id);
@@ -82,7 +86,7 @@ export function DressBookingCalendar() {
             <input
               type="search"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => changeQuery(event.target.value)}
               placeholder={t("cal.searchPh")}
               className="w-full rounded-2xl border-0 bg-[var(--salla-soft)] px-3 py-2.5 text-sm outline-none ring-[var(--salla-border)] focus:ring-2"
               aria-label={t("cal.searchAria")}
@@ -151,8 +155,10 @@ export function DressCalendarPanel({ dress, bookings }: { dress: Dress; bookings
   const focus = nearestBookingDate(bookings, dress.id, today);
   const [monthIso, setMonthIso] = useState(() => startOfMonthIso(focus));
   const [pickedDate, setPickedDate] = useState(focus);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- formatters read the language globally; locale re-runs them on switch
   const history = useMemo(() => dressBookingHistory(bookings, dress.id), [bookings, dress.id, locale]);
   const cells = useMemo(() => monthCells(monthIso), [monthIso]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- formatters read the language globally; locale re-runs them on switch
   const weekdayLabels = useMemo(() => weekdaysSat(), [locale]);
   const pickedMark = markDressDay(dress, bookings, pickedDate);
   const PrevIcon = dir === "rtl" ? ChevronRight : ChevronLeft;

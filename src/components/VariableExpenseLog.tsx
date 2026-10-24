@@ -13,7 +13,7 @@ const fieldClass =
 
 export function VariableExpenseLog() {
   const { variableExpenses, dresses, addVariableExpense } = useShop();
-  const { t } = useLanguage();
+  useLanguage();
   const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const rows = useMemo(

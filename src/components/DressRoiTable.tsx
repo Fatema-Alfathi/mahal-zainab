@@ -203,28 +203,3 @@ function SummaryCard({
     </div>
   );
 }
-
-function Stat({
-  label,
-  value,
-  accent = "default",
-}: {
-  label: string;
-  value: string;
-  accent?: "default" | "primary" | "danger";
-}) {
-  return (
-    <div className="rounded-xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/50 px-3 py-2.5">
-      <dt className="text-[11px] text-[var(--salla-muted)]">{label}</dt>
-      <dd
-        className={cn(
-          "mt-1 font-semibold tabular-nums text-[var(--foreground)]",
-          accent === "primary" && "text-[var(--salla-primary)]",
-          accent === "danger" && "text-[var(--salla-danger)]",
-        )}
-      >
-        {value}
-      </dd>
-    </div>
-  );
-}

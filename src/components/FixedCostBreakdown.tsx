@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import {
   Building2,
   Camera,
@@ -22,7 +22,7 @@ import { useShop } from "@/context/ShopContext";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { SALARY_EXPENSE_ID } from "@/lib/employees";
 import { totalFixedExpenses } from "@/lib/finance";
-import { cn, formatCurrency } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import { isSalaryExpense, isStandardMonthlyExpense, sortMonthlyExpenses } from "@/lib/monthlyExpenses";
 
 const ICONS: Record<string, typeof Building2> = {
@@ -145,10 +145,12 @@ function AmountField({
 }) {
   const { t } = useLanguage();
   const [value, setValue] = useState(String(amount));
-
-  useEffect(() => {
+  // Show the saved amount again whenever it changes from outside.
+  const [seenAmount, setSeenAmount] = useState(amount);
+  if (amount !== seenAmount) {
+    setSeenAmount(amount);
     setValue(String(amount));
-  }, [amount]);
+  }
 
   return (
     <label className="flex shrink-0 items-center gap-2 text-sm">

@@ -77,17 +77,6 @@ export function DressGrid() {
     visibleDresses.find((dress) => dress.id === calendarDressId) ??
     (query.trim() ? visibleDresses[0] : null);
 
-  function staffStatusCopy(dress: Dress, guest?: string) {
-    if (dress.status === "available") return t("floor.ready");
-    if (dress.status === "reserved") {
-      return guest ? t("floor.reservedFor", { guest }) : t("floor.reservedInShop");
-    }
-    if (dress.status === "rented") {
-      return guest ? t("floor.withNamedNow", { guest }) : t("floor.withGuest");
-    }
-    return t("floor.inCare");
-  }
-
   return (
     <section className="space-y-5">
       {/* Header */}
@@ -398,14 +387,6 @@ export function DressGrid() {
         </div>
       ) : null}
     </section>
-  );
-}
-
-function MetaChip({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded-md bg-[var(--salla-soft)] px-2 py-1 text-[11px] font-medium text-[var(--foreground)]">
-      {children}
-    </span>
   );
 }
 

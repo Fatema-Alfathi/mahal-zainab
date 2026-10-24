@@ -28,10 +28,8 @@ import {
   isCustomerNumberTaken,
   matchCustomer,
   normalizeCustomerDraft,
-  resolveFitting,
-  suggestCustomerNumber,
 } from "@/lib/customers";
-import { isBarcodeTaken, normalizeDressDraft, statusAfterCare } from "@/lib/dressCatalog";
+import { isBarcodeTaken, normalizeDressDraft } from "@/lib/dressCatalog";
 import {
   employeeLoginNameError,
   isEmployeeNumberTaken,
@@ -39,24 +37,15 @@ import {
   normalizeEmployeeDraft,
   readStoredEmployees,
   suggestEmployeeNumber,
-  syncSalaryExpense,
   writeStoredEmployees,
 } from "@/lib/employees";
-import { suggestInvoiceNumber } from "@/lib/invoices";
 import { parseShopBackup, readStoredShop, snapshotFromState, writeStoredShop, type ShopSnapshot } from "@/lib/shopBackup";
 import { isSalaryExpense, isStandardMonthlyExpense, normalizeExpenseAmount } from "@/lib/monthlyExpenses";
 import { normalizeGovernmentRecordDraft } from "@/lib/governmentRecords";
-import {
-  applyBookingDiscount,
-  calculateBookingSubtotal,
-  createDryCleaningExpense,
-  roundMoney,
-  settleDeposit,
-} from "@/lib/finance";
+import { roundMoney } from "@/lib/finance";
 import { todayIso } from "@/lib/format";
 import { initialState, shopReducer, type Action } from "@/lib/shopReducer";
 import {
-  DRY_CLEANING_FEE,
   type CustomerDraft,
   type DiscountType,
   type DressCatalogDraft,
@@ -64,7 +53,6 @@ import {
   type EmployeeDraft,
   type GovernmentRecordDraft,
   type ShopState,
-  type UserRole,
   type VariableExpense,
 } from "@/types";
 
@@ -269,6 +257,8 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!shopReady) return;
     writeStoredShop(snapshotFromState(state));
+    // Save only when shop data changes, not on sign-in or other session fields.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     shopReady,
     state.dresses,
