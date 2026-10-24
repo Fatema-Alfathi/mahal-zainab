@@ -1,8 +1,14 @@
 import { createHash } from "crypto";
 
-// Server-only. The API secret must never reach the browser, so these
-// variables have no NEXT_PUBLIC_ prefix and are read only in API routes.
-export type CloudinaryConfig = { cloudName: string; apiKey: string; apiSecret: string };
+// Server-only. These variables have no NEXT_PUBLIC_ prefix and are read only
+// in API routes, so the preset and any secret never reach the browser.
+//
+// Two ways to upload:
+// - unsigned: cloud name + an unsigned upload preset (no secret needed)
+// - signed:   cloud name + API key + API secret
+export type CloudinaryConfig =
+  | { mode: "unsigned"; cloudName: string; uploadPreset: string }
+  | { mode: "signed"; cloudName: string; apiKey: string; apiSecret: string };
 
 const FOLDER = "yal/dresses";
 
@@ -10,8 +16,11 @@ export function cloudinaryConfig(): CloudinaryConfig | null {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim() ?? "";
   const apiKey = process.env.CLOUDINARY_API_KEY?.trim() ?? "";
   const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim() ?? "";
-  if (!cloudName || !apiKey || !apiSecret) return null;
-  return { cloudName, apiKey, apiSecret };
+  const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET?.trim() ?? "";
+  if (!cloudName) return null;
+  if (apiKey && apiSecret) return { mode: "signed", cloudName, apiKey, apiSecret };
+  if (uploadPreset) return { mode: "unsigned", cloudName, uploadPreset };
+  return null;
 }
 
 // Cloudinary signature: params sorted by name, joined as a=1&b=2,
@@ -32,13 +41,17 @@ export async function uploadToCloudinary(
   fetchImpl: typeof fetch = fetch,
   now: () => number = Date.now,
 ): Promise<string> {
-  const params = { folder: FOLDER, timestamp: String(Math.floor(now() / 1000)) };
   const form = new FormData();
   form.append("file", new Blob([new Uint8Array(bytes)], { type: mime }));
-  form.append("api_key", config.apiKey);
-  form.append("folder", params.folder);
-  form.append("timestamp", params.timestamp);
-  form.append("signature", signCloudinaryParams(params, config.apiSecret));
+  form.append("folder", FOLDER);
+  if (config.mode === "signed") {
+    const params = { folder: FOLDER, timestamp: String(Math.floor(now() / 1000)) };
+    form.append("api_key", config.apiKey);
+    form.append("timestamp", params.timestamp);
+    form.append("signature", signCloudinaryParams(params, config.apiSecret));
+  } else {
+    form.append("upload_preset", config.uploadPreset);
+  }
 
   const url = `https://api.cloudinary.com/v1_1/${encodeURIComponent(config.cloudName)}/image/upload`;
   const response = await fetchImpl(url, { method: "POST", body: form });
