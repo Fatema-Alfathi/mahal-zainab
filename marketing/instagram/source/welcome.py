@@ -19,14 +19,24 @@ WCSS='''
 .tags{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:22px}
 .tags span{font:600 25px 'IBM Plex Sans Arabic';color:#4B4270;background:#fff;border:1px solid rgba(213,128,182,.35);padding:8px 20px;border-radius:999px;white-space:nowrap}
 .has-tags .handle{top:1080px}
+
+.dark .w-text .pre{color:#fff}
+.dark .w-text h1{color:#F2A7D0}
+.dark .w-text p{color:#DCD8F0}
+.dark .tags span{background:rgba(255,255,255,.07);border-color:rgba(242,167,208,.3);color:#fff}
+.dark .w-ring{border-color:rgba(242,167,208,.45)}
+.dark .w-av{box-shadow:0 40px 80px rgba(10,4,30,.5),0 0 90px rgba(226,85,154,.25)}
+.dark .w-chip{border-color:#2E1F5E;box-shadow:0 16px 34px rgba(226,85,154,.4)}
+.dark .handle{border:none;box-shadow:0 24px 50px rgba(10,4,30,.4)}
+.dark .handle .ig{background:radial-gradient(circle at 30% 25%,#EE6FAE,#E2559A 45%,#C2398A)}
 '''
 CONF=[(150,250,26,12,'#D580B6',-30),(230,420,16,16,'#8182BE',20),(880,260,22,10,'#E2559A',35),(850,470,14,14,'#F2A7D0',0),(930,380,30,10,'#8182BE',-15),(120,520,20,9,'#F2A7D0',50),(300,200,12,12,'#E2559A',0),(780,190,12,12,'#D580B6',0)]
-def page(v):
+def page(v,dark=False):
     photo=f'<img src="{v["photo"]}">' if v.get('photo') else f'{icon("image-plus","#8182BE",72)}<span class="ph">شعار أو صورة المنظم</span>'
     conf=''.join(f'<i class="conf" style="left:{x}px;top:{y}px;width:{w}px;height:{h}px;background:{c};transform:rotate({r}deg);{"border-radius:50%" if w==h else ""}"></i>' for x,y,w,h,c,r in CONF)
     return f'''<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@800&family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=block" rel="stylesheet">
-<style>{CSS}{WCSS}</style></head><body><div class="post{' has-tags' if v.get('tags') else ''}"><div class="glow"></div><div class="frame"></div>
+<style>{CSS}{WCSS}</style></head><body><div class="post{' has-tags' if v.get('tags') else ''}{' dark' if dark else ''}">{('<img class="logo" src="logo-white.png"><div class="url">'+icon("globe","#CFCBEA",34)+'<span>www.trtib.app</span></div><div class="big-c"></div>') if dark else ''}<div class="glow"></div><div class="frame"></div>
 <div class="dots"><i></i><i></i></div>{conf}
 <div class="w-ring"></div><div class="w-av"><div class="in">{photo}</div></div>
 <div class="w-chip">{icon(v["icon"],"#fff",34)}<span>{v["cat"]}</span></div>
@@ -37,7 +47,7 @@ def page(v):
  <p>{v["desc"]}</p>
  {('<div class="tags">'+''.join(f'<span>{t}</span>' for t in v['tags'])+'</div>') if v.get('tags') else ''}
 </div>
-<div class="handle"><div class="ig">{icon("instagram","#F2A7D0",34)}</div><b>{v["handle"]}</b><span class="hint">تابعوهم على</span></div>
+<div class="handle"><div class="ig">{icon("instagram","#fff" if dark else "#F2A7D0",34)}</div><b>{v["handle"]}</b><span class="hint">تابعوهم على</span></div>
 </div></body></html>'''
 if __name__=='__main__':
     T=[('06-welcome-organizer',dict(icon='party-popper',cat='منظم مناسبات',name='اسم المنظم',desc='تنسيق حفلات التخرّج والمناسبات الخاصة في مسقط',handle='@username')),
