@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cloudinaryConfig, uploadToCloudinary } from "@/lib/cloudinary";
 import { clearAuthCookie, readAuthSession } from "@/lib/sessionCookie";
 import { loadShop, sessionAllows } from "@/lib/shopStore";
 import { supabaseAdmin, supabaseConfigured } from "@/lib/supabaseAdmin";
@@ -63,6 +64,13 @@ export async function POST(request: Request) {
     const bytes = new Uint8Array(await file.arrayBuffer());
     const kind = imageType(bytes);
     if (!kind) return NextResponse.json({ error: "unsupported_type" }, { status: 400 });
+
+    // Cloudinary when its keys are set; otherwise Supabase Storage as before.
+    const cloudinary = cloudinaryConfig();
+    if (cloudinary) {
+      const url = await uploadToCloudinary(bytes, kind.mime, cloudinary);
+      return NextResponse.json({ url });
+    }
 
     const path = `dresses/${crypto.randomUUID()}.${kind.ext}`;
     const client = supabaseAdmin();
