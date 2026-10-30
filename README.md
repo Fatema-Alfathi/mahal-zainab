@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# بوتيك YAL — نظام تأجير الفساتين
 
-## Getting Started
+نظام لإدارة بوتيك تأجير فساتين: الفساتين، العميلات، الحجوزات، التقويم، الحسابات، الموظفات، والتراخيص.
+مبني بـ Next.js، والبيانات تنحفظ في Supabase.
 
-First, run the development server:
+## التشغيل على الجهاز
+
+يحتاج [Node.js](https://nodejs.org) نسخة 20 أو أحدث.
+
+```bash
+npm install
+```
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+بعدها افتحي <http://localhost:3000>.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### الوضع المحلي (بدون Supabase)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+إذا ما حطيتي مفاتيح Supabase، البرنامج يشتغل بوضع تجربة: البيانات تنحفظ في المتصفح بس،
+وتضيع إذا انمسح المتصفح، وما تظهر في جهاز ثاني. للتجربة فقط.
 
-## Learn More
+- اسم المستخدم: `المالكة`
+- كلمة السر: `yal`
 
-To learn more about Next.js, take a look at the following resources:
+## الربط مع Supabase (للاستخدام الحقيقي)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 1. سوّي مشروع وجداول
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. سوّي مشروع جديد في [supabase.com](https://supabase.com).
+2. افتحي **SQL Editor**، وشغّلي ملفات `supabase/migrations` بالترتيب (كل ملف لحاله، انسخيه ثم Run):
+   1. `20261013103000_shop_state.sql` — بيانات البوتيك
+   2. `20261013121340_dress_photos_bucket.sql` — مكان صور الفساتين
+   3. `20261013123812_shop_auth.sql` — كلمات السر
+   4. `20261013130429_shop_backups.sql` — النسخ اليومية
 
-## Deploy on Vercel
+### 2. حطي المفاتيح
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+انسخي الملف `.env.example` باسم `.env.local`:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+cp .env.example .env.local
+```
+
+وعبّي فيه:
+
+| المفتاح | من وين |
+| --- | --- |
+| `SUPABASE_URL` | Supabase > Project Settings > API > Project URL |
+| `SUPABASE_SECRET_KEY` | Supabase > Project Settings > API Keys > Secret key (أو `service_role`) |
+| `SESSION_SECRET` | أي نص عشوائي طويل (16 حرف أو أكثر). الأمر تحت يطلع لك واحد |
+| `CLOUDINARY_*` | اختياري، لصور الفساتين. إذا ما حطيتيه، الصور تنحفظ في Supabase |
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+> المفاتيح هذي سرية. لا ترفعين `.env.local` على GitHub، ولا تحطين قبلها `NEXT_PUBLIC_`.
+
+### 3. حطي كلمة سر المالكة
+
+أول مرة (أو إذا نسيتي كلمة السر):
+
+```bash
+npm run set-owner-password
+```
+
+يطلب كلمة السر مرتين (6 أحرف على الأقل) ويحفظها في Supabase. كلمات سر الموظفات ما تتغير.
+
+إذا ما تبين تحطين المفاتيح في جهازك، شغّليه كذا، وهو يطلع لك كود SQL تلصقينه في **SQL Editor**:
+
+```bash
+npm run set-owner-password -- --sql
+```
+
+بعدها شغّلي `npm run dev` وادخلي باسم `المالكة` وكلمة السر الجديدة.
+كلمات سر الموظفات تنضاف من داخل البرنامج: لوحة التحكم > الموظفات.
+
+## النشر على الإنترنت
+
+البرنامج يحتاج سيرفر (فيه API)، فيشتغل على [Vercel](https://vercel.com) أو أي استضافة تدعم Next.js.
+في إعدادات المشروع هناك (Environment Variables) حطي نفس المفاتيح اللي في `.env.local`.
+
+## أوامر مفيدة
+
+| الأمر | وش يسوي |
+| --- | --- |
+| `npm run dev` | يشغّل البرنامج للتجربة والتعديل |
+| `npm run build` ثم `npm start` | يبني ويشغّل نسخة الإنتاج |
+| `npm test` | يشغّل الفحوصات |
+| `npm run lint` | يدقق الكود |
+| `npm run set-owner-password` | يحط أو يغيّر كلمة سر المالكة |
+
+## النسخ الاحتياطية
+
+- مع أول تعديل كل يوم، تنحفظ نسخة من البوتيك في Supabase تلقائياً.
+- من لوحة التحكم تقدرين تنزّلين نسخة على جهازك، وترجعين منها، وتنزّلين تقرير الشهر.
