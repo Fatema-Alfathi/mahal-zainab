@@ -122,7 +122,7 @@ export function canEncodeBarcode(value: string): boolean {
 }
 
 export function barcodeModules(value: string): string {
-  const text = canEncodeBarcode(value) ? value : value.replace(/[^\x20-\x7E]/g, "-") || "ZNB";
+  const text = canEncodeBarcode(value) ? value : value.replace(/[^\x20-\x7E]/g, "-") || "YAL";
   const values = [...text].map((char) => symbolValue(char) ?? 13);
   let checksum = START_B;
   const modules = [CODE128_PATTERNS[START_B]];

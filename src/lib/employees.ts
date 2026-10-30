@@ -1,4 +1,5 @@
 import { compactLoginName, isReservedOwnerName } from "@/lib/auth";
+import { suggestCode } from "@/lib/codes";
 import { normalizePhone } from "@/lib/customers";
 import { roundMoney } from "@/lib/finance";
 import type { Employee, EmployeeDraft, FixedExpense } from "@/types";
@@ -9,12 +10,10 @@ export const SALARY_EXPENSE_ID = "fixed-salaries";
 export const SALARY_EXPENSE_NAME = "الرواتب";
 
 export function suggestEmployeeNumber(employees: Employee[]): string {
-  const used = new Set(employees.map((item) => item.number.trim().toUpperCase()));
-  for (let index = 1; index < 1000; index += 1) {
-    const candidate = `ZNB-E-${String(index).padStart(3, "0")}`;
-    if (!used.has(candidate)) return candidate;
-  }
-  return `ZNB-E-${Date.now().toString().slice(-6)}`;
+  return suggestCode(
+    "E",
+    employees.map((item) => item.number),
+  );
 }
 
 export function isEmployeeNumberTaken(employees: Employee[], number: string, excludeId?: string): boolean {

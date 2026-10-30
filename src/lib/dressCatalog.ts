@@ -1,4 +1,5 @@
 import { DRESS_PRESENTATION } from "@/data/mockData";
+import { suggestCode } from "@/lib/codes";
 import { t } from "@/i18n/t";
 import { formatDate } from "@/lib/format";
 import { DRESS_CATEGORY_LABELS, joinArabic, piecesLabel } from "@/lib/labels";
@@ -190,12 +191,11 @@ export function isBarcodeTaken(dresses: Dress[], barcode: string, excludeId?: st
 }
 
 export function suggestBarcode(dresses: Dress[]): string {
-  const used = new Set(dresses.map((item) => item.barcode.trim().toUpperCase()));
-  for (let index = dresses.length + 1; index < dresses.length + 1000; index += 1) {
-    const candidate = `ZNB-NEW-${String(index).padStart(3, "0")}`;
-    if (!used.has(candidate)) return candidate;
-  }
-  return `ZNB-NEW-${Date.now().toString().slice(-6)}`;
+  return suggestCode(
+    "NEW",
+    dresses.map((item) => item.barcode),
+    dresses.length + 1,
+  );
 }
 
 export function normalizeDressDraft(draft: DressCatalogDraft): DressCatalogDraft | null {

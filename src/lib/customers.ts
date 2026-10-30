@@ -1,4 +1,5 @@
 import { FITTING_LEAD_DAYS, type Customer, type CustomerDraft, type Booking } from "@/types";
+import { suggestCode } from "@/lib/codes";
 import { shiftIso } from "@/lib/format";
 
 export function normalizePhone(phone: string): string {
@@ -6,12 +7,10 @@ export function normalizePhone(phone: string): string {
 }
 
 export function suggestCustomerNumber(customers: Customer[]): string {
-  const used = new Set(customers.map((item) => item.number.trim().toUpperCase()));
-  for (let index = 1; index < 1000; index += 1) {
-    const candidate = `ZNB-C-${String(index).padStart(3, "0")}`;
-    if (!used.has(candidate)) return candidate;
-  }
-  return `ZNB-C-${Date.now().toString().slice(-6)}`;
+  return suggestCode(
+    "C",
+    customers.map((item) => item.number),
+  );
 }
 
 export function isCustomerNumberTaken(customers: Customer[], number: string, excludeId?: string): boolean {
