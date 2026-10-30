@@ -41,7 +41,12 @@ export const metadata: Metadata = {
   description: "Boutique management for YAL wedding dress rentals.",
   icons: {
     icon: assetPath("/yal-logo.jpg"),
-    apple: assetPath("/yal-logo.jpg"),
+    apple: assetPath("/apple-touch-icon.png"),
+  },
+  appleWebApp: {
+    capable: true,
+    title: "YAL",
+    statusBarStyle: "default",
   },
 };
 
