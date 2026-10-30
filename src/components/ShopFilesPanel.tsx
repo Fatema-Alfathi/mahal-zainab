@@ -33,6 +33,7 @@ export function ShopFilesPanel() {
   const snapshot = snapshotFromState(shop);
 
   useEffect(() => {
+    if (shop.localMode) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -47,7 +48,7 @@ export function ShopFilesPanel() {
     return () => {
       cancelled = true;
     };
-  }, [notice]);
+  }, [notice, shop.localMode]);
 
   function downloadBackup() {
     downloadTextFile(backupFilename(), buildBackupJson(snapshot), "application/json;charset=utf-8");
@@ -89,7 +90,7 @@ export function ShopFilesPanel() {
       <div className="mb-4">
         <p className="text-xs font-medium text-[var(--salla-muted)]">{t("files.kicker")}</p>
         <h2 className="mt-1 text-lg text-[var(--foreground)]">{t("files.title")}</h2>
-        <p className="mt-1 text-xs leading-5 text-[var(--salla-muted)]">{t("files.lead")}</p>
+        <p className="mt-1 text-xs leading-5 text-[var(--salla-muted)]">{t(shop.localMode ? "files.leadLocal" : "files.lead")}</p>
       </div>
       <div className="flex flex-wrap gap-2">
         <button type="button" onClick={downloadBackup} className="shop-btn inline-flex items-center gap-1.5 rounded-2xl px-4 py-2 text-sm">
@@ -126,8 +127,11 @@ export function ShopFilesPanel() {
       </div>
       <div className="mt-4 rounded-2xl border border-[var(--salla-border)] bg-[var(--salla-soft)]/40 p-3">
         <h3 className="text-sm font-semibold text-[var(--foreground)]">{t("files.dailyTitle")}</h3>
-        {loadingBackups ? <p className="mt-2 text-xs text-[var(--salla-muted)]">{t("files.dailyLoading")}</p> : null}
-        {!loadingBackups && backups.length === 0 ? (
+        {shop.localMode ? (
+          <p className="mt-2 text-xs text-[var(--salla-muted)]">{t("files.dailyLocal")}</p>
+        ) : null}
+        {!shop.localMode && loadingBackups ? <p className="mt-2 text-xs text-[var(--salla-muted)]">{t("files.dailyLoading")}</p> : null}
+        {!shop.localMode && !loadingBackups && backups.length === 0 ? (
           <p className="mt-2 text-xs text-[var(--salla-muted)]">{t("files.dailyEmpty")}</p>
         ) : null}
         {backups.length > 0 ? (

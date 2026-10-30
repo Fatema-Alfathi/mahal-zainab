@@ -186,7 +186,7 @@ export function AppShell({
               </div>
             </div>
 
-            <div className="border-t border-[var(--salla-border)] pt-3">
+            <div className="border-t border-[var(--salla-border)] pt-3 lg:hidden">
               <NavLinks active={active} variant="top" />
             </div>
           </div>
