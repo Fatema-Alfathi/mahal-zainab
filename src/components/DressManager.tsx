@@ -131,7 +131,7 @@ export function DressManager() {
 
       {notice ? (
         <p className="rounded-xl border border-[color-mix(in_srgb,var(--salla-success)_30%,var(--salla-border))] bg-[color-mix(in_srgb,var(--salla-success)_10%,transparent)] px-4 py-2.5 text-sm text-[var(--salla-success)]">
-          {notice}
+          {t(notice)}
         </p>
       ) : null}
 

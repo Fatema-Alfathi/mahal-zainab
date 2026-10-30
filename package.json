@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test tests/*.test.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "set-owner-password": "tsx scripts/set-owner-password.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",
