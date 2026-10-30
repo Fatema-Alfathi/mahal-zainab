@@ -61,6 +61,8 @@ interface ShopContextValue extends ShopState {
   authReady: boolean;
   loadError: boolean;
   syncError: boolean;
+  // True when there is no Supabase: data lives in this browser only.
+  localMode: boolean;
   isOwner: boolean;
   signIn: (username: string, password: string) => Promise<"ok" | "invalid" | "locked">;
   signOut: () => void;
@@ -132,6 +134,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const [passwords, setPasswords] = useState<PasswordStore>(defaultPasswordStore);
   const [loadError, setLoadError] = useState(false);
   const [syncError, setSyncError] = useState(false);
+  const [localMode, setLocalMode] = useState(false);
   const backendRef = useRef<"unknown" | "local" | "supabase">("unknown");
   const saveSeq = useRef(0);
 
@@ -199,6 +202,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         if (probe.status === 503) {
           backendRef.current = "local";
+          setLocalMode(true);
           const storedShop = readStoredShop();
           if (storedShop) dispatch({ type: "hydrate-shop", snapshot: storedShop });
           const storedEmployees = readStoredEmployees();
@@ -658,6 +662,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       authReady,
       loadError,
       syncError,
+      localMode,
       isOwner: state.role === "owner" && state.signedIn,
       signIn,
       signOut,
@@ -697,6 +702,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       authReady,
       loadError,
       syncError,
+      localMode,
       signIn,
       signOut,
       createBooking,

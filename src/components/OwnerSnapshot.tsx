@@ -223,16 +223,22 @@ export function OwnerSnapshot() {
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h3 className="text-lg text-[var(--foreground)]">{t("owner.monthFlow")}</h3>
-            <p className="mt-1 text-xs text-[var(--salla-muted)]">{t("owner.monthFlowHint", { n: recentMonths.length })}</p>
+            <p className="mt-1 text-xs text-[var(--salla-muted)]">
+              {t(history.highestIncomeMonth ? "owner.monthFlowHint" : "owner.monthFlowHintPlain", {
+                n: recentMonths.length,
+              })}
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-white">
-              {t("owner.highest", { label: history.highestIncomeMonth?.label ?? "—" })}
-            </span>
-            <span className="rounded-full bg-red-600 px-2.5 py-1 text-white">
-              {t("owner.lowest", { label: history.lowestIncomeMonth?.label ?? "—" })}
-            </span>
-          </div>
+          {history.highestIncomeMonth && history.lowestIncomeMonth ? (
+            <div className="flex flex-wrap gap-2 text-xs">
+              <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-white">
+                {t("owner.highest", { label: history.highestIncomeMonth.label })}
+              </span>
+              <span className="rounded-full bg-red-600 px-2.5 py-1 text-white">
+                {t("owner.lowest", { label: history.lowestIncomeMonth.label })}
+              </span>
+            </div>
+          ) : null}
         </div>
         <div className="flex h-48 items-end gap-1.5 sm:gap-2">
           {recentMonths.map((row) => {

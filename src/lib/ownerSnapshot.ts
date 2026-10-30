@@ -198,6 +198,8 @@ function rowForRange(label: string, key: string, bookings: Booking[], fixed: Fix
 
 function pickExtreme(rows: HistoryRow[], field: keyof Pick<HistoryRow, "income" | "profit" | "expenses" | "bookings">, kind: "max" | "min"): HistoryRow | null {
   if (rows.length === 0) return null;
+  // No highest or lowest when every row has the same value (one month, or all zero).
+  if (rows.every((row) => row[field] === rows[0][field])) return null;
   return rows.reduce((best, row) => {
     if (kind === "max") return row[field] > best[field] ? row : best;
     return row[field] < best[field] ? row : best;
